@@ -1,170 +1,0 @@
-2025-12-18 11:34:07-log: Cannot access game frame or container.
-2025-12-18 11:34:08-debug: asset-db:require-engine-code (1868ms)
-2025-12-18 11:34:08-log: meshopt wasm decoder initialized
-2025-12-18 11:34:08-log: [box2d]:box2d wasm lib loaded.
-2025-12-18 11:34:08-log: [bullet]:bullet wasm lib loaded.
-2025-12-18 11:34:08-log: Cocos Creator v3.8.8
-2025-12-18 11:34:08-log: Using legacy pipeline
-2025-12-18 11:34:08-log: Forward render pipeline initialized.
-2025-12-18 11:34:08-debug: [Assets Memory track]: asset-db:worker-init: initEngine start:30.52MB, end 79.86MB, increase: 49.34MB
-2025-12-18 11:34:12-debug: [Assets Memory track]: asset-db:worker-init: initPlugin start:79.61MB, end 275.13MB, increase: 195.51MB
-2025-12-18 11:34:12-debug: asset-db:worker-init: initPlugin (3448ms)
-2025-12-18 11:34:12-debug: [Assets Memory track]: asset-db:worker-init start:30.51MB, end 275.25MB, increase: 244.74MB
-2025-12-18 11:34:12-debug: Run asset db hook engine-extends:beforePreStart success!
-2025-12-18 11:34:12-debug: Run asset db hook programming:beforePreStart ...
-2025-12-18 11:34:12-debug: Run asset db hook programming:beforePreStart success!
-2025-12-18 11:34:12-debug: Run asset db hook engine-extends:beforePreStart ...
-2025-12-18 11:34:12-debug: asset-db:worker-init (5597ms)
-2025-12-18 11:34:12-debug: asset-db-hook-programming-beforePreStart (127ms)
-2025-12-18 11:34:12-debug: asset-db-hook-engine-extends-beforePreStart (128ms)
-2025-12-18 11:34:12-debug: Preimport db internal success
-2025-12-18 11:34:12-debug: %cImport%c: /Users/huixu/Documents/GitHub/BrainGames/assets/@sharedbackground: #aaff85; color: #000;color: #000;
-2025-12-18 11:34:12-debug: %cImport%c: /Users/huixu/Documents/GitHub/BrainGames/assets/gamesbackground: #aaff85; color: #000;color: #000;
-2025-12-18 11:34:12-debug: %cImport%c: /Users/huixu/Documents/GitHub/BrainGames/assets/@launcher/scenesbackground: #aaff85; color: #000;color: #000;
-2025-12-18 11:34:12-debug: %cImport%c: /Users/huixu/Documents/GitHub/BrainGames/assets/@launcherbackground: #aaff85; color: #000;color: #000;
-2025-12-18 11:34:12-debug: %cImport%c: /Users/huixu/Documents/GitHub/BrainGames/assets/@launcher/resourcesbackground: #aaff85; color: #000;color: #000;
-2025-12-18 11:34:12-debug: %cImport%c: /Users/huixu/Documents/GitHub/BrainGames/assets/@launcher/scriptsbackground: #aaff85; color: #000;color: #000;
-2025-12-18 11:34:12-debug: %cImport%c: /Users/huixu/Documents/GitHub/BrainGames/assets/games/chessbackground: #aaff85; color: #000;color: #000;
-2025-12-18 11:34:12-debug: %cImport%c: /Users/huixu/Documents/GitHub/BrainGames/assets/@shared/scriptsbackground: #aaff85; color: #000;color: #000;
-2025-12-18 11:34:12-debug: %cImport%c: /Users/huixu/Documents/GitHub/BrainGames/assets/@shared/texturesbackground: #aaff85; color: #000;color: #000;
-2025-12-18 11:34:12-debug: %cImport%c: /Users/huixu/Documents/GitHub/BrainGames/assets/@shared/prefabsbackground: #aaff85; color: #000;color: #000;
-2025-12-18 11:34:12-debug: %cImport%c: /Users/huixu/Documents/GitHub/BrainGames/assets/games/chess/resourcesbackground: #aaff85; color: #000;color: #000;
-2025-12-18 11:34:12-debug: %cImport%c: /Users/huixu/Documents/GitHub/BrainGames/assets/games/chess/scenesbackground: #aaff85; color: #000;color: #000;
-2025-12-18 11:34:12-debug: %cImport%c: /Users/huixu/Documents/GitHub/BrainGames/assets/games/chess/scriptsbackground: #aaff85; color: #000;color: #000;
-2025-12-18 11:34:12-debug: Preimport db assets success
-2025-12-18 11:34:12-debug: Run asset db hook programming:afterPreStart ...
-2025-12-18 11:34:12-debug: starting packer-driver...
-2025-12-18 11:34:13-debug: initialize scripting environment...
-2025-12-18 11:34:13-debug: [[Executor]] prepare before lock
-2025-12-18 11:34:13-debug: Set detail map pack:///resolution-detail-map.json: {}
-2025-12-18 11:34:13-debug: [[Executor]] prepare after unlock
-2025-12-18 11:34:13-debug: [Assets Memory track]: asset-db:worker-init: preStart start:275.26MB, end 279.34MB, increase: 4.08MB
-2025-12-18 11:34:13-debug: Start up the 'internal' database...
-2025-12-18 11:34:13-debug: Run asset db hook engine-extends:afterPreStart success!
-2025-12-18 11:34:13-debug: Run asset db hook programming:afterPreStart success!
-2025-12-18 11:34:13-debug: Run asset db hook engine-extends:afterPreStart ...
-2025-12-18 11:34:13-debug: asset-db-hook-programming-afterPreStart (1332ms)
-2025-12-18 11:34:13-debug: asset-db:worker-effect-data-processing (609ms)
-2025-12-18 11:34:13-debug: asset-db-hook-engine-extends-afterPreStart (609ms)
-2025-12-18 11:34:13-debug: Run asset db hook engine-extends:afterStartDB ...
-2025-12-18 11:34:14-debug: recompile effect.bin success
-2025-12-18 11:34:14-debug: Run asset db hook engine-extends:afterStartDB success!
-2025-12-18 11:34:14-debug: Start up the 'assets' database...
-2025-12-18 11:34:14-debug: asset-db:worker-effect-data-processing (476ms)
-2025-12-18 11:34:14-debug: asset-db-hook-engine-extends-afterStartDB (476ms)
-2025-12-18 11:34:14-debug: %cImport%c: /Users/huixu/Documents/GitHub/BrainGames/assets/games/chess/scenes/ChessGame.scenebackground: #aaff85; color: #000;color: #000;
-2025-12-18 11:34:14-debug: %cImport%c: /Users/huixu/Documents/GitHub/BrainGames/assets/games/chess/resources/cross.pngbackground: #aaff85; color: #000;color: #000;
-2025-12-18 11:34:14-debug: %cImport%c: /Users/huixu/Documents/GitHub/BrainGames/assets/games/chess/resources/check.pngbackground: #aaff85; color: #000;color: #000;
-2025-12-18 11:34:14-debug: %cImport%c: /Users/huixu/Documents/GitHub/BrainGames/assets/games/chess/resources/check.png@6c48abackground: #aaff85; color: #000;color: #000;
-2025-12-18 11:34:14-debug: %cImport%c: /Users/huixu/Documents/GitHub/BrainGames/assets/games/chess/resources/cross.png@6c48abackground: #aaff85; color: #000;color: #000;
-2025-12-18 11:34:14-debug: %cImport%c: /Users/huixu/Documents/GitHub/BrainGames/assets/games/chess/resources/check.png@f9941background: #aaff85; color: #000;color: #000;
-2025-12-18 11:34:14-debug: %cImport%c: /Users/huixu/Documents/GitHub/BrainGames/assets/games/chess/resources/cross.png@f9941background: #aaff85; color: #000;color: #000;
-2025-12-18 11:34:14-debug: Run asset db hook engine-extends:afterStartDB ...
-2025-12-18 11:34:14-debug: recompile effect.bin success
-2025-12-18 11:34:14-debug: lazy register asset handler *
-2025-12-18 11:34:14-debug: lazy register asset handler text
-2025-12-18 11:34:14-debug: lazy register asset handler spine-data
-2025-12-18 11:34:14-debug: lazy register asset handler dragonbones
-2025-12-18 11:34:14-debug: lazy register asset handler dragonbones-atlas
-2025-12-18 11:34:14-debug: lazy register asset handler terrain
-2025-12-18 11:34:14-debug: lazy register asset handler javascript
-2025-12-18 11:34:14-debug: lazy register asset handler typescript
-2025-12-18 11:34:14-debug: lazy register asset handler scene
-2025-12-18 11:34:14-debug: lazy register asset handler prefab
-2025-12-18 11:34:14-debug: lazy register asset handler sprite-frame
-2025-12-18 11:34:14-debug: lazy register asset handler tiled-map
-2025-12-18 11:34:14-debug: lazy register asset handler buffer
-2025-12-18 11:34:14-debug: lazy register asset handler image
-2025-12-18 11:34:14-debug: lazy register asset handler sign-image
-2025-12-18 11:34:14-debug: lazy register asset handler alpha-image
-2025-12-18 11:34:14-debug: lazy register asset handler texture
-2025-12-18 11:34:14-debug: lazy register asset handler texture-cube
-2025-12-18 11:34:14-debug: lazy register asset handler erp-texture-cube
-2025-12-18 11:34:14-debug: lazy register asset handler render-texture
-2025-12-18 11:34:14-debug: lazy register asset handler texture-cube-face
-2025-12-18 11:34:14-debug: lazy register asset handler rt-sprite-frame
-2025-12-18 11:34:14-debug: lazy register asset handler gltf
-2025-12-18 11:34:14-debug: lazy register asset handler gltf-mesh
-2025-12-18 11:34:14-debug: lazy register asset handler gltf-animation
-2025-12-18 11:34:14-debug: lazy register asset handler gltf-skeleton
-2025-12-18 11:34:14-debug: lazy register asset handler gltf-material
-2025-12-18 11:34:14-debug: lazy register asset handler gltf-scene
-2025-12-18 11:34:14-debug: lazy register asset handler gltf-embeded-image
-2025-12-18 11:34:14-debug: lazy register asset handler fbx
-2025-12-18 11:34:14-debug: lazy register asset handler material
-2025-12-18 11:34:14-debug: lazy register asset handler physics-material
-2025-12-18 11:34:14-debug: lazy register asset handler effect
-2025-12-18 11:34:14-debug: lazy register asset handler effect-header
-2025-12-18 11:34:14-debug: lazy register asset handler audio-clip
-2025-12-18 11:34:14-debug: lazy register asset handler animation-clip
-2025-12-18 11:34:14-debug: lazy register asset handler animation-graph
-2025-12-18 11:34:14-debug: lazy register asset handler animation-graph-variant
-2025-12-18 11:34:14-debug: lazy register asset handler animation-mask
-2025-12-18 11:34:14-debug: lazy register asset handler ttf-font
-2025-12-18 11:34:14-debug: lazy register asset handler bitmap-font
-2025-12-18 11:34:14-debug: lazy register asset handler particle
-2025-12-18 11:34:14-debug: lazy register asset handler sprite-atlas
-2025-12-18 11:34:14-debug: lazy register asset handler auto-atlas
-2025-12-18 11:34:14-debug: lazy register asset handler label-atlas
-2025-12-18 11:34:14-debug: lazy register asset handler render-pipeline
-2025-12-18 11:34:14-debug: lazy register asset handler render-stage
-2025-12-18 11:34:14-debug: lazy register asset handler render-flow
-2025-12-18 11:34:14-debug: lazy register asset handler instantiation-material
-2025-12-18 11:34:14-debug: lazy register asset handler instantiation-mesh
-2025-12-18 11:34:14-debug: lazy register asset handler instantiation-skeleton
-2025-12-18 11:34:14-debug: lazy register asset handler instantiation-animation
-2025-12-18 11:34:14-debug: lazy register asset handler video-clip
-2025-12-18 11:34:14-debug: lazy register asset handler directory
-2025-12-18 11:34:14-debug: lazy register asset handler json
-2025-12-18 11:34:14-debug: Run asset db hook engine-extends:afterStartDB success!
-2025-12-18 11:34:14-debug: asset-db:worker-effect-data-processing (377ms)
-2025-12-18 11:34:14-debug: asset-db:start-database (2502ms)
-2025-12-18 11:34:14-debug: asset-db-hook-engine-extends-afterStartDB (377ms)
-2025-12-18 11:34:14-debug: asset-db:ready (12093ms)
-2025-12-18 11:34:14-debug: init worker message success
-2025-12-18 11:34:14-debug: programming:execute-script (8ms)
-2025-12-18 11:34:15-debug: [Build Memory track]: builder:worker-init start:226.67MB, end 235.87MB, increase: 9.20MB
-2025-12-18 11:34:15-debug: builder:worker-init (501ms)
-2025-12-18 11:34:20-debug: refresh db internal success
-2025-12-18 11:34:20-debug: refresh db assets success
-2025-12-18 11:34:20-debug: Run asset db hook engine-extends:afterRefresh ...
-2025-12-18 11:34:20-debug: Run asset db hook engine-extends:afterRefresh success!
-2025-12-18 11:34:20-debug: asset-db:refresh-all-database (63ms)
-2025-12-18 11:34:20-debug: asset-db:worker-effect-data-processing (1ms)
-2025-12-18 11:34:20-debug: asset-db-hook-engine-extends-afterRefresh (2ms)
-2025-12-18 11:34:24-debug: Query all assets info in project
-2025-12-18 11:34:24-debug: init custom config: keepNodeUuid: false, useCache: true
-2025-12-18 11:34:24-debug: Skip compress image, progress: 0%
-2025-12-18 11:34:24-debug: Init all bundles start..., progress: 0%
-2025-12-18 11:34:24-debug: // ---- build task 查询 Asset Bundle ----
-2025-12-18 11:34:24-debug: Init bundle root assets start..., progress: 0%
-2025-12-18 11:34:24-debug: 查询 Asset Bundle start, progress: 0%
-2025-12-18 11:34:24-debug: Num of bundles: 5..., progress: 0%
-2025-12-18 11:34:24-debug: Query preload assets/scripts from cc.config.json: 60f7195c-ec2a-45eb-ba94-8955f60e81d0,1c02ae6f-4492-4915-b8f8-7492a3b1e4cd,810e96e4-e456-4468-9b59-f4e8f39732c0,efe8e2a3-eace-427b-b4f1-cb8a937ec77d,e9aa9a3e-5b2b-4ac7-a2c7-073de2b2b24f,8bbdbcdd-5cd4-4100-b6d5-b7c9625b6107,50f4348b-c883-4e2f-8f11-ce233b859fa1,fda095cb-831d-4601-ad94-846013963de8,f92806d7-1768-443f-afe8-12bcde84d0f0,dd3a144d-ab7f-41f0-82b8-2e43a090d496,f0416e68-0200-4b77-a926-4f9d16e494da,970b0598-bcb0-4714-91fb-2e81440dccd8,bcd64cc6-2dd9-43f6-abbe-66318d332032,d930590d-bb92-4cc8-8bd1-23cd027f9edf,a3cd009f-0ab0-420d-9278-b9fdab939bbc,6a2d0734-bd9e-4ddf-946e-caa52498cb75,c27215d8-6835-4b68-bfbb-bdeac6100c04,b5d6115f-0370-4d7c-aad3-c194cc71cf98,871c3b6c-7379-419d-bda3-794b239ab90d,ff9b0199-ce04-4cfe-86cc-6c719f08d6e4,de1c2107-70c8-4021-8459-6399f24d01c6,cbf30902-517f-40dc-af90-a550bac27cf1,5c601d96-e4c7-4698-991b-7ee674b11079
-2025-12-18 11:34:24-debug: Init bundle root assets success..., progress: 0%
-2025-12-18 11:34:24-debug:   Number of all scenes: 1
-2025-12-18 11:34:24-debug:   Number of all scripts: 9
-2025-12-18 11:34:24-debug:   Number of other assets: 321
-2025-12-18 11:34:24-debug: // ---- build task 查询 Asset Bundle ---- (9ms)
-2025-12-18 11:34:24-debug: // ---- build task 查询 Asset Bundle ----
-2025-12-18 11:34:24-debug: [Build Memory track]: 查询 Asset Bundle start:236.08MB, end 236.92MB, increase: 862.19KB
-2025-12-18 11:34:24-debug: 查询 Asset Bundle start, progress: 5%
-2025-12-18 11:34:24-log: run build task 查询 Asset Bundle success in 9 ms√, progress: 5%
-2025-12-18 11:34:24-debug: // ---- build task 查询 Asset Bundle ---- (6ms)
-2025-12-18 11:34:24-debug: [Build Memory track]: 查询 Asset Bundle start:236.96MB, end 237.07MB, increase: 110.81KB
-2025-12-18 11:34:24-log: run build task 查询 Asset Bundle success in 6 ms√, progress: 10%
-2025-12-18 11:34:24-debug: 整理部分构建选项内数据到 settings.json start, progress: 10%
-2025-12-18 11:34:24-debug: // ---- build task 整理部分构建选项内数据到 settings.json ----
-2025-12-18 11:34:24-debug: // ---- build task 整理部分构建选项内数据到 settings.json ---- (1ms)
-2025-12-18 11:34:24-debug: // ---- build task 填充脚本数据到 settings.json ----
-2025-12-18 11:34:24-debug: [Build Memory track]: 整理部分构建选项内数据到 settings.json start:237.10MB, end 237.14MB, increase: 41.19KB
-2025-12-18 11:34:24-debug: 填充脚本数据到 settings.json start, progress: 12%
-2025-12-18 11:34:24-log: run build task 整理部分构建选项内数据到 settings.json success in 1 ms√, progress: 12%
-2025-12-18 11:34:24-debug: // ---- build task 填充脚本数据到 settings.json ---- (3ms)
-2025-12-18 11:34:24-debug: // ---- build task 整理部分构建选项内数据到 settings.json ----
-2025-12-18 11:34:24-debug: [Build Memory track]: 填充脚本数据到 settings.json start:237.18MB, end 237.21MB, increase: 32.30KB
-2025-12-18 11:34:24-debug: 整理部分构建选项内数据到 settings.json start, progress: 13%
-2025-12-18 11:34:24-log: run build task 填充脚本数据到 settings.json success in 3 ms√, progress: 13%
-2025-12-18 11:34:24-debug: // ---- build task 整理部分构建选项内数据到 settings.json ---- (11ms)
-2025-12-18 11:34:24-log: run build task 整理部分构建选项内数据到 settings.json success in 11 ms√, progress: 15%
-2025-12-18 11:34:24-debug: [Build Memory track]: 整理部分构建选项内数据到 settings.json start:237.26MB, end 237.40MB, increase: 143.67KB
