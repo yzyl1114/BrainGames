@@ -765,39 +765,51 @@ export class BoardController extends Component {
     // ==================== 游戏状态检查 ====================
     private checkGameState() {
         let remainingPegs = 0;
+        // 同时找出所有棋子的位置，方便调试
+        const pegPositions: [number, number][] = [];
         for (let r = 0; r < BOARD_SIZE; r++) {
             for (let c = 0; c < BOARD_SIZE; c++) {
                 if (this.boardState[r][c] === TILE_STATE.PEG) {
                     remainingPegs++;
+                    pegPositions.push([r, c]);
                 }
             }
         }
         
-        console.log(`Game state check: ${remainingPegs} pegs remaining`);
+        console.log(`[GameState] 剩余棋子: ${remainingPegs}, 位置: ${JSON.stringify(pegPositions)}`);
         
+        // 情况1: 胜利 (只剩1颗)
         if (remainingPegs === 1) {
+            console.log(`[GameState] ✅ 检测到胜利条件：只剩1颗棋子`);
             const isCenter = this.boardState[CENTER_POS.row][CENTER_POS.col] === TILE_STATE.PEG;
             const result = evaluateResult(remainingPegs, isCenter);
             
-            console.log(`Victory! Remaining pegs: ${remainingPegs}, center: ${isCenter}, result: ${result}, steps: ${this.stepCount}`);
+            console.log(`[GameState] 胜利详情：中心=${isCenter}, 评价=${result}, 步数=${this.stepCount}`);
             
-            // 显示结算弹窗
+            // 显示胜利结算弹窗
             this.showSettlementPanel(true, remainingPegs, result, this.stepCount, isCenter);
-            
             return;
         }
 
-        if (remainingPegs > 1 && !this.hasValidMove()) {
-            console.log("No valid moves remaining");
+        // 情况2: 检查是否还有合法移动 (只有当棋子数>1时才检查)
+        if (remainingPegs > 1) {
+            const hasMove = this.hasValidMove();
+            console.log(`[GameState] 剩余${remainingPegs}颗棋子，检查是否有合法移动: ${hasMove}`);
             
-            let foundCenterPeg = false;
-            if (this.boardState[CENTER_POS.row][CENTER_POS.col] === TILE_STATE.PEG) {
-                foundCenterPeg = true;
+            if (!hasMove) {
+                console.log(`[GameState] ❌ 检测到失败条件：无合法移动`);
+                let foundCenterPeg = false;
+                if (this.boardState[CENTER_POS.row][CENTER_POS.col] === TILE_STATE.PEG) {
+                    foundCenterPeg = true;
+                }
+                const result = evaluateResult(remainingPegs, foundCenterPeg);
+                // 显示失败结算弹窗
+                this.showSettlementPanel(false, remainingPegs, result, this.stepCount);
+            } else {
+                console.log(`[GameState] 游戏继续，仍有合法移动`);
             }
-
-            const result = evaluateResult(remainingPegs, foundCenterPeg);
-            // 显示结算弹窗
-            this.showSettlementPanel(false, remainingPegs, result, this.stepCount);
+        } else if (remainingPegs === 0) {
+            console.warn(`[GameState] 异常：棋盘上无棋子！`);
         }
     }
     
@@ -811,14 +823,17 @@ export class BoardController extends Component {
                         const r2 = r1 + dr;
                         const c2 = c1 + dc;
                         
-                        if (this.checkJumpValidity(r1, c1, r2, c2)) {
-                            console.log(`Found valid move from (${r1}, ${c1}) to (${r2}, ${c2})`);
+                        // 直接调用检查方法并记录结果
+                        const jumpResult = this.checkJumpValidity(r1, c1, r2, c2);
+                        if (jumpResult) {
+                            console.log(`[ValidMove] ✅ 找到合法移动: (${r1},${c1}) -> (${r2},${c2}), 吃 (${jumpResult.row},${jumpResult.col})`);
                             return true; 
                         }
                     }
                 }
             }
         }
+        console.log(`[ValidMove] ❌ 未找到任何合法移动`);
         return false; 
     }
     
