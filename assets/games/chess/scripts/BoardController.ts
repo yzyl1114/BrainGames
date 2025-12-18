@@ -1,6 +1,6 @@
 // assets/games/chess/scripts/BoardController.ts
 
-import { _decorator, Component, Node, Prefab, instantiate, UITransform, Vec3, v3, EventTouch, Label, tween, UIOpacity, Sprite, Color } from 'cc';
+import { _decorator, Component, Node, Prefab, instantiate, UITransform, Vec3, v3, EventTouch, Label, tween, UIOpacity, Sprite, Color, Button, find } from 'cc';
 import { Peg } from './Peg';
 import { BOARD_SIZE, TILE_STATE, LEVELS_DATA, evaluateResult, CENTER_POS } from './GameConfig'; 
 
@@ -20,15 +20,29 @@ export class BoardController extends Component {
     @property(Node)
     public feedbackNode: Node = null; // 反馈节点（可选）
 
-    @property(Label)
-    public resultLabel: Label = null; 
-    
-    @property(Label)
-    public stepCounterLabel: Label = null; // 新增：计步器标签
+    // ===== 预制体方案核心修改：只需绑定一个预制体 =====
+    @property(Prefab)
+    public gameUIPrefab: Prefab = null;
 
-    @property(Label)
-    public tipsLabel: Label = null; // 新增：提示标签
-    
+    // ===== 所有UI组件将在代码中动态获取，不再需要编辑器拖拽绑定 =====
+    private uiRoot: Node = null; // UI总根节点 (对应预制体中的 UIRoot)
+
+    // 通用UI组件引用
+    private gameTitleLabel: Label = null;
+    private stepCounterLabel: Label = null;
+    private tipsLabel: Label = null;
+    private retryButton: Button = null;
+    private undoButton: Button = null;
+
+    // 结算弹窗组件引用
+    private settlementPanel: Node = null;
+    private settlementTitle: Label = null;
+    private settlementResult: Label = null;
+    private settlementStats: Label = null;
+    private settlementRetryBtn: Button = null;
+    private settlementNextBtn: Button = null;
+
+    // ===== 游戏状态变量 =====
     private currentLevelIndex: number = 0;
     private boardState: number[][] = []; 
     private activeNode: Node | null = null; 
@@ -38,7 +52,7 @@ export class BoardController extends Component {
     private touchStartPos: Vec3 = v3(0, 0, 0);
     private pegNodes: Map<string, Node> = new Map(); // 使用Map存储棋子节点
     
-    // 新增：历史记录和游戏状态
+    // 历史记录和游戏状态
     private moveHistory: Array<{
         boardState: number[][];
         pegsInfo: Array<{row: number, col: number}>;
@@ -48,35 +62,124 @@ export class BoardController extends Component {
     private undoCount: number = 0; // 悔棋次数计数器
     private maxUndoCount: number = 5; // 最大悔棋次数（根据关卡动态调整）
 
+    // ==================== 核心初始化方法 ====================
     protected onLoad() {
         console.log("BoardController: onLoad start");
         
+        // 1. 初始化UI（必须在其他逻辑之前）
+        this.initUI();
+        
+        // 2. 检查核心资源
         if (!this.PegPrefab) {
             console.error("BoardController: PegPrefab is not assigned in the editor!");
             return;
         }
-
         if (!this.boardRoot) {
             console.error("BoardController: boardRoot is not assigned in the editor!");
             return;
         }
-        
-        if (!this.resultLabel) {
-            console.error("BoardController: resultLabel is not assigned in the editor!");
+        if (!this.uiRoot) {
+            console.error("BoardController: UI failed to initialize!");
+            // 可以根据情况决定是否阻止游戏运行
+        }
+
+        // 3. 加载关卡
+        this.loadLevel(this.currentLevelIndex); 
+    }
+
+    // ==================== UI 初始化与动态绑定 ====================
+    private initUI() {
+        if (!this.gameUIPrefab) {
+            console.error('[UI] GameUI Prefab is not assigned in BoardController!');
             return;
         }
 
-        this.loadLevel(this.currentLevelIndex); 
+        // 1. 实例化UI预制体
+        this.uiRoot = instantiate(this.gameUIPrefab);
+        // 查找Canvas作为父节点
+        const canvas = find('Canvas');
+        if (canvas) {
+            this.uiRoot.parent = canvas;
+        } else {
+            // 备选方案：挂载到当前节点
+            this.uiRoot.parent = this.node;
+            console.warn('[UI] Canvas not found, parented UI to BoardController node.');
+        }
+        this.uiRoot.setPosition(0, 0, 0);
+        console.log('[UI] GameUI Prefab instantiated.');
+
+        // 2. 安全获取组件的辅助函数
+        const getComponent = <T extends Component>(path: string, type: new () => T): T | null => {
+            const node = this.uiRoot.getChildByPath(path);
+            if (node) {
+                const comp = node.getComponent(type);
+                if (comp) {
+                    return comp;
+                } else {
+                    console.warn(`[UI] Found node at "${path}", but it has no ${type.name} component.`);
+                }
+            } else {
+                console.warn(`[UI] Node not found at path: "${path}". Check the name in the prefab.`);
+            }
+            return null;
+        };
+
+        // 3. 动态查找并绑定所有通用UI组件
+        this.gameTitleLabel = getComponent('UIRoot/GameTitleLabel', Label);
+        this.stepCounterLabel = getComponent('UIRoot/StepCounter', Label);
+        this.tipsLabel = getComponent('UIRoot/TipsLabel', Label);
+        this.retryButton = getComponent('UIRoot/ButtonContainer/RetryButton', Button);
+        this.undoButton = getComponent('UIRoot/ButtonContainer/UndoButton', Button);
+
+        // 4. 动态查找并绑定结算弹窗组件
+        this.settlementPanel = this.uiRoot.getChildByPath('UIRoot/SettlementPanel');
+        if (this.settlementPanel) {
+            this.settlementTitle = getComponent('UIRoot/SettlementPanel/PopupWindow/TitleLabel', Label);
+            this.settlementResult = getComponent('UIRoot/SettlementPanel/PopupWindow/ResultLabel', Label);
+            this.settlementStats = getComponent('UIRoot/SettlementPanel/PopupWindow/StatsLabel', Label);
+            this.settlementRetryBtn = getComponent('UIRoot/SettlementPanel/PopupWindow/BtnContainer/SettlementRetryBtn', Button);
+            this.settlementNextBtn = getComponent('UIRoot/SettlementPanel/PopupWindow/BtnContainer/SettlementNextBtn', Button);
+        } else {
+            console.warn('[UI] SettlementPanel not found in UI prefab.');
+        }
+
+        // 5. 动态绑定按钮点击事件（替代编辑器Click Events设置）
+        if (this.retryButton) {
+            this.retryButton.node.on(Button.EventType.CLICK, this.retryLevel, this);
+        }
+        if (this.undoButton) {
+            this.undoButton.node.on(Button.EventType.CLICK, this.undoMove, this);
+        }
+        if (this.settlementRetryBtn) {
+            this.settlementRetryBtn.node.on(Button.EventType.CLICK, this.onSettlementRetry, this);
+        }
+        if (this.settlementNextBtn) {
+            this.settlementNextBtn.node.on(Button.EventType.CLICK, this.onSettlementNext, this);
+        }
+
+        // 6. 初始化UI状态
+        if (this.tipsLabel) {
+            this.tipsLabel.node.active = false; // 初始隐藏提示
+        }
+        if (this.settlementPanel) {
+            this.settlementPanel.active = false; // 初始隐藏结算弹窗
+        }
+
+        console.log('[UI] UI initialization complete.');
     }
-    
+
+    // ==================== 游戏关卡与状态管理 ====================
     public loadLevel(levelIndex: number) {
         console.log(`Loading level ${levelIndex}`);
         
-        if (!this.boardRoot || !this.resultLabel) {
+        if (!this.boardRoot) {
             console.error("Critical nodes missing, cannot load level");
             return;
         }
         
+        // 隐藏结算弹窗（如果正在显示）
+        this.hideSettlementPanel();
+
         this.boardRoot.destroyAllChildren();
         
         this.activeNode = null;
@@ -92,6 +195,7 @@ export class BoardController extends Component {
         // 根据关卡设置最大悔棋次数
         this.setMaxUndoCount(levelIndex);
         
+        // 初始化棋盘状态数组
         this.boardState = [];
         for (let i = 0; i < BOARD_SIZE; i++) {
             this.boardState[i] = [];
@@ -100,25 +204,29 @@ export class BoardController extends Component {
             }
         }
 
+        // 检查是否为最后一关
         if (levelIndex >= LEVELS_DATA.length) {
-            this.resultLabel.string = "所有关卡完成! 恭喜您！";
-            if (this.stepCounterLabel) {
-                this.stepCounterLabel.string = "";
-            }
+            this.showGameCompletePanel();
             return;
         }
 
         const level = LEVELS_DATA[levelIndex];
-        this.resultLabel.string = `关卡 ${levelIndex + 1}: ${level.name}`;
+        
+        // 更新游戏标题
+        if (this.gameTitleLabel) {
+            this.gameTitleLabel.string = `钻石棋游戏 - 关卡 ${levelIndex + 1}: ${level.name}`;
+        }
         
         // 更新计步器显示
         this.updateStepCounter();
         
+        // 加载关卡布局
         this.boardState = [];
         for (let i = 0; i < level.layout.length; i++) {
             this.boardState[i] = [...level.layout[i]];
         }
         
+        // 生成棋子
         for (let r = 0; r < BOARD_SIZE; r++) {
             for (let c = 0; c < BOARD_SIZE; c++) {
                 if (this.boardState[r][c] === TILE_STATE.PEG) {
@@ -132,19 +240,8 @@ export class BoardController extends Component {
         
         console.log(`Level ${levelIndex} loaded: ${level.name}, pegs count: ${this.countPegs()}, max undo: ${this.maxUndoCount}`);
     }
-    
-    // 新增：根据关卡设置最大悔棋次数
-    private setMaxUndoCount(levelIndex: number) {
-        if (levelIndex < 30) {
-            this.maxUndoCount = 5; // 1-30关：5次
-        } else if (levelIndex < 60) {
-            this.maxUndoCount = 7; // 31-60关：7次
-        } else {
-            this.maxUndoCount = 9; // 61+关：9次
-        }
-    }
-    
-    // 新增：更新计步器显示
+
+    // ==================== 计步器与提示系统 ====================
     private updateStepCounter() {
         if (!this.stepCounterLabel) {
             console.warn("Step counter label not assigned");
@@ -155,7 +252,6 @@ export class BoardController extends Component {
         this.stepCounterLabel.string = `步数: ${this.stepCount} | 剩余悔棋: ${remainingUndo}次`;
     }
     
-    // 新增：显示临时提示
     private showTips(message: string, duration: number = 2.0) {
         if (!this.tipsLabel || !this.tipsLabel.isValid) {
             console.log("Tips:", message);
@@ -166,7 +262,7 @@ export class BoardController extends Component {
         this.tipsLabel.string = message;
         this.tipsLabel.node.active = true;
         
-        // 淡入效果
+        // 淡入淡出效果
         const opacity = this.tipsLabel.node.getComponent(UIOpacity) || this.tipsLabel.node.addComponent(UIOpacity);
         opacity.opacity = 0;
         
@@ -180,7 +276,7 @@ export class BoardController extends Component {
             .start();
     }
 
-    // 新增：保存当前状态到历史记录
+    // ==================== 悔棋与历史记录系统 ====================
     private saveCurrentState() {
         // 深拷贝棋盘状态
         const boardCopy: number[][] = [];
@@ -212,7 +308,6 @@ export class BoardController extends Component {
         console.log(`State saved. History size: ${this.moveHistory.length}, Step: ${this.stepCount}`);
     }
     
-    // 悔棋功能,修改undoMove方法，使用提示代替resultLabel
     public undoMove() {
         // 检查是否有历史记录
         if (this.moveHistory.length <= 1) {
@@ -267,14 +362,112 @@ export class BoardController extends Component {
         console.log(`Undo successful. Steps: ${this.stepCount}, Undo used: ${this.undoCount}/${this.maxUndoCount}, History: ${this.moveHistory.length}`);
     }
     
-    // 新增：清空历史记录
     private clearHistory() {
         this.moveHistory = [];
         this.stepCount = 0;
         this.undoCount = 0;
         console.log("Move history cleared");
     }
+
+    // ==================== 结算弹窗系统 ====================
+    private showGameCompletePanel() {
+        if (this.settlementPanel && this.settlementTitle && this.settlementResult) {
+            this.settlementPanel.active = true;
+            this.settlementTitle.string = "恭喜通关！";
+            this.settlementResult.string = "您已成功完成所有关卡！\n真是一位钻石棋大师！";
+            this.settlementStats.string = "";
+            
+            // 禁用下一关按钮（已经是最后一关）
+            if (this.settlementNextBtn) {
+                this.settlementNextBtn.interactable = false;
+                // 添加文本提示
+                const nextBtnLabel = this.settlementNextBtn.node.getComponentInChildren(Label);
+                if (nextBtnLabel) {
+                    nextBtnLabel.string = "已是最后一关";
+                }
+            }
+        }
+    }
     
+    private showSettlementPanel(isVictory: boolean, remainingPegs: number, resultText: string, stepCount: number, isCenterPeg: boolean = false) {
+        if (!this.settlementPanel || !this.settlementTitle || !this.settlementResult || !this.settlementStats) {
+            console.warn("Settlement panel components not fully assigned, falling back to tips.");
+            // 降级处理：使用提示显示
+            this.showTips(isVictory ? 
+                `恭喜! 剩余 ${remainingPegs} 颗. 评价: ${resultText}. 步数: ${stepCount}` :
+                `游戏结束! 剩余 ${remainingPegs} 颗. 评价: ${resultText}. 步数: ${stepCount}`);
+            return;
+        }
+        
+        // 显示结算弹窗
+        this.settlementPanel.active = true;
+        
+        // 设置标题
+        this.settlementTitle.string = isVictory ? "恭喜完成！" : "游戏结束！";
+        
+        // 设置结果文本
+        let centerText = "";
+        if (isVictory && isCenterPeg) {
+            centerText = "\n(成功将棋子移至中心！)";
+        }
+        this.settlementResult.string = `评价: ${resultText}${centerText}`;
+        
+        // 设置统计数据
+        this.settlementStats.string = `剩余棋子: ${remainingPegs}颗\n步数: ${stepCount}步`;
+        
+        // 设置下一关按钮状态
+        if (this.settlementNextBtn) {
+            const isLastLevel = this.currentLevelIndex >= LEVELS_DATA.length - 1;
+            this.settlementNextBtn.interactable = isVictory && !isLastLevel;
+            
+            // 更新按钮文本
+            const nextBtnLabel = this.settlementNextBtn.node.getComponentInChildren(Label);
+            if (nextBtnLabel) {
+                if (isLastLevel) {
+                    nextBtnLabel.string = "已是最后一关";
+                } else if (!isVictory) {
+                    nextBtnLabel.string = "未完成";
+                } else {
+                    nextBtnLabel.string = "下一关";
+                }
+            }
+        }
+    }
+    
+    private hideSettlementPanel() {
+        if (this.settlementPanel) {
+            this.settlementPanel.active = false;
+        }
+    }
+    
+    // 结算弹窗按钮事件 - 再玩一次
+    public onSettlementRetry() {
+        console.log("Settlement: Retry level");
+        this.hideSettlementPanel();
+        this.retryLevel();
+    }
+    
+    // 结算弹窗按钮事件 - 下一关
+    public onSettlementNext() {
+        console.log("Settlement: Next level");
+        this.hideSettlementPanel();
+        this.nextLevel();
+    }
+
+    // ==================== 游戏流程控制 ====================
+    public retryLevel() {
+        console.log("Retrying current level");
+        this.clearHistory();  // 清空历史记录
+        this.loadLevel(this.currentLevelIndex);
+    }
+    
+    public nextLevel() {
+        console.log("Loading next level");
+        this.currentLevelIndex++;
+        this.loadLevel(this.currentLevelIndex);
+    }
+
+    // ==================== 游戏核心逻辑（保持不变） ====================
     private getPegLocalPosition(r: number, c: number): Vec3 {
         const x = (c - 3) * TILE_SIZE;
         const y = (3 - r) * TILE_SIZE; 
@@ -317,8 +510,7 @@ export class BoardController extends Component {
         return { row: eatR, col: eatC };
     }
     
-    // =================== 保持原有的拖拽逻辑 ===================
-    
+    // ==================== 棋子拖拽逻辑 ====================
     public handlePegTouchStart(peg: Peg, event: EventTouch) {
         console.log(`TouchStart: peg at (${peg.row}, ${peg.col})`);
         
@@ -515,9 +707,9 @@ export class BoardController extends Component {
             
             const opacityComp = eatenNode.getComponent(UIOpacity) || eatenNode.addComponent(UIOpacity);
             
-            tween(eatenNode)  // 这里加上eatenNode
+            tween(eatenNode)
                 .parallel(
-                    tween().to(0.15, { scale: v3(0.1, 0.1, 0.1) }),  // 这里去掉eatenNode
+                    tween().to(0.15, { scale: v3(0.1, 0.1, 0.1) }),
                     tween(opacityComp).to(0.15, { opacity: 0 })
                 )            
                 .call(() => {
@@ -570,18 +762,7 @@ export class BoardController extends Component {
         return this.pegNodes.get(key) || null;
     }
     
-    private countPegs(): number {
-        let count = 0;
-        for (let r = 0; r < BOARD_SIZE; r++) {
-            for (let c = 0; c < BOARD_SIZE; c++) {
-                if (this.boardState[r][c] === TILE_STATE.PEG) {
-                    count++;
-                }
-            }
-        }
-        return count;
-    }
-    
+    // ==================== 游戏状态检查 ====================
     private checkGameState() {
         let remainingPegs = 0;
         for (let r = 0; r < BOARD_SIZE; r++) {
@@ -597,14 +778,12 @@ export class BoardController extends Component {
         if (remainingPegs === 1) {
             const isCenter = this.boardState[CENTER_POS.row][CENTER_POS.col] === TILE_STATE.PEG;
             const result = evaluateResult(remainingPegs, isCenter);
-            this.resultLabel.string = `恭喜! 剩余 ${remainingPegs} 颗. 评价: ${result}. 步数: ${this.stepCount}`;
             
             console.log(`Victory! Remaining pegs: ${remainingPegs}, center: ${isCenter}, result: ${result}, steps: ${this.stepCount}`);
             
-            setTimeout(() => {
-                this.currentLevelIndex++;
-                this.loadLevel(this.currentLevelIndex); 
-            }, 3000);
+            // 显示结算弹窗
+            this.showSettlementPanel(true, remainingPegs, result, this.stepCount, isCenter);
+            
             return;
         }
 
@@ -617,7 +796,8 @@ export class BoardController extends Component {
             }
 
             const result = evaluateResult(remainingPegs, foundCenterPeg);
-            this.resultLabel.string = `游戏结束! 剩余 ${remainingPegs} 颗. 评价: ${result}. 步数: ${this.stepCount}`;
+            // 显示结算弹窗
+            this.showSettlementPanel(false, remainingPegs, result, this.stepCount);
         }
     }
     
@@ -642,17 +822,27 @@ export class BoardController extends Component {
         return false; 
     }
     
-    public nextLevel() {
-        console.log("Loading next level");
-        this.currentLevelIndex++;
-        this.loadLevel(this.currentLevelIndex);
+    // ==================== 辅助方法 ====================
+    private countPegs(): number {
+        let count = 0;
+        for (let r = 0; r < BOARD_SIZE; r++) {
+            for (let c = 0; c < BOARD_SIZE; c++) {
+                if (this.boardState[r][c] === TILE_STATE.PEG) {
+                    count++;
+                }
+            }
+        }
+        return count;
     }
     
-    // 修改：重玩功能
-    public retryLevel() {
-        console.log("Retrying current level");
-        this.clearHistory();  // 清空历史记录
-        this.loadLevel(this.currentLevelIndex);
+    private setMaxUndoCount(levelIndex: number) {
+        if (levelIndex < 30) {
+            this.maxUndoCount = 5; // 1-30关：5次
+        } else if (levelIndex < 60) {
+            this.maxUndoCount = 7; // 31-60关：7次
+        } else {
+            this.maxUndoCount = 9; // 61+关：9次
+        }
     }
     
     private spawnPeg(r: number, c: number) {
