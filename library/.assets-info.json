@@ -1,0 +1,153 @@
+{
+  "version": "1.0.1",
+  "map": {
+    "@launcher": {
+      "time": 1766028777000,
+      "uuid": "13b982c4-1590-4ef1-9ee2-cbc9650b8ff7"
+    },
+    "@shared": {
+      "time": 1766028777000,
+      "uuid": "4b12a131-ff1d-403b-8fd1-32705ffb1bbc"
+    },
+    "games": {
+      "time": 1766028782000,
+      "uuid": "0afbb589-8434-4029-b907-a7690fb7fe2e"
+    },
+    "@launcher/resources": {
+      "time": 1766028774000,
+      "uuid": "39fa5a49-ced1-489c-87c0-dd004e40f610"
+    },
+    "@launcher/scenes": {
+      "time": 1766028774000,
+      "uuid": "df0b7006-de61-4e88-a882-0d835e2dd805"
+    },
+    "@launcher/scripts": {
+      "time": 1766028774000,
+      "uuid": "8436fce9-89b5-49ca-9349-60e47ac12d16"
+    },
+    "@shared/prefabs": {
+      "time": 1766028774000,
+      "uuid": "b5c5b8a0-a9fc-4a3a-87b3-fa17b33d6547"
+    },
+    "@shared/scripts": {
+      "time": 1766028774000,
+      "uuid": "d19e3089-820e-423a-babf-b26a22c83fa2"
+    },
+    "@shared/textures": {
+      "time": 1766028774000,
+      "uuid": "d47193e5-666d-4c9c-baba-ac5098c58567"
+    },
+    "games/chess": {
+      "time": 1766028782000,
+      "uuid": "9f2ff9eb-dbf3-4262-9499-79892540f529"
+    },
+    "games/chess/resources": {
+      "time": 1766028782000,
+      "uuid": "ce7fb469-cf92-4408-9d3a-d53055ef809c"
+    },
+    "games/chess/scenes": {
+      "time": 1766028782000,
+      "uuid": "0c8934ba-454d-4060-b9a3-f6e95e9df872"
+    },
+    "games/chess/scripts": {
+      "time": 1766028782000,
+      "uuid": "94cfa9e3-fc7e-48dd-9f8a-dfdb8855add7"
+    },
+    "games/chess/scripts/BoardController.ts": {
+      "time": 1765963282909.0286,
+      "uuid": "0f72470b-945a-4e36-92b8-118fc4d9f64c"
+    },
+    "games/chess/scripts/GameConfig.ts": {
+      "time": 1765850866506.2852,
+      "uuid": "12131a35-4e06-43f2-9bbe-1c1161130cc1"
+    },
+    "games/chess/scripts/Peg.ts": {
+      "time": 1765842988656.092,
+      "uuid": "72eb8534-82ef-442a-b149-11bb8c253db7"
+    },
+    "@launcher.meta": {
+      "time": 1765518357928.2231
+    },
+    "@shared.meta": {
+      "time": 1765518357929.1858
+    },
+    "games.meta": {
+      "time": 1765518357929.9993
+    },
+    "@launcher/resources.meta": {
+      "time": 1765518357930.7769
+    },
+    "@launcher/scenes.meta": {
+      "time": 1765518357931.8477
+    },
+    "@launcher/scripts.meta": {
+      "time": 1765518357932.632
+    },
+    "@shared/prefabs.meta": {
+      "time": 1765518357933.3176
+    },
+    "@shared/scripts.meta": {
+      "time": 1765518357934.0186
+    },
+    "@shared/textures.meta": {
+      "time": 1765518357935.0137
+    },
+    "games/chess.meta": {
+      "time": 1765518357936.9634
+    },
+    "games/chess/resources.meta": {
+      "time": 1765518357938.6387
+    },
+    "games/chess/scenes.meta": {
+      "time": 1765518357941.4553
+    },
+    "games/chess/scripts.meta": {
+      "time": 1765518357942.2063
+    },
+    "games/chess/scripts/BoardController.ts.meta": {
+      "time": 1765518357985.6099
+    },
+    "games/chess/scripts/GameConfig.ts.meta": {
+      "time": 1765518357986.5046
+    },
+    "games/chess/scripts/Peg.ts.meta": {
+      "time": 1765518357987.5562
+    },
+    "games/chess/resources/Peg.prefab": {
+      "time": 1765840453942.8958,
+      "uuid": "5d4871a6-d8ef-4aa8-a8d1-6001f0d837c7"
+    },
+    "games/chess/resources/check.png": {
+      "time": 1765520421888.2546,
+      "uuid": "50cc12c7-aee6-4ef0-b2b4-b000554c3d63"
+    },
+    "games/chess/resources/cross.png": {
+      "time": 1765520468937.0205,
+      "uuid": "ddc1aafb-7c5b-45bf-b3b7-02f1c56f0a7d"
+    },
+    "games/chess/resources/peg_diamond.png": {
+      "time": 1765520229312.1196,
+      "uuid": "68258a89-e689-499e-b740-2415db039f3c"
+    },
+    "games/chess/scenes/ChessGame.scene": {
+      "time": 1765522817461.9363,
+      "uuid": "61046460-35e4-45d0-a505-24255411fae8"
+    },
+    "games/chess/resources/Peg.prefab.meta": {
+      "time": 1765518858638.0815
+    },
+    "games/chess/scenes/ChessGame.scene.meta": {
+      "time": 1765519712478.7627
+    },
+    "games/chess/resources/peg_diamond.png.meta": {
+      "time": 1765520311324.8572
+    },
+    "games/chess/resources/cross.png.meta": {
+      "time": 1765520551409.022
+    },
+    "games/chess/resources/check.png.meta": {
+      "time": 1765520551630.0212
+    }
+  },
+  "missing": {}
+}

@@ -1,0 +1,218 @@
+12-18-2025 11:34:01 - log: Load engine in /Applications/Cocos/Creator/3.8.8/CocosCreator.app/Contents/Resources/resources/3d/engine
+12-18-2025 11:34:02 - log: Register native engine in /Applications/Cocos/Creator/3.8.8/CocosCreator.app/Contents/Resources/resources/3d/engine/native
+12-18-2025 11:34:02 - log: Request namespace: device-list
+12-18-2025 11:34:11 - info: [PreviewInEditor] 预览环境初始化完毕
+12-18-2025 11:34:15 - log: [Scene] meshopt wasm decoder initialized
+12-18-2025 11:34:15 - log: [Scene] [bullet]:bullet wasm lib loaded.
+12-18-2025 11:34:15 - log: [Scene] [box2d]:box2d wasm lib loaded.
+12-18-2025 11:34:16 - log: [Scene] [PHYSICS]: using builtin.
+12-18-2025 11:34:16 - log: [Scene] Cocos Creator v3.8.8
+12-18-2025 11:34:16 - log: [Scene] Using custom pipeline: Builtin
+12-18-2025 11:34:16 - log: [Scene] [PHYSICS2D]: switch from builtin to box2d.
+12-18-2025 11:34:24 - log: [PreviewInEditor] meshopt wasm decoder initialized
+12-18-2025 11:34:24 - log: [PreviewInEditor] [bullet]:bullet wasm lib loaded.
+12-18-2025 11:34:24 - log: [PreviewInEditor] [box2d]:box2d wasm lib loaded.
+12-18-2025 11:34:24 - log: [PreviewInEditor] [PHYSICS]: using builtin.
+12-18-2025 11:34:24 - log: [PreviewInEditor] Cocos Creator v3.8.8
+12-18-2025 11:34:25 - log: [PreviewInEditor] Using custom pipeline: Builtin
+12-18-2025 11:34:25 - log: [PreviewInEditor] [PHYSICS2D]: switch from builtin to box2d.
+12-18-2025 11:34:26 - log: [PreviewInEditor] BoardController: onLoad start
+12-18-2025 11:34:26 - log: [PreviewInEditor] Loading level 0
+12-18-2025 11:34:26 - warn: [PreviewInEditor] Step counter label not assignedError: [PreviewInEditor] Step counter label not assigned
+    at console.warn (/Applications/Cocos/Creator/3.8.8/CocosCreator.app/Contents/Resources/app.asar/node_modules/@sentry/core/src/utils-hoist/instrument/console.ts:40:14)
+    at BoardController.updateStepCounter (file:///Users/huixu/Documents/GitHub/BrainGames/temp/programming/packer-driver/targets/editor/chunks/8a/file:/Users/huixu/Documents/GitHub/BrainGames/assets/games/chess/scripts/BoardController.ts:150:21)
+    at BoardController.loadLevel (file:///Users/huixu/Documents/GitHub/BrainGames/temp/programming/packer-driver/targets/editor/chunks/8a/file:/Users/huixu/Documents/GitHub/BrainGames/assets/games/chess/scripts/BoardController.ts:115:14)
+    at BoardController.onLoad (file:///Users/huixu/Documents/GitHub/BrainGames/temp/programming/packer-driver/targets/editor/chunks/8a/file:/Users/huixu/Documents/GitHub/BrainGames/assets/games/chess/scripts/BoardController.ts:69:14)
+    at eval (/Applications/Cocos/Creator/3.8.8/CocosCreator.app/Contents/Resources/resources/3d/engine/bin/.cache/dev/editor/bundled/index.js:51220:132)
+    at OneOffInvoker.eval [as _invoke] (/Applications/Cocos/Creator/3.8.8/CocosCreator.app/Contents/Resources/resources/3d/engine/bin/.cache/dev/editor/bundled/index.js:49513:9)
+    at OneOffInvoker.invoke (/Applications/Cocos/Creator/3.8.8/CocosCreator.app/Contents/Resources/resources/3d/engine/bin/.cache/dev/editor/bundled/index.js:49627:16)
+    at NodeActivator.activateNode (/Applications/Cocos/Creator/3.8.8/CocosCreator.app/Contents/Resources/resources/3d/engine/bin/.cache/dev/editor/bundled/index.js:51271:27)
+    at Scene._activate (/Applications/Cocos/Creator/3.8.8/CocosCreator.app/Contents/Resources/resources/3d/engine/bin/.cache/dev/editor/bundled/index.js:59188:44)
+    at Director.runSceneImmediate (/Applications/Cocos/Creator/3.8.8/CocosCreator.app/Contents/Resources/resources/3d/engine/bin/.cache/dev/editor/bundled/index.js:82681:17)
+    at /Applications/Cocos/Creator/3.8.8/CocosCreator.app/Contents/Resources/app.asar/builtin/scene/dist/script/3d/manager/scene/utils.ccc:1:1515
+    at eval (/Applications/Cocos/Creator/3.8.8/CocosCreator.app/Contents/Resources/resources/3d/engine/bin/.cache/dev/editor/bundled/index.js:117502:17)
+    at eval (/Applications/Cocos/Creator/3.8.8/CocosCreator.app/Contents/Resources/resources/3d/engine/bin/.cache/dev/editor/bundled/index.js:125859:9)
+    at eval (/Applications/Cocos/Creator/3.8.8/CocosCreator.app/Contents/Resources/resources/3d/engine/bin/.cache/dev/editor/bundled/index.js:169027:9)
+    at sentryWrapped (/Applications/Cocos/Creator/3.8.8/CocosCreator.app/Contents/Resources/app.asar/node_modules/@sentry/browser/src/helpers.ts:116:17)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Event listeners registered for node at (-1, -1)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Initialized at (0, 2)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Spawned peg at (0, 2)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Event listeners registered for node at (-1, -1)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Initialized at (0, 3)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Spawned peg at (0, 3)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Event listeners registered for node at (-1, -1)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Initialized at (0, 4)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Spawned peg at (0, 4)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Event listeners registered for node at (-1, -1)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Initialized at (1, 2)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Spawned peg at (1, 2)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Event listeners registered for node at (-1, -1)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Initialized at (1, 3)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Spawned peg at (1, 3)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Event listeners registered for node at (-1, -1)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Initialized at (1, 4)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Spawned peg at (1, 4)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Event listeners registered for node at (-1, -1)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Initialized at (2, 0)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Spawned peg at (2, 0)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Event listeners registered for node at (-1, -1)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Initialized at (2, 1)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Spawned peg at (2, 1)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Event listeners registered for node at (-1, -1)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Initialized at (2, 2)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Spawned peg at (2, 2)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Event listeners registered for node at (-1, -1)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Initialized at (2, 3)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Spawned peg at (2, 3)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Event listeners registered for node at (-1, -1)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Initialized at (2, 4)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Spawned peg at (2, 4)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Event listeners registered for node at (-1, -1)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Initialized at (2, 5)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Spawned peg at (2, 5)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Event listeners registered for node at (-1, -1)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Initialized at (2, 6)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Spawned peg at (2, 6)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Event listeners registered for node at (-1, -1)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Initialized at (3, 0)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Spawned peg at (3, 0)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Event listeners registered for node at (-1, -1)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Initialized at (3, 1)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Spawned peg at (3, 1)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Event listeners registered for node at (-1, -1)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Initialized at (3, 2)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Spawned peg at (3, 2)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Event listeners registered for node at (-1, -1)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Initialized at (3, 4)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Spawned peg at (3, 4)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Event listeners registered for node at (-1, -1)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Initialized at (3, 5)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Spawned peg at (3, 5)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Event listeners registered for node at (-1, -1)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Initialized at (3, 6)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Spawned peg at (3, 6)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Event listeners registered for node at (-1, -1)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Initialized at (4, 0)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Spawned peg at (4, 0)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Event listeners registered for node at (-1, -1)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Initialized at (4, 1)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Spawned peg at (4, 1)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Event listeners registered for node at (-1, -1)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Initialized at (4, 2)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Spawned peg at (4, 2)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Event listeners registered for node at (-1, -1)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Initialized at (4, 3)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Spawned peg at (4, 3)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Event listeners registered for node at (-1, -1)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Initialized at (4, 4)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Spawned peg at (4, 4)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Event listeners registered for node at (-1, -1)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Initialized at (4, 5)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Spawned peg at (4, 5)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Event listeners registered for node at (-1, -1)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Initialized at (4, 6)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Spawned peg at (4, 6)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Event listeners registered for node at (-1, -1)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Initialized at (5, 2)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Spawned peg at (5, 2)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Event listeners registered for node at (-1, -1)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Initialized at (5, 3)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Spawned peg at (5, 3)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Event listeners registered for node at (-1, -1)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Initialized at (5, 4)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Spawned peg at (5, 4)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Event listeners registered for node at (-1, -1)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Initialized at (6, 2)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Spawned peg at (6, 2)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Event listeners registered for node at (-1, -1)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Initialized at (6, 3)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Spawned peg at (6, 3)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Event listeners registered for node at (-1, -1)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Peg: Initialized at (6, 4)
+12-18-2025 11:34:26 - log: [PreviewInEditor] Spawned peg at (6, 4)
+12-18-2025 11:34:26 - log: [PreviewInEditor] State saved. History size: 1, Step: 0
+12-18-2025 11:34:26 - log: [PreviewInEditor] Level 0 loaded: 十字架, pegs count: 32, max undo: 5
+12-18-2025 11:34:28 - log: [PreviewInEditor] Peg 1, 3 Touch Start!
+12-18-2025 11:34:28 - log: [PreviewInEditor] TouchStart: peg at (1, 3)
+12-18-2025 11:34:28 - log: [PreviewInEditor] TouchStart: touch (360.6952789699571, 850.2103004291846), offset (14.313304721030079, -3.210300429184599)
+12-18-2025 11:34:29 - log: [PreviewInEditor] Peg 1, 3 Touch Move!
+12-18-2025 11:34:29 - log: [PreviewInEditor] TouchMove: current (359.26394849785413, 850.2103004291846), new world (373.5772532188842, 847)
+12-18-2025 11:34:29 - log: [PreviewInEditor] Peg 1, 3 Touch Move!
+12-18-2025 11:34:29 - log: [PreviewInEditor] TouchMove: current (359.26394849785413, 835.8969957081546), new world (373.5772532188842, 832.68669527897)
+12-18-2025 11:34:29 - log: [PreviewInEditor] Peg 1, 3 Touch Move!
+12-18-2025 11:34:29 - log: [PreviewInEditor] TouchMove: current (359.26394849785413, 818.7210300429185), new world (373.5772532188842, 815.5107296137339)
+12-18-2025 11:34:29 - log: [PreviewInEditor] Peg 1, 3 Touch Move!
+12-18-2025 11:34:29 - log: [PreviewInEditor] TouchMove: current (359.26394849785413, 801.5450643776825), new world (373.5772532188842, 798.3347639484979)
+12-18-2025 11:34:29 - log: [PreviewInEditor] Peg 1, 3 Touch Move!
+12-18-2025 11:34:29 - log: [PreviewInEditor] TouchMove: current (359.26394849785413, 787.2317596566525), new world (373.5772532188842, 784.0214592274679)
+12-18-2025 11:34:29 - log: [PreviewInEditor] Peg 1, 3 Touch Move!
+12-18-2025 11:34:29 - log: [PreviewInEditor] TouchMove: current (359.26394849785413, 775.7811158798283), new world (373.5772532188842, 772.5708154506437)
+12-18-2025 11:34:29 - log: [PreviewInEditor] Peg 1, 3 Touch Move!
+12-18-2025 11:34:29 - log: [PreviewInEditor] TouchMove: current (359.26394849785413, 764.3304721030044), new world (373.5772532188842, 761.1201716738198)
+12-18-2025 11:34:29 - log: [PreviewInEditor] Peg 1, 3 Touch Move!
+12-18-2025 11:34:29 - log: [PreviewInEditor] TouchMove: current (359.26394849785413, 755.7424892703863), new world (373.5772532188842, 752.5321888412017)
+12-18-2025 11:34:29 - log: [PreviewInEditor] Peg 1, 3 Touch Move!
+12-18-2025 11:34:29 - log: [PreviewInEditor] TouchMove: current (359.26394849785413, 747.1545064377683), new world (373.5772532188842, 743.9442060085837)
+12-18-2025 11:34:29 - log: [PreviewInEditor] Peg 1, 3 Touch Move!
+12-18-2025 11:34:29 - log: [PreviewInEditor] TouchMove: current (359.26394849785413, 735.7038626609443), new world (373.5772532188842, 732.4935622317597)
+12-18-2025 11:34:29 - log: [PreviewInEditor] Peg 1, 3 Touch Move!
+12-18-2025 11:34:29 - log: [PreviewInEditor] TouchMove: current (359.26394849785413, 727.1158798283262), new world (373.5772532188842, 723.9055793991416)
+12-18-2025 11:34:29 - log: [PreviewInEditor] Peg 1, 3 Touch Move!
+12-18-2025 11:34:29 - log: [PreviewInEditor] TouchMove: current (362.1266094420601, 721.3905579399142), new world (376.4399141630902, 718.1802575107296)
+12-18-2025 11:34:29 - log: [PreviewInEditor] Peg 1, 3 Touch Move!
+12-18-2025 11:34:29 - log: [PreviewInEditor] TouchMove: current (362.1266094420601, 715.6652360515022), new world (376.4399141630902, 712.4549356223176)
+12-18-2025 11:34:29 - log: [PreviewInEditor] Peg 1, 3 Touch Move!
+12-18-2025 11:34:29 - log: [PreviewInEditor] TouchMove: current (362.1266094420601, 707.0772532188842), new world (376.4399141630902, 703.8669527896996)
+12-18-2025 11:34:29 - log: [PreviewInEditor] Peg 1, 3 Touch Move!
+12-18-2025 11:34:29 - log: [PreviewInEditor] TouchMove: current (362.1266094420601, 701.3519313304722), new world (376.4399141630902, 698.1416309012876)
+12-18-2025 11:34:29 - log: [PreviewInEditor] Peg 1, 3 Touch Move!
+12-18-2025 11:34:29 - log: [PreviewInEditor] TouchMove: current (362.1266094420601, 698.4892703862662), new world (376.4399141630902, 695.2789699570816)
+12-18-2025 11:34:29 - log: [PreviewInEditor] Peg 1, 3 Touch Move!
+12-18-2025 11:34:29 - log: [PreviewInEditor] TouchMove: current (362.1266094420601, 695.6266094420602), new world (376.4399141630902, 692.4163090128756)
+12-18-2025 11:34:29 - log: [PreviewInEditor] Peg 1, 3 Touch Move!
+12-18-2025 11:34:29 - log: [PreviewInEditor] TouchMove: current (362.1266094420601, 692.7639484978541), new world (376.4399141630902, 689.5536480686695)
+12-18-2025 11:34:29 - log: [PreviewInEditor] Peg 1, 3 Touch Move!
+12-18-2025 11:34:29 - log: [PreviewInEditor] TouchMove: current (362.1266094420601, 687.0386266094421), new world (376.4399141630902, 683.8283261802575)
+12-18-2025 11:34:29 - log: [PreviewInEditor] Peg 1, 3 Touch Move!
+12-18-2025 11:34:29 - log: [PreviewInEditor] TouchMove: current (364.9892703862661, 684.175965665236), new world (379.3025751072962, 680.9656652360514)
+12-18-2025 11:34:29 - log: [PreviewInEditor] Peg 1, 3 Touch Move!
+12-18-2025 11:34:29 - log: [PreviewInEditor] TouchMove: current (364.9892703862661, 678.4506437768241), new world (379.3025751072962, 675.2403433476395)
+12-18-2025 11:34:29 - log: [PreviewInEditor] Peg 1, 3 Touch Move!
+12-18-2025 11:34:29 - log: [PreviewInEditor] TouchMove: current (364.9892703862661, 675.5879828326181), new world (379.3025751072962, 672.3776824034335)
+12-18-2025 11:34:29 - log: [PreviewInEditor] Peg 1, 3 Touch Move!
+12-18-2025 11:34:29 - log: [PreviewInEditor] TouchMove: current (364.9892703862661, 672.725321888412), new world (379.3025751072962, 669.5150214592275)
+12-18-2025 11:34:29 - log: [PreviewInEditor] Peg 1, 3 Touch Move!
+12-18-2025 11:34:29 - log: [PreviewInEditor] TouchMove: current (364.9892703862661, 669.862660944206), new world (379.3025751072962, 666.6523605150214)
+12-18-2025 11:34:29 - log: [PreviewInEditor] Peg 1, 3 Touch Move!
+12-18-2025 11:34:29 - log: [PreviewInEditor] TouchMove: current (364.9892703862661, 667), new world (379.3025751072962, 663.7896995708154)
+12-18-2025 11:34:29 - log: [PreviewInEditor] Peg 1, 3 Touch Move!
+12-18-2025 11:34:29 - log: [PreviewInEditor] TouchMove: current (364.9892703862661, 664.1373390557941), new world (379.3025751072962, 660.9270386266095)
+12-18-2025 11:34:29 - log: [PreviewInEditor] Peg 1, 3 Touch Move!
+12-18-2025 11:34:29 - log: [PreviewInEditor] TouchMove: current (364.9892703862661, 661.2746781115881), new world (379.3025751072962, 658.0643776824035)
+12-18-2025 11:34:29 - log: [PreviewInEditor] Peg 1, 3 Touch End!
+12-18-2025 11:34:29 - log: [PreviewInEditor] TouchEnd: peg at (1, 3)
+12-18-2025 11:34:29 - log: [PreviewInEditor] TouchEnd: world pos (379.3025751072962, 658.0643776824035), target (3, 3)
+12-18-2025 11:34:29 - log: [PreviewInEditor] Valid jump from (1, 3) to (3, 3), eat (2, 3)
+12-18-2025 11:34:29 - log: [PreviewInEditor] Valid jump detected, executing...
+12-18-2025 11:34:29 - log: [PreviewInEditor] Executing jump: peg (1, 3) -> (3, 3), eat (2, 3)
+12-18-2025 11:34:29 - log: [PreviewInEditor] State saved. History size: 2, Step: 0
+12-18-2025 11:34:29 - log: [PreviewInEditor] Removing eaten peg at (2, 3)
+12-18-2025 11:34:29 - log: [PreviewInEditor] Moving peg from (1, 3) to (3, 3)
+12-18-2025 11:34:29 - warn: [PreviewInEditor] Step counter label not assignedError: [PreviewInEditor] Step counter label not assigned
+    at console.warn (/Applications/Cocos/Creator/3.8.8/CocosCreator.app/Contents/Resources/app.asar/node_modules/@sentry/core/src/utils-hoist/instrument/console.ts:40:14)
+    at BoardController.updateStepCounter (file:///Users/huixu/Documents/GitHub/BrainGames/temp/programming/packer-driver/targets/editor/chunks/8a/file:/Users/huixu/Documents/GitHub/BrainGames/assets/games/chess/scripts/BoardController.ts:150:21)
+    at file:///Users/huixu/Documents/GitHub/BrainGames/temp/programming/packer-driver/targets/editor/chunks/8a/file:/Users/huixu/Documents/GitHub/BrainGames/assets/games/chess/scripts/BoardController.ts:559:22
+    at CallFunc.execute (/Applications/Cocos/Creator/3.8.8/CocosCreator.app/Contents/Resources/resources/3d/engine/bin/.cache/dev/editor/bundled/index.js:251654:28)
+    at CallFunc.update (/Applications/Cocos/Creator/3.8.8/CocosCreator.app/Contents/Resources/resources/3d/engine/bin/.cache/dev/editor/bundled/index.js:251658:16)
+    at Sequence.update (/Applications/Cocos/Creator/3.8.8/CocosCreator.app/Contents/Resources/resources/3d/engine/bin/.cache/dev/editor/bundled/index.js:252189:23)
+    at Sequence.step (/Applications/Cocos/Creator/3.8.8/CocosCreator.app/Contents/Resources/resources/3d/engine/bin/.cache/dev/editor/bundled/index.js:252009:16)
+    at ActionManager.update (/Applications/Cocos/Creator/3.8.8/CocosCreator.app/Contents/Resources/resources/3d/engine/bin/.cache/dev/editor/bundled/index.js:253577:45)
+    at TweenSystem.update (/Applications/Cocos/Creator/3.8.8/CocosCreator.app/Contents/Resources/resources/3d/engine/bin/.cache/dev/editor/bundled/index.js:66989:28)
+    at Director.tick (/Applications/Cocos/Creator/3.8.8/CocosCreator.app/Contents/Resources/resources/3d/engine/bin/.cache/dev/editor/bundled/index.js:82971:34)
+    at Game._updateCallback (/Applications/Cocos/Creator/3.8.8/CocosCreator.app/Contents/Resources/resources/3d/engine/bin/.cache/dev/editor/bundled/index.js:84043:22)
+    at updateCallback (/Applications/Cocos/Creator/3.8.8/CocosCreator.app/Contents/Resources/resources/3d/engine/bin/.cache/dev/editor/bundled/index.js:86709:20)
+    at sentryWrapped (/Applications/Cocos/Creator/3.8.8/CocosCreator.app/Contents/Resources/app.asar/node_modules/@sentry/browser/src/helpers.ts:116:17)
+12-18-2025 11:34:29 - log: [PreviewInEditor] Jump completed. Step: 1, Board updated.
+12-18-2025 11:34:29 - log: [PreviewInEditor] Game state check: 31 pegs remaining
+12-18-2025 11:34:29 - log: [PreviewInEditor] Valid jump from (2, 1) to (2, 3), eat (2, 2)
+12-18-2025 11:34:29 - log: [PreviewInEditor] Found valid move from (2, 1) to (2, 3)

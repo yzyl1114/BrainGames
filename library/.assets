@@ -1,0 +1,28 @@
+{
+    "version": "1.0.1",
+    "data": {
+        "paths": [
+            "@launcher",
+            "@shared",
+            "games",
+            "@launcher/resources",
+            "@launcher/scenes",
+            "@launcher/scripts",
+            "@shared/prefabs",
+            "@shared/scripts",
+            "@shared/textures",
+            "games/chess",
+            "games/chess/resources",
+            "games/chess/scenes",
+            "games/chess/scripts",
+            "games/chess/scripts/BoardController.ts",
+            "games/chess/scripts/GameConfig.ts",
+            "games/chess/scripts/Peg.ts",
+            "games/chess/resources/Peg.prefab",
+            "games/chess/resources/check.png",
+            "games/chess/resources/cross.png",
+            "games/chess/resources/peg_diamond.png",
+            "games/chess/scenes/ChessGame.scene"
+        ]
+    }
+}

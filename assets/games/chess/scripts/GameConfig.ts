@@ -1,0 +1,61 @@
+// assets/games/chess/scripts/GameConfig.ts
+
+// 棋盘状态常量
+export const TILE_STATE = {
+    INVALID: -1, // 无效位置 | 棋盘外
+    EMPTY: 0,    // 空位
+    PEG: 1,      // 有棋子
+    ACTIVE_PEG: 2 // 激活棋子（被选中，虽然在 BoardController 中未使用，但保留）
+};
+
+// 棋盘尺寸
+export const BOARD_SIZE = 7;
+// 中心点坐标 (3, 3)
+export const CENTER_POS = { row: 3, col: 3 };
+
+// 关卡数据 (数组中包含对象，每个对象有 name 和 layout)
+// -1: 无效位置, 0: 空位, 1: 棋子
+export const LEVELS_DATA = [
+    // 关卡 0: 十字架 (传统起点布局)
+    { name: "十字架", layout: [
+        [-1, -1, 1, 1, 1, -1, -1],
+        [-1, -1, 1, 1, 1, -1, -1],
+        [1, 1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 0, 1, 1, 1], // 中心(3,3)空
+        [1, 1, 1, 1, 1, 1, 1],
+        [-1, -1, 1, 1, 1, -1, -1],
+        [-1, -1, 1, 1, 1, -1, -1],
+    ]},
+    // 关卡 1: 大十字
+    { name: "大十字", layout: [
+        [-1, -1, 0, 1, 0, -1, -1],
+        [-1, -1, 1, 1, 1, -1, -1],
+        [1, 1, 1, 0, 1, 1, 1],
+        [1, 1, 0, 0, 0, 1, 1],
+        [1, 1, 1, 0, 1, 1, 1],
+        [-1, -1, 1, 1, 1, -1, -1],
+        [-1, -1, 0, 1, 0, -1, -1],
+    ]},
+    // 关卡 2: 古字形
+    { name: "古字形", layout: [
+        [-1, -1, 1, 0, 1, -1, -1],
+        [-1, -1, 1, 0, 1, -1, -1],
+        [1, 1, 1, 0, 1, 1, 1],
+        [0, 0, 0, 1, 0, 0, 0],
+        [1, 1, 1, 0, 1, 1, 1],
+        [-1, -1, 1, 0, 1, -1, -1],
+        [-1, -1, 1, 0, 1, -1, -1],
+    ]},
+    // 更多关卡...
+];
+
+// 评价系统
+export function evaluateResult(remainingPegs: number, isCenterPeg: boolean): string {
+    if (remainingPegs === 1 && isCenterPeg) return "天才";
+    if (remainingPegs === 1) return "大师 (非中心)";
+    if (remainingPegs === 2) return "大师";
+    if (remainingPegs === 3) return "尖子";
+    if (remainingPegs === 4) return "聪明";
+    if (remainingPegs === 5) return "颇好";
+    return "还需努力";
+}
