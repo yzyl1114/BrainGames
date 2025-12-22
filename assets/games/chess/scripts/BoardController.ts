@@ -69,7 +69,17 @@ export class BoardController extends Component {
         // 1. 初始化UI（必须在其他逻辑之前）
         this.initUI();
         
-        // 2. 检查核心资源
+        // 2. 确保BoardRoot在UI上层
+        if (this.boardRoot && this.uiRoot) {
+            // 将BoardRoot移动到Canvas的最后一个子节点（最上层）
+            const canvas = find('Canvas');
+            if (canvas) {
+                this.boardRoot.parent = canvas;
+                this.boardRoot.setSiblingIndex(canvas.children.length - 1);
+            }
+        }
+
+        // 3. 检查核心资源
         if (!this.PegPrefab) {
             console.error("BoardController: PegPrefab is not assigned in the editor!");
             return;
@@ -83,7 +93,7 @@ export class BoardController extends Component {
             // 可以根据情况决定是否阻止游戏运行
         }
 
-        // 3. 加载关卡
+        // 4. 加载关卡
         this.loadLevel(this.currentLevelIndex); 
     }
 
@@ -100,6 +110,14 @@ export class BoardController extends Component {
         const canvas = find('Canvas');
         if (canvas) {
             this.uiRoot.parent = canvas;
+            this.uiRoot.setSiblingIndex(0); // 设置为第一个子节点
+        
+        const backgroundNode = this.uiRoot.getChildByPath('UIRoot/Background');
+        if (backgroundNode) {
+            backgroundNode.setSiblingIndex(0); // Background在GameUI内部也是第一个
+        }
+
+            console.log('[UI] GameUI inserted as first child of Canvas');            
         } else {
             // 备选方案：挂载到当前节点
             this.uiRoot.parent = this.node;
