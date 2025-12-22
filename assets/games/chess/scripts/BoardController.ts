@@ -1,6 +1,6 @@
 // assets/games/chess/scripts/BoardController.ts
 
-import { _decorator, Component, Node, Prefab, instantiate, UITransform, Vec3, v3, EventTouch, Label, tween, UIOpacity, Sprite, Color, Button, find } from 'cc';
+import { _decorator, Component, Node, Prefab, instantiate, UITransform, Vec3, v3, EventTouch, Label, tween, UIOpacity, Sprite, Color, Button, find, SpriteFrame } from 'cc';
 import { Peg } from './Peg';
 import { BOARD_SIZE, TILE_STATE, LEVELS_DATA, evaluateResult, CENTER_POS } from './GameConfig'; 
 
@@ -10,7 +10,6 @@ const TILE_SIZE = 90;
 
 @ccclass('BoardController')
 export class BoardController extends Component {
-
     @property(Prefab)
     public PegPrefab: Prefab = null; 
     
@@ -20,9 +19,17 @@ export class BoardController extends Component {
     @property(Node)
     public feedbackNode: Node = null; // 反馈节点（可选）
 
-    // ===== 预制体方案核心修改：只需绑定一个预制体 =====
     @property(Prefab)
     public gameUIPrefab: Prefab = null;
+
+    @property(SpriteFrame)
+    public boardTileSprite: SpriteFrame = null; // 棋盘格子图片
+
+    @property(SpriteFrame)
+    public boardBorderSprite: SpriteFrame = null; // 棋盘边框图片（可选）
+
+    // ===== 棋盘背景相关 =====
+    private boardTileNodes: Node[] = []; // 存储棋盘格子节点
 
     // ===== 所有UI组件将在代码中动态获取，不再需要编辑器拖拽绑定 =====
     private uiRoot: Node = null; // UI总根节点 (对应预制体中的 UIRoot)
@@ -198,13 +205,16 @@ export class BoardController extends Component {
         // 隐藏结算弹窗（如果正在显示）
         this.hideSettlementPanel();
 
-        this.boardRoot.destroyAllChildren();
+        this.boardRoot.destroyAllChildren();  
         
         this.activeNode = null;
         this.activePegRow = -1;
         this.activePegCol = -1;
         this.pegNodes.clear();
         
+        // 清空旧的棋盘节点数组
+        this.clearBoardBackground();
+
         // 重置游戏状态
         this.stepCount = 0;
         this.undoCount = 0;
@@ -243,7 +253,10 @@ export class BoardController extends Component {
         for (let i = 0; i < level.layout.length; i++) {
             this.boardState[i] = [...level.layout[i]];
         }
-        
+
+        // 生成棋盘背景
+        this.generateBoardBackground(levelIndex); 
+
         // 生成棋子
         for (let r = 0; r < BOARD_SIZE; r++) {
             for (let c = 0; c < BOARD_SIZE; c++) {
@@ -292,6 +305,103 @@ export class BoardController extends Component {
                 this.tipsLabel.node.active = false;
             })
             .start();
+    }
+
+    // ==================== 棋盘生成方法 ====================
+    private generateBoardBackground(levelIndex: number) {
+        // 清空旧的棋盘
+        this.clearBoardBackground();
+        
+        const level = LEVELS_DATA[levelIndex];
+        const tileSize = TILE_SIZE;
+        
+        // 遍历所有有效位置生成棋盘格子
+        for (let r = 0; r < BOARD_SIZE; r++) {
+            for (let c = 0; c < BOARD_SIZE; c++) {
+                // 只生成有效位置（非INVALID）
+                if (level.layout[r][c] !== TILE_STATE.INVALID) {
+                    this.createBoardTile(r, c, level.layout[r][c]);
+                }
+            }
+        }
+        
+        // 可选：添加棋盘边框
+        this.generateBoardBorder();
+        
+        console.log(`Board background generated for level ${levelIndex}`);
+    }
+
+    private createBoardTile(row: number, col: number, tileState: number) {
+        // 创建棋盘格子节点
+        const tileNode = new Node(`BoardTile_${row}_${col}`);
+        tileNode.parent = this.boardRoot;
+        
+        // 设置位置（与棋子位置相同）
+        const position = this.getPegLocalPosition(row, col);
+        tileNode.setPosition(position.x, position.y, -10); // Z轴在棋子后面
+        
+        // 添加Sprite组件
+        const sprite = tileNode.addComponent(Sprite);
+        if (this.boardTileSprite) {
+            sprite.spriteFrame = this.boardTileSprite;
+        }
+        
+        // 根据位置状态设置颜色
+        if (tileState === TILE_STATE.EMPTY) {
+            sprite.color = Color.fromHEX(new Color(), "#F0F0F0"); // 空位浅色
+        } else {
+            sprite.color = Color.fromHEX(new Color(), "#E8E8E8"); // 有棋位置稍深
+        }
+        
+        // 设置大小
+        let uiTransform = tileNode.getComponent(UITransform);
+        if (!uiTransform) {
+            uiTransform = tileNode.addComponent(UITransform);
+        }
+        uiTransform.setContentSize(TILE_SIZE * 0.9, TILE_SIZE * 0.9); // 稍小于棋子
+        
+        // 保存节点引用
+        this.boardTileNodes.push(tileNode);
+    }
+
+    private generateBoardBorder() {
+        if (!this.boardBorderSprite) return;
+        
+        const boardSize = TILE_SIZE * BOARD_SIZE;
+        const borderWidth = 10;
+        
+        // 生成四条边框
+        const borders = [
+            { name: "Border_Top", x: 0, y: boardSize/2 + borderWidth/2, width: boardSize + borderWidth*2, height: borderWidth },
+            { name: "Border_Bottom", x: 0, y: -boardSize/2 - borderWidth/2, width: boardSize + borderWidth*2, height: borderWidth },
+            { name: "Border_Left", x: -boardSize/2 - borderWidth/2, y: 0, width: borderWidth, height: boardSize },
+            { name: "Border_Right", x: boardSize/2 + borderWidth/2, y: 0, width: borderWidth, height: boardSize },
+        ];
+        
+        borders.forEach(border => {
+            const borderNode = new Node(border.name);
+            borderNode.parent = this.boardRoot;
+            borderNode.setPosition(border.x, border.y, -5);
+            
+            const sprite = borderNode.addComponent(Sprite);
+            sprite.spriteFrame = this.boardBorderSprite;
+            sprite.color = Color.fromHEX(new Color(), "#8B4513"); // 棕色边框
+            
+            const uiTransform = borderNode.addComponent(UITransform);
+            uiTransform.setContentSize(border.width, border.height);
+            
+            this.boardTileNodes.push(borderNode);
+        });
+    }
+
+    private clearBoardBackground() {
+        // 销毁所有棋盘格子节点
+        this.boardTileNodes.forEach(node => {
+            if (node && node.isValid) {
+                node.destroy();
+            }
+        });
+        this.boardTileNodes = [];
     }
 
     // ==================== 悔棋与历史记录系统 ====================
