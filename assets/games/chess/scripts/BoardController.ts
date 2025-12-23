@@ -28,6 +28,12 @@ export class BoardController extends Component {
     @property(SpriteFrame)
     public boardBorderSprite: SpriteFrame = null; // 棋盘边框图片（可选）
 
+    @property(Node)
+    public levelSelectionNode: Node = null; // 关卡选择页面节点
+    
+    @property(Button)
+    public backToLevelSelectButton: Button = null; // 返回关卡选择按钮
+
     // ===== 棋盘背景相关 =====
     private boardTileNodes: Node[] = []; // 存储棋盘格子节点
 
@@ -40,6 +46,7 @@ export class BoardController extends Component {
     private tipsLabel: Label = null;
     private retryButton: Button = null;
     private undoButton: Button = null;
+    private backButton: Button = null; // 返回按钮（在GameUI中）
 
     // 结算弹窗组件引用
     private settlementPanel: Node = null;
@@ -97,11 +104,32 @@ export class BoardController extends Component {
         }
         if (!this.uiRoot) {
             console.error("BoardController: UI failed to initialize!");
-            // 可以根据情况决定是否阻止游戏运行
+            return; // 添加return，避免后续错误
         }
 
-        // 4. 加载关卡
-        this.loadLevel(this.currentLevelIndex); 
+        // 4. 【重要修改】默认显示关卡选择页
+        if (this.levelSelectionNode) {
+            // 隐藏游戏UI和棋盘
+            if (this.uiRoot) {
+                this.uiRoot.active = false;
+            }
+            if (this.boardRoot) {
+                this.boardRoot.active = false;
+            }
+            
+            // 显示关卡选择页
+            this.levelSelectionNode.active = true;
+            
+            // 初始化关卡选择
+            const levelSelection = this.levelSelectionNode.getComponent('LevelSelection');
+            if (levelSelection && typeof levelSelection.show === 'function') {
+                levelSelection.show();
+            }
+        } else {
+            // 如果没有关卡选择页，直接加载第一关（向后兼容）
+            console.warn("LevelSelectionNode not assigned, loading default level");
+            this.loadLevel(this.currentLevelIndex);
+        }        
     }
 
     // ==================== UI 初始化与动态绑定 ====================
@@ -155,6 +183,7 @@ export class BoardController extends Component {
         this.tipsLabel = getComponent('UIRoot/TipsLabel', Label);
         this.retryButton = getComponent('UIRoot/ButtonContainer/RetryButton', Button);
         this.undoButton = getComponent('UIRoot/ButtonContainer/UndoButton', Button);
+        this.backButton = getComponent('UIRoot/BackButton', Button); // 假设在GameUI中添加了BackButton
 
         // 4. 动态查找并绑定结算弹窗组件
         this.settlementPanel = this.uiRoot.getChildByPath('UIRoot/SettlementPanel');
@@ -181,6 +210,9 @@ export class BoardController extends Component {
         if (this.settlementNextBtn) {
             this.settlementNextBtn.node.on(Button.EventType.CLICK, this.onSettlementNext, this);
         }
+        if (this.backButton) {
+            this.backButton.node.on(Button.EventType.CLICK, this.onBackToLevelSelect, this);
+        }
 
         // 6. 初始化UI状态
         if (this.tipsLabel) {
@@ -197,6 +229,22 @@ export class BoardController extends Component {
     public loadLevel(levelIndex: number) {
         console.log(`Loading level ${levelIndex}`);
         
+        // 保存当前关卡索引
+        this.currentLevelIndex = levelIndex;
+        
+        // 【修复3新增】确保游戏UI和棋盘显示
+        if (this.uiRoot) {
+            this.uiRoot.active = true;
+        }
+        if (this.boardRoot) {
+            this.boardRoot.active = true;
+        }
+        
+        // 【修复3新增】隐藏关卡选择页（如果显示）
+        if (this.levelSelectionNode) {
+            this.levelSelectionNode.active = false;
+        }
+
         if (!this.boardRoot) {
             console.error("Critical nodes missing, cannot load level");
             return;
@@ -270,6 +318,75 @@ export class BoardController extends Component {
         this.saveCurrentState();
         
         console.log(`Level ${levelIndex} loaded: ${level.name}, pegs count: ${this.countPegs()}, max undo: ${this.maxUndoCount}`);
+    }
+
+    // 添加返回关卡选择的方法
+    private onBackToLevelSelect() {
+        console.log("Returning to level selection");
+        
+        // 隐藏游戏UI
+        if (this.uiRoot) {
+            this.uiRoot.active = false;
+        }
+        
+        // 隐藏棋盘
+        if (this.boardRoot) {
+            this.boardRoot.active = false;
+        }
+        
+        // 显示关卡选择页
+        if (this.levelSelectionNode) {
+            this.levelSelectionNode.active = true;
+            
+            // 调用LevelSelection的show方法刷新数据
+            const levelSelection = this.levelSelectionNode.getComponent('LevelSelection');
+            if (levelSelection && typeof levelSelection.show === 'function') {
+                levelSelection.show();
+            }
+            
+            // 【新增】隐藏结算弹窗（如果在显示）
+            this.hideSettlementPanel();
+        } else {
+            console.error("LevelSelectionNode not assigned!");
+        }
+    }
+
+    // 添加从结算弹窗返回关卡选择的方法
+    private onSettlementBackToLevelSelect() {
+        console.log("从结算弹窗返回关卡选择");
+        this.restoreGameUIAfterSettlement();
+        this.hideSettlementPanel();
+        this.onBackToLevelSelect(); // 调用相同的返回方法
+    }
+
+    // 添加更新关卡进度的方法
+    private updateLevelProgress(levelIndex: number, score: string, stepCount: number, isCenterPeg: boolean = false) {
+        // 如果有 LevelSelection 组件，调用其更新方法
+        if (this.levelSelectionNode) {
+            const levelSelection = this.levelSelectionNode.getComponent('LevelSelection');
+            if (levelSelection && typeof levelSelection.updateLevelProgress === 'function') {
+                levelSelection.updateLevelProgress(levelIndex, score, stepCount);
+            }
+        }
+        
+        // 同时保存到本地存储
+        try {
+            const progress = {
+                levelIndex: levelIndex,
+                score: score,
+                stepCount: stepCount,
+                isCenterPeg: isCenterPeg,
+                completed: true,
+                timestamp: Date.now()
+            };
+            
+            // 保存单个关卡的进度
+            localStorage.setItem(`diamond_chess_level_${levelIndex}`, JSON.stringify(progress));
+            
+            console.log(`Level ${levelIndex} progress saved: ${score}, ${stepCount} steps`);
+        } catch (e) {
+            console.error("Failed to save level progress:", e);
+        }
     }
 
     // ==================== 计步器与提示系统 ====================
@@ -600,7 +717,12 @@ export class BoardController extends Component {
             const nextBtnLabel = this.settlementNextBtn.node.getComponentInChildren(Label);
             if (nextBtnLabel) {
                 if (isLastLevel) {
-                    nextBtnLabel.string = "已是最后一关";
+                    nextBtnLabel.string = "返回关卡选择";
+                    // 修改按钮点击事件
+                    this.settlementNextBtn.node.off(Button.EventType.CLICK);
+                    this.settlementNextBtn.node.on(Button.EventType.CLICK, () => {
+                        this.onSettlementBackToLevelSelect();
+                    }, this);                    
                 } else if (!isVictory) {
                     nextBtnLabel.string = "未完成";
                 } else {
@@ -1018,6 +1140,9 @@ export class BoardController extends Component {
             
             console.log(`[GameState] 胜利详情：中心=${isCenter}, 评价=${result}, 步数=${this.stepCount}`);
             
+            // 更新关卡进度
+            this.updateLevelProgress(this.currentLevelIndex, result, this.stepCount, isCenter);
+        
             // 显示胜利结算弹窗
             this.showSettlementPanel(true, remainingPegs, result, this.stepCount, isCenter);
             return;
