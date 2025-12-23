@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Prefab, instantiate, Label, Button, Sprite, Color, ScrollView, UITransform, Layout, SpriteFrame, find } from 'cc';
+import { _decorator, Component, Node, Prefab, instantiate, Label, Button, Sprite, Color, ScrollView, UITransform, Layout, SpriteFrame, find, Size } from 'cc';
 import { LEVELS_DATA } from './GameConfig';
 
 const { ccclass, property } = _decorator;
@@ -115,36 +115,96 @@ export class LevelSelection extends Component {
     }
     
     private initUI() {
+        console.log('初始化关卡选择UI');
+        
+        // 获取屏幕尺寸
+        const screenWidth = 750;
+        const screenHeight = 1334;
+        
+        // 1. 设置标题位置
         if (this.titleLabel) {
             this.titleLabel.string = `钻石棋 - 关卡选择`;
+            this.titleLabel.node.setPosition(screenWidth/2, -100, 0);
         }
         
-        // 设置容器布局
+        // 2. 设置ScrollView位置和尺寸
+        if (this.scrollView && this.scrollView.node) {
+            const scrollTransform = this.scrollView.node.getComponent(UITransform);
+            if (scrollTransform) {
+                this.scrollView.node.setPosition(25, -200, 0);
+                scrollTransform.width = 700;
+                scrollTransform.height = 1000;
+            }
+            
+            if (this.levelContainer) {
+                this.scrollView.content = this.levelContainer;
+            }
+        }
+        
+        // 3. 设置LevelContainer布局
         if (this.levelContainer) {
             const layout = this.levelContainer.getComponent(Layout) || this.levelContainer.addComponent(Layout);
+            
             layout.type = Layout.Type.GRID;
             layout.resizeMode = Layout.ResizeMode.CONTAINER;
+            
+            const containerWidth = 700;
+            const cardsPerRow = 5;
+            
+            // 【修正】重新计算：总宽度 = 左边距 + 卡片总宽度 + 卡片间距 + 右边距
+            // 设：卡片宽度 = W，水平间距 = S，左右内边距 = P
+            // 公式：P + (W×5) + (S×4) + P = 700
+            
+            // 我们希望：W = 120，S = 15，P = 20
+            // 验证：20 + (120×5=600) + (15×4=60) + 20 = 700 ✓
+            
+            const cardWidth = 120;
+            const cardHeight = cardWidth * 1.2; // 144
+            
             layout.paddingTop = 20;
             layout.paddingBottom = 20;
-            layout.paddingLeft = 20;
-            layout.paddingRight = 20;
-            layout.spacingX = 20;
-            layout.spacingY = 20;
-            layout.cellSize = { width: 150, height: 180 }; // 卡片尺寸
+            layout.paddingLeft = 20;    // 增加左边距
+            layout.paddingRight = 20;   // 增加右边距
+            layout.spacingX = 15;       // 保持15
+            layout.spacingY = 15;       // 保持15
+            
+            layout.cellSize = new Size(cardWidth, cardHeight);
+            
             layout.startAxis = Layout.AxisDirection.HORIZONTAL;
             layout.constraint = Layout.Constraint.FIXED_ROW;
-            layout.constraintNum = 3; // 每行3个
+            layout.constraintNum = cardsPerRow;
+            layout.verticalDirection = Layout.VerticalDirection.TOP_TO_BOTTOM;
+            layout.horizontalDirection = Layout.HorizontalDirection.LEFT_TO_RIGHT;
+            
+            console.log('卡片布局设置:', {
+                每行数量: cardsPerRow,
+                卡片尺寸: `${cardWidth}×${cardHeight}`,
+                间距: '15px',
+                内边距: '20px'
+            });
         }
     }
-    
+
     private generateLevelCards() {
+        console.log('开始生成关卡卡片');
+        console.log('总关卡数:', LEVELS_DATA?.length);
+        
         if (!this.levelCardPrefab || !this.levelContainer) {
-            console.error("Level card prefab or container not assigned");
+            console.error("错误：Level card prefab 或 Level container 未赋值");
             return;
         }
         
         this.levelContainer.destroyAllChildren();
         
+        // 检查关卡数据
+        if (!LEVELS_DATA || LEVELS_DATA.length === 0) {
+            console.error('错误：LEVELS_DATA为空或未定义！请检查GameConfig.ts文件');
+            return;
+        }
+
+        console.log('=== 卡片生成详情 ===');
+        
+        // 生成所有卡片
         for (let i = 0; i < LEVELS_DATA.length; i++) {
             const levelData = this.levelDataList[i] || {
                 levelIndex: i,
@@ -158,42 +218,48 @@ export class LevelSelection extends Component {
             cardNode.parent = this.levelContainer;
             cardNode.name = `LevelCard_${i}`;
             
-            // 设置卡片数据
+            console.log(`生成卡片 ${i+1}，名称: LevelCard_${i}`);
+
             this.setupLevelCard(cardNode, levelData);
         }
         
-        // 更新容器尺寸
-        this.updateContainerSize();
+        console.log(`已生成 ${LEVELS_DATA.length} 个关卡卡片`);
+        
+        // 延迟更新布局并计算容器高度
+        this.scheduleOnce(() => {
+            this.updateContainerSize(); 
+        }, 0.1);
     }
     
     private setupLevelCard(cardNode: Node, levelData: LevelData) {
         // 获取卡片组件
         const levelIndexLabel = cardNode.getChildByPath('LevelIndex')?.getComponent(Label);
-        const levelNameLabel = cardNode.getChildByPath('LevelName')?.getComponent(Label);
-        const scoreLabel = cardNode.getChildByPath('Score')?.getComponent(Label);
+        const scoreLabel = cardNode.getChildByPath('Score')?.getComponent(Label); // 保留用于显示评价
         const lockIcon = cardNode.getChildByPath('LockIcon');
         const completedIcon = cardNode.getChildByPath('CompletedIcon');
-        const cardBg = cardNode.getComponent(Sprite);
+        const cardBg = cardNode.getComponent(Sprite) || 
+                    cardNode.getChildByPath('Background')?.getComponent(Sprite);
         
         const levelIndex = levelData.levelIndex;
-        const levelInfo = LEVELS_DATA[levelIndex];
         
-        // 设置文本
+        // 【修改】只设置关卡序号，去掉关卡名称
         if (levelIndexLabel) {
-            levelIndexLabel.string = `第${levelIndex + 1}关`;
+            levelIndexLabel.string = `${levelIndex + 1}`; // 只显示数字，如"1"
+            levelIndexLabel.fontSize = 36; // 可以调大一些
         }
         
-        if (levelNameLabel) {
-            levelNameLabel.string = levelInfo?.name || `关卡 ${levelIndex + 1}`;
-        }
-        
+        // 【修改】已完成的评价放在下方
         if (scoreLabel) {
             if (levelData.isCompleted) {
-                scoreLabel.string = `${levelData.bestScore}\n步数: ${levelData.stepCount}`;
+                scoreLabel.string = `${levelData.bestScore}`; // 只显示评价，如"天才"
+                scoreLabel.fontSize = 20;
                 scoreLabel.color = Color.GREEN;
+                scoreLabel.node.active = true; // 确保显示
             } else {
                 scoreLabel.string = levelData.isUnlocked ? "未完成" : "未解锁";
+                scoreLabel.fontSize = 16;
                 scoreLabel.color = levelData.isUnlocked ? Color.WHITE : Color.GRAY;
+                scoreLabel.node.active = true;
             }
         }
         
@@ -233,18 +299,36 @@ export class LevelSelection extends Component {
         if (!this.levelContainer) return;
         
         const layout = this.levelContainer.getComponent(Layout);
+        if (!layout) return;
+        
+        layout.updateLayout();
+        
+        // 计算容器高度
         const totalCards = LEVELS_DATA.length;
-        const rowCount = Math.ceil(totalCards / 3); // 每行3个
+        const cardsPerRow = layout.constraintNum || 5; // 改为从布局获取
+        const rows = Math.ceil(totalCards / cardsPerRow);
+        const cellHeight = layout.cellSize.height;
+        const spacingY = layout.spacingY;
+        const paddingTop = layout.paddingTop;
+        const paddingBottom = layout.paddingBottom;
+        
+        const totalHeight = paddingTop + paddingBottom + (rows * cellHeight) + ((rows - 1) * spacingY);
         
         const uiTransform = this.levelContainer.getComponent(UITransform);
-        if (uiTransform && layout) {
-            const cellHeight = layout.cellSize.height;
-            const spacingY = layout.spacingY;
-            const paddingTop = layout.paddingTop;
-            const paddingBottom = layout.paddingBottom;
-            
-            const totalHeight = paddingTop + paddingBottom + (rowCount * cellHeight) + ((rowCount - 1) * spacingY);
+        if (uiTransform) {
             uiTransform.height = totalHeight;
+            console.log(`容器信息:`, {
+                总卡片: totalCards,
+                每行: cardsPerRow,
+                行数: rows,
+                卡片高: cellHeight,
+                容器高: totalHeight
+            });
+        }
+        
+        // 滚动到顶部
+        if (this.scrollView) {
+            this.scrollView.scrollToTop();
         }
     }
     
@@ -282,7 +366,7 @@ export class LevelSelection extends Component {
         this.node.active = false;
         
         // 查找游戏控制器并加载关卡
-        const boardController = find('Canvas/GameManager')?.getComponent('BoardController');
+        const boardController = find('Canvas/GameManager')?.getComponent('BoardController') as any;
         if (boardController) {
             // 调用游戏控制器的加载关卡方法
             boardController.loadLevel(levelIndex);
