@@ -1,5 +1,6 @@
 // assets/games/chess/scripts/BoardController.ts
 
+import { LevelSelection } from './LevelSelection';
 import { _decorator, Component, Node, Prefab, instantiate, UITransform, Vec3, v3, EventTouch, Label, tween, UIOpacity, Sprite, Color, Button, find, SpriteFrame } from 'cc';
 import { Peg } from './Peg';
 import { BOARD_SIZE, TILE_STATE, LEVELS_DATA, evaluateResult, CENTER_POS } from './GameConfig'; 
@@ -31,8 +32,8 @@ export class BoardController extends Component {
     @property(Node)
     public levelSelectionNode: Node = null; // 关卡选择页面节点
     
-    @property(Button)
-    public backToLevelSelectButton: Button = null; // 返回关卡选择按钮
+    // @property(Button)
+    // public backToLevelSelectButton: Button = null; 
 
     // ===== 棋盘背景相关 =====
     private boardTileNodes: Node[] = []; // 存储棋盘格子节点
@@ -121,8 +122,8 @@ export class BoardController extends Component {
             this.levelSelectionNode.active = true;
             
             // 初始化关卡选择
-            const levelSelection = this.levelSelectionNode.getComponent('LevelSelection');
-            if (levelSelection && typeof levelSelection.show === 'function') {
+            const levelSelection = this.levelSelectionNode.getComponent(LevelSelection);
+            if (levelSelection && levelSelection.show) {
                 levelSelection.show();
             }
         } else {
@@ -146,12 +147,12 @@ export class BoardController extends Component {
         if (canvas) {
             this.uiRoot.parent = canvas;
             this.uiRoot.setSiblingIndex(0); // 设置为第一个子节点
-        
-        const backgroundNode = this.uiRoot.getChildByPath('UIRoot/Background');
-        if (backgroundNode) {
-            backgroundNode.setSiblingIndex(0); // Background在GameUI内部也是第一个
-        }
-
+            
+            const backgroundNode = this.uiRoot.getChildByPath('UIRoot/Background');
+            if (backgroundNode) {
+                backgroundNode.setSiblingIndex(0); // Background在GameUI内部也是第一个
+            }
+            
             console.log('[UI] GameUI inserted as first child of Canvas');            
         } else {
             // 备选方案：挂载到当前节点
@@ -183,7 +184,9 @@ export class BoardController extends Component {
         this.tipsLabel = getComponent('UIRoot/TipsLabel', Label);
         this.retryButton = getComponent('UIRoot/ButtonContainer/RetryButton', Button);
         this.undoButton = getComponent('UIRoot/ButtonContainer/UndoButton', Button);
-        this.backButton = getComponent('UIRoot/BackButton', Button); // 假设在GameUI中添加了BackButton
+        
+        // 【修改这里】直接查找BackButton，而不是通过属性绑定
+        this.backButton = getComponent('UIRoot/BackButton', Button); 
 
         // 4. 动态查找并绑定结算弹窗组件
         this.settlementPanel = this.uiRoot.getChildByPath('UIRoot/SettlementPanel');
@@ -210,8 +213,14 @@ export class BoardController extends Component {
         if (this.settlementNextBtn) {
             this.settlementNextBtn.node.on(Button.EventType.CLICK, this.onSettlementNext, this);
         }
+        
+        // 【关键修改】动态绑定BackButton点击事件
         if (this.backButton) {
+            console.log('[UI] BackButton found, binding click event');
+            this.backButton.node.off(Button.EventType.CLICK); // 先移除旧的事件
             this.backButton.node.on(Button.EventType.CLICK, this.onBackToLevelSelect, this);
+        } else {
+            console.warn('[UI] BackButton not found in UI prefab!');
         }
 
         // 6. 初始化UI状态
@@ -339,12 +348,11 @@ export class BoardController extends Component {
             this.levelSelectionNode.active = true;
             
             // 调用LevelSelection的show方法刷新数据
-            const levelSelection = this.levelSelectionNode.getComponent('LevelSelection');
-            if (levelSelection && typeof levelSelection.show === 'function') {
+            const levelSelection = this.levelSelectionNode.getComponent(LevelSelection);
+            if (levelSelection && levelSelection.show) {
                 levelSelection.show();
             }
-            
-            // 【新增】隐藏结算弹窗（如果在显示）
+            // 隐藏结算弹窗（如果在显示）
             this.hideSettlementPanel();
         } else {
             console.error("LevelSelectionNode not assigned!");
@@ -363,8 +371,8 @@ export class BoardController extends Component {
     private updateLevelProgress(levelIndex: number, score: string, stepCount: number, isCenterPeg: boolean = false) {
         // 如果有 LevelSelection 组件，调用其更新方法
         if (this.levelSelectionNode) {
-            const levelSelection = this.levelSelectionNode.getComponent('LevelSelection');
-            if (levelSelection && typeof levelSelection.updateLevelProgress === 'function') {
+            const levelSelection = this.levelSelectionNode.getComponent(LevelSelection);
+            if (levelSelection && levelSelection.updateLevelProgress) {
                 levelSelection.updateLevelProgress(levelIndex, score, stepCount);
             }
         }
