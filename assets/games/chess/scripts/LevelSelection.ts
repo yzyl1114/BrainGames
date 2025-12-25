@@ -115,7 +115,7 @@ export class LevelSelection extends Component {
     }
     
     private initUI() {
-        console.log('初始化关卡选择UI - 中心锚点体系');
+        console.log('初始化关卡选择UI - 使用LevelCard实际尺寸');
         
         // 屏幕尺寸（中心坐标系）
         const screenWidth = 750;
@@ -125,29 +125,23 @@ export class LevelSelection extends Component {
         if (this.titleLabel) {
             this.titleLabel.string = `钻石棋 - 关卡选择`;
             
-            // 确保标题使用中心锚点
             const titleTransform = this.titleLabel.node.getComponent(UITransform);
             if (titleTransform) {
                 titleTransform.setAnchorPoint(0.5, 0.5);
             }
-            // 中心坐标系：Y轴向上为正，标题在屏幕上部
-            // 屏幕中心是(0,0)，向上500px到屏幕顶部附近
-            this.titleLabel.node.setPosition(0, 500, 0);
+            this.titleLabel.node.setPosition(0, 550, 0);
         }
         
         // 2. 设置ScrollView位置和尺寸
         if (this.scrollView && this.scrollView.node) {
             const scrollTransform = this.scrollView.node.getComponent(UITransform);
             if (scrollTransform) {
-                // 改为中心锚点
                 scrollTransform.setAnchorPoint(0.5, 0.5);
-                // 位置：在标题下方（Y轴向下为负）
-                // 从中心向下150px（标题在+500，这里在-150）
-                this.scrollView.node.setPosition(0, -150, 0);
+                this.scrollView.node.setPosition(0, -50, 0);
                 
-                // 尺寸
-                scrollTransform.width = 700;
-                scrollTransform.height = 900;
+                // 【可选】如果需要更宽，可以增加ScrollView宽度
+                scrollTransform.width = 720; // 从700增加到720
+                scrollTransform.height = 1000;
                 
                 console.log('ScrollView设置:', {
                     位置: this.scrollView.node.position,
@@ -155,7 +149,6 @@ export class LevelSelection extends Component {
                 });
             }
             
-            // 设置ScrollView内容
             if (this.levelContainer) {
                 this.scrollView.content = this.levelContainer;
             }
@@ -163,38 +156,55 @@ export class LevelSelection extends Component {
         
         // 3. 设置LevelContainer布局
         if (this.levelContainer) {
-            // 确保LevelContainer使用中心锚点
             const uiTransform = this.levelContainer.getComponent(UITransform);
             if (uiTransform) {
                 uiTransform.setAnchorPoint(0.5, 0.5);
                 this.levelContainer.setPosition(0, 0, 0);
             }
             
-            // Layout设置 - 每行5个卡片
             const layout = this.levelContainer.getComponent(Layout) || this.levelContainer.addComponent(Layout);
             
             layout.type = Layout.Type.GRID;
             layout.resizeMode = Layout.ResizeMode.CONTAINER;
             
-            const containerWidth = 700;
             const cardsPerRow = 5;
             
-            // 卡片尺寸计算
-            const cardWidth = 120;
-            const cardHeight = cardWidth * 1.2; // 144
+            // 【关键修改】使用LevelCard预制体的实际尺寸
+            const cardWidth = 100;   // LevelCard预制体宽度
+            const cardHeight = 100;  // LevelCard预制体高度
             
-            // 内边距和间距
+            // 计算每行5个是否合适
+            const containerWidth = 720; // 或720，如果ScrollView加宽了
+            const totalCardWidth = cardWidth * cardsPerRow;
+            const totalSpacing = 20 * (cardsPerRow - 1); // 假设间距20
+            const totalPadding = 30 * 2; // 左右内边距
+            
+            const neededWidth = totalPadding + totalCardWidth + totalSpacing;
+            console.log(`布局计算: 需要宽度=${neededWidth}, 容器宽度=${containerWidth}`);
+            
+            if (neededWidth > containerWidth) {
+                console.warn(`警告：每行${cardsPerRow}个卡片需要${neededWidth}宽度，但容器只有${containerWidth}`);
+                // 可以自动调整间距或内边距
+                const availableSpace = containerWidth - totalPadding - totalCardWidth;
+                const spacing = availableSpace / (cardsPerRow - 1);
+                
+                layout.paddingLeft = 15;
+                layout.paddingRight = 15;
+                layout.spacingX = Math.max(10, spacing); // 最小间距10
+            } else {
+                // 使用合适的间距
+                layout.paddingLeft = 20;
+                layout.paddingRight = 20;
+                layout.spacingX = 20;
+            }
+            
             layout.paddingTop = 30;
             layout.paddingBottom = 30;
-            layout.paddingLeft = 20;    // 左边距
-            layout.paddingRight = 20;   // 右边距
-            layout.spacingX = 15;       // 水平间距
-            layout.spacingY = 15;       // 垂直间距
+            layout.spacingY = 20;
             
-            // 卡片尺寸
+            // 设置卡片尺寸
             layout.cellSize = new Size(cardWidth, cardHeight);
             
-            // 排列方向
             layout.startAxis = Layout.AxisDirection.HORIZONTAL;
             layout.constraint = Layout.Constraint.FIXED_ROW;
             layout.constraintNum = cardsPerRow;
@@ -202,10 +212,11 @@ export class LevelSelection extends Component {
             layout.horizontalDirection = Layout.HorizontalDirection.LEFT_TO_RIGHT;
             
             console.log('卡片布局设置:', {
+                卡片实际尺寸: '100×100',
                 每行数量: cardsPerRow,
-                卡片尺寸: `${cardWidth}×${cardHeight}`,
-                内边距: '30/20/30/20 (上/左/下/右)',
-                间距: '15px'
+                内边距: `${layout.paddingTop}/${layout.paddingLeft}/${layout.paddingBottom}/${layout.paddingRight}`,
+                水平间距: layout.spacingX,
+                垂直间距: layout.spacingY
             });
         }
     }
