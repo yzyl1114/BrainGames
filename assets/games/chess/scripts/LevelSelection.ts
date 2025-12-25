@@ -131,16 +131,26 @@ export class LevelSelection extends Component {
             this.titleLabel.node.setPosition(0, 550, 0);
         }
         
-        // 2. 设置ScrollView
+        // 2. 【关键修改】设置ScrollView和容器的正确位置
         if (this.scrollView && this.scrollView.node) {
             const scrollTransform = this.scrollView.node.getComponent(UITransform);
             if (scrollTransform) {
                 scrollTransform.setAnchorPoint(0.5, 0.5);
-                this.scrollView.node.setPosition(0, -50, 0);
+                
+                // 【重要】设置ScrollView在屏幕中间偏下
+                this.scrollView.node.setPosition(0, -100, 0); // 向下移动一些
+                
                 scrollTransform.width = 720;
-                scrollTransform.height = 1000;
+                scrollTransform.height = 800; // 【减小高度】给标题留空间
+                
+                console.log('ScrollView设置:', {
+                    位置: this.scrollView.node.position,
+                    尺寸: `${scrollTransform.width}×${scrollTransform.height}`,
+                    锚点: `(${scrollTransform.anchorX}, ${scrollTransform.anchorY})`
+                });
             }
             
+            // 【关键】确保content正确设置
             if (this.levelContainer) {
                 this.scrollView.content = this.levelContainer;
             }
@@ -148,7 +158,7 @@ export class LevelSelection extends Component {
         
         // 3. 确保LevelContainer在正确位置
         if (this.levelContainer) {
-            // 确保位置正确
+            // 【重要】LevelContainer应该位于ScrollView的content区域顶部
             this.levelContainer.setPosition(0, 0, 0);
             
             // 移除所有Layout组件
@@ -165,18 +175,35 @@ export class LevelSelection extends Component {
             
             uiTransform.setAnchorPoint(0.5, 0.5);
             
-            // 【关键修改】设置合适的初始尺寸
-            // view节点的宽度是700，我们要适应它
-            uiTransform.setContentSize(700, 1000); // 宽度700，高度先设大一点
+            // 【修改】设置合理的初始尺寸
+            uiTransform.setContentSize(700, 400); // 高度先设小一点，后面会根据卡片数量调整
             
             // 【关键】确保LevelContainer的父节点位置正确
             const parentNode = this.levelContainer.parent;
             if (parentNode && parentNode.name === 'view') {
                 parentNode.setPosition(0, 0, 0);
+                
+                const parentTransform = parentNode.getComponent(UITransform);
+                if (parentTransform) {
+                    console.log('view节点信息:', {
+                        尺寸: `${parentTransform.width}×${parentTransform.height}`,
+                        锚点: `(${parentTransform.anchorX}, ${parentTransform.anchorY})`,
+                        位置: parentNode.position
+                    });
+                    
+                    // 确保view节点的尺寸正确
+                    parentTransform.setContentSize(700, 800);
+                    parentTransform.setAnchorPoint(0.5, 0.5);
+                }
+                
                 console.log('已设置view节点位置为(0, 0, 0)');
             }
             
-            console.log('LevelContainer初始化完成，尺寸:', uiTransform.contentSize);
+            console.log('LevelContainer初始化完成:', {
+                尺寸: uiTransform.contentSize,
+                锚点: `(${uiTransform.anchorX}, ${uiTransform.anchorY})`,
+                位置: this.levelContainer.position
+            });
         }
     }
 
@@ -351,19 +378,97 @@ export class LevelSelection extends Component {
         console.log('紧急修复完成');
     }
 
+    private testSimpleLayout() {
+        console.log('=== 测试简单布局 ===');
+        
+        if (!this.levelContainer) return;
+        
+        const children = this.levelContainer.children;
+        if (children.length === 0) return;
+        
+        // 1. 先详细检查第一个卡片的尺寸和缩放
+        console.log('=== 卡片详细检查 ===');
+        if (children.length > 0) {
+            const firstCard = children[0];
+            const transform = firstCard.getComponent(UITransform);
+            console.log('第一个卡片信息:', {
+                位置: firstCard.position,
+                世界位置: firstCard.worldPosition,
+                局部尺寸: transform?.contentSize,
+                世界尺寸: transform ? `${transform.width * firstCard.scale.x}×${transform.height * firstCard.scale.y}` : '无',
+                缩放: firstCard.scale,
+                旋转: firstCard.rotation,
+                锚点: transform ? `(${transform.anchorX}, ${transform.anchorY})` : '无'
+            });
+            
+            // 检查所有子节点
+            console.log('卡片子节点:');
+            firstCard.children.forEach((child, index) => {
+                const childTransform = child.getComponent(UITransform);
+                console.log(`  子节点[${index}] ${child.name}:`, {
+                    尺寸: childTransform?.contentSize,
+                    位置: child.position,
+                    缩放: child.scale
+                });
+            });
+        }
+        
+        // 2. 使用更大的间距测试
+        console.log('=== 使用大间距测试 ===');
+        const positions = [
+            { x: -300, y: 0 },  // 第1个 - 间距200
+            { x: -100, y: 0 },  // 第2个  
+            { x: 100, y: 0 },   // 第3个
+            { x: 300, y: 0 },   // 第4个
+            { x: 500, y: 0 }    // 第5个
+        ];
+        
+        for (let i = 0; i < children.length; i++) {
+            const card = children[i];
+            if (i < positions.length) {
+                card.setPosition(positions[i].x, positions[i].y, 0);
+                
+                // 强制重置缩放
+                card.setScale(1, 1, 1);
+                
+                // 强制设置卡片尺寸
+                const transform = card.getComponent(UITransform);
+                if (transform) {
+                    transform.setContentSize(80, 80);
+                    transform.setAnchorPoint(0.5, 0.5);
+                }
+                
+                console.log(`测试大间距卡片 ${i}: 位置(${positions[i].x}, ${positions[i].y})`);
+            }
+        }
+        
+        console.log('大间距测试完成');
+        
+        // 3. 检查卡片实际渲染范围
+        setTimeout(() => {
+            console.log('=== 渲染后检查 ===');
+            for (let i = 0; i < Math.min(3, children.length); i++) {
+                const card = children[i];
+                const worldPos = card.worldPosition;
+                console.log(`卡片 ${i}: 世界位置(${worldPos.x.toFixed(1)}, ${worldPos.y.toFixed(1)})`);
+                
+                // 计算卡片四个角的坐标
+                const transform = card.getComponent(UITransform);
+                if (transform) {
+                    const halfWidth = transform.width * card.scale.x / 2;
+                    const halfHeight = transform.height * card.scale.y / 2;
+                    console.log(`  渲染范围: X[${worldPos.x - halfWidth} ~ ${worldPos.x + halfWidth}], Y[${worldPos.y - halfHeight} ~ ${worldPos.y + halfHeight}]`);
+                }
+            }
+        }, 100);
+    }
+
     private generateLevelCards() {
         console.log('=== 开始生成关卡卡片 ===');
         
         if (!this.levelCardPrefab || !this.levelContainer) {
             console.error("缺少必要的组件");
             return;
-        }
-        
-        // 【关键】移除Layout组件，完全使用手动布局
-        const layout = this.levelContainer.getComponent(Layout);
-        if (layout) {
-            console.log('移除Layout组件，使用手动布局');
-            layout.destroy();
         }
         
         // 清空现有卡片
@@ -386,26 +491,24 @@ export class LevelSelection extends Component {
             cardNode.parent = this.levelContainer;
             cardNode.name = `LevelCard_${i}`;
             
-            // 确保卡片有正确的UITransform
-            let cardTransform = cardNode.getComponent(UITransform);
-            if (!cardTransform) {
-                cardTransform = cardNode.addComponent(UITransform);
-            }
-            cardTransform.setContentSize(100, 100);
-            cardTransform.setAnchorPoint(0.5, 0.5);
+            // 只确保缩放正确
+            cardNode.setScale(1, 1, 1);
+            
+            console.log(`卡片 ${i} 生成完成`);
             
             this.setupLevelCard(cardNode, levelData);
         }
         
         console.log(`已生成 ${LEVELS_DATA.length} 个关卡卡片`);
         
-        // 【关键】使用手动网格布局
+        // 改回正式布局方法
         setTimeout(() => {
             this.manualGridLayout();
+            // this.testSimpleLayout(); // 注释掉测试布局
         }, 100);
     }
 
-    // 【新增】纯手动网格布局方法
+    // 纯手动网格布局方法
     private manualGridLayout() {
         console.log('执行手动网格布局...');
         
@@ -414,42 +517,49 @@ export class LevelSelection extends Component {
         const children = this.levelContainer.children;
         if (children.length === 0) return;
         
-        // 布局参数
-        const cardsPerRow = 5;           // 每行5个
-        const cardWidth = 100;           // 卡片宽度
-        const cardHeight = 100;          // 卡片高度
-        const spacingX = 36;             // 水平间距
-        const spacingY = 20;             // 垂直间距
-        const paddingLeft = 36;          // 左内边距
-        const paddingRight = 36;         // 右内边距
-        const paddingTop = 30;           // 上内边距
-        const paddingBottom = 30;        // 下内边距
+        // 布局参数 - 使用实际卡片尺寸
+        const cardsPerRow = 5;
+        const cardWidth = 80;          // 卡片实际宽度（已在预制体中设置）
+        const cardHeight = 80;         // 卡片实际高度
+        const spacingX = 25;           // 水平间距
+        const spacingY = 20;           // 垂直间距
+        const paddingTop = 40;         // 上内边距
+        const paddingBottom = 40;      // 下内边距
+        const paddingHorizontal = 50;  // 左右内边距
         
-        // 【关键修改】使用正确的坐标系
-        // LevelContainer锚点是(0.5, 0.5)，所以中心是(0, 0)
+        // 获取LevelContainer的实际尺寸
+        const containerTransform = this.levelContainer.getComponent(UITransform);
+        if (!containerTransform) return;
+        
+        const containerWidth = containerTransform.width;
+        const containerHeight = containerTransform.height;
+        
+        console.log('容器信息:', {
+            宽度: containerWidth,
+            高度: containerHeight,
+            锚点: `(${containerTransform.anchorX}, ${containerTransform.anchorY})`
+        });
         
         // 计算每行的总宽度
         const totalRowWidth = (cardWidth * cardsPerRow) + (spacingX * (cardsPerRow - 1));
         
-        // 【关键修改】起始X位置：从左边开始（负的半个宽度）
-        const startX = -(totalRowWidth / 2) + (cardWidth / 2);
+        // 计算起始X：居中显示
+        const startX = -totalRowWidth / 2 + cardWidth / 2;
         
-        // 【关键修改】起始Y位置：从上面开始（正的半个容器高度减去上内边距）
-        // 由于是TOP_TO_BOTTOM，Y应该从正数开始
-        const startY = paddingTop;
+        // 计算起始Y：从容器顶部开始（锚点在中心，顶部是负的）
+        const startY = containerHeight / 2 - paddingTop - cardHeight / 2;
         
         console.log('手动布局参数:', {
+            容器尺寸: `${containerWidth}×${containerHeight}`,
             每行总宽度: totalRowWidth,
-            起始X: startX,
-            起始Y: startY,
+            起始X: startX.toFixed(1),
+            起始Y: startY.toFixed(1),
             卡片尺寸: `${cardWidth}×${cardHeight}`,
             每行数量: cardsPerRow,
             水平间距: spacingX,
-            垂直间距: spacingY
+            垂直间距: spacingY,
+            内边距: `上${paddingTop}/下${paddingBottom}/左右${paddingHorizontal}`
         });
-        
-        // 计算行数
-        const totalRows = Math.ceil(children.length / cardsPerRow);
         
         // 布局所有卡片
         for (let i = 0; i < children.length; i++) {
@@ -461,50 +571,52 @@ export class LevelSelection extends Component {
             
             // 计算位置
             const x = startX + col * (cardWidth + spacingX);
-            const y = startY - row * (cardHeight + spacingY); // 注意：Y是递减的
+            const y = startY - row * (cardHeight + spacingY);
             
             card.setPosition(x, y, 0);
             
-            console.log(`布局卡片 ${i} (${card.name}): 行${row}, 列${col}, 位置(${x.toFixed(1)}, ${y.toFixed(1)})`);
+            console.log(`布局卡片 ${i}: 行${row}, 列${col}, 位置(${x.toFixed(1)}, ${y.toFixed(1)})`);
         }
         
-        // 更新容器高度
-        const containerHeight = paddingTop + paddingBottom + 
+        // 计算需要的容器高度
+        const totalRows = Math.ceil(children.length / cardsPerRow);
+        const neededHeight = paddingTop + paddingBottom + 
                             (totalRows * cardHeight) + 
                             ((totalRows - 1) * spacingY);
         
-        const uiTransform = this.levelContainer.getComponent(UITransform);
-        if (uiTransform) {
-            uiTransform.height = containerHeight;
-            console.log(`设置容器高度: ${containerHeight}, 宽度: ${uiTransform.width}`);
+        // 更新容器高度
+        if (containerTransform.height < neededHeight) {
+            containerTransform.height = neededHeight;
+            console.log(`更新容器高度: ${neededHeight}`);
         }
         
-        // 【重要】立即检查卡片是否可见
+        // 最终验证
         setTimeout(() => {
-            console.log('=== 卡片可见性检查 ===');
-            console.log('Canvas位置:', find('Canvas')?.position);
-            console.log('ScrollView位置:', this.scrollView?.node?.position);
-            console.log('LevelContainer位置:', this.levelContainer?.position);
-            console.log('LevelContainer尺寸:', this.levelContainer?.getComponent(UITransform)?.contentSize);
+            console.log('=== 最终布局验证 ===');
             
-            for (let i = 0; i < Math.min(3, children.length); i++) {
-                const card = children[i];
-                const worldPos = card.worldPosition;
-                console.log(`卡片 ${i}: 本地位置(${card.position.x.toFixed(1)}, ${card.position.y.toFixed(1)}), 世界位置(${worldPos.x.toFixed(1)}, ${worldPos.y.toFixed(1)})`);
+            // 检查间距是否正确
+            if (children.length >= 2) {
+                const card1 = children[0];
+                const card2 = children[1];
+                const actualSpacing = Math.abs(card2.position.x - card1.position.x);
+                const expectedSpacing = cardWidth + spacingX;
+                
+                console.log(`间距检查: 实际${actualSpacing.toFixed(1)} vs 期望${expectedSpacing}`);
+                
+                if (Math.abs(actualSpacing - expectedSpacing) > 5) {
+                    console.warn('⚠️ 间距不符合期望');
+                } else {
+                    console.log('✅ 间距正确');
+                }
             }
             
-            // 检查卡片是否在屏幕内
-            const firstCard = children[0];
-            if (firstCard) {
-                const worldPos = firstCard.worldPosition;
-                console.log(`第一个卡片的世界位置: (${worldPos.x}, ${worldPos.y})`);
-                
-                // 屏幕中心是(0, 0)，范围大约是(-375, 667)到(375, -667)
-                if (worldPos.x > -375 && worldPos.x < 375 && worldPos.y > -667 && worldPos.y < 667) {
-                    console.log('✅ 卡片应该在屏幕内');
-                } else {
-                    console.warn('⚠️ 卡片可能在屏幕外');
-                }
+            // 检查是否在可视范围内
+            console.log('ScrollView位置:', this.scrollView?.node?.position);
+            console.log('Canvas中心Y: 667');
+            
+            for (let i = 0; i < Math.min(3, children.length); i++) {
+                const worldPos = children[i].worldPosition;
+                console.log(`卡片 ${i} 世界位置: (${worldPos.x.toFixed(1)}, ${worldPos.y.toFixed(1)})`);
             }
         }, 50);
     }
@@ -523,19 +635,16 @@ export class LevelSelection extends Component {
         // 【修改】只设置关卡序号，去掉关卡名称
         if (levelIndexLabel) {
             levelIndexLabel.string = `${levelIndex + 1}`; // 只显示数字，如"1"
-            levelIndexLabel.fontSize = 36; // 可以调大一些
         }
         
         // 【修改】已完成的评价放在下方
         if (scoreLabel) {
             if (levelData.isCompleted) {
                 scoreLabel.string = `${levelData.bestScore}`; // 只显示评价，如"天才"
-                scoreLabel.fontSize = 20;
                 scoreLabel.color = Color.GREEN;
                 scoreLabel.node.active = true; // 确保显示
             } else {
                 scoreLabel.string = levelData.isUnlocked ? "未完成" : "未解锁";
-                scoreLabel.fontSize = 16;
                 scoreLabel.color = levelData.isUnlocked ? Color.WHITE : Color.GRAY;
                 scoreLabel.node.active = true;
             }
