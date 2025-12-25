@@ -83,6 +83,7 @@ export class BoardController extends Component {
         
         // 1. 初始化UI（必须在其他逻辑之前）
         this.initUI();
+        this.debugUIHierarchy();
         
         // 2. 确保BoardRoot在UI上层
         if (this.boardRoot && this.uiRoot) {
@@ -214,9 +215,27 @@ export class BoardController extends Component {
             this.settlementNextBtn.node.on(Button.EventType.CLICK, this.onSettlementNext, this);
         }
         
-        // 【关键修改】动态绑定BackButton点击事件
+        // 动态绑定BackButton点击事件
         if (this.backButton) {
             console.log('[UI] BackButton found, binding click event');
+
+            // 获取所有相关节点的信息
+            const backTransform = this.backButton.node.getComponent(UITransform);
+            const uiRootNode = find('Canvas/GameUI/UIRoot');
+            const uiRootTransform = uiRootNode?.getComponent(UITransform);
+            
+            console.log('[UI] 详细层级信息:');
+            console.log('  Canvas尺寸:', find('Canvas')?.getComponent(UITransform)?.contentSize);
+            console.log('  GameUI位置:', this.uiRoot?.position);
+            console.log('  UIRoot位置:', uiRootNode?.position);
+            console.log('  UIRoot尺寸:', uiRootTransform?.contentSize);
+            console.log('  UIRoot锚点:', uiRootTransform?.anchorPoint);
+            console.log('  BackButton位置:', this.backButton.node.position);
+            console.log('  BackButton世界位置:', this.backButton.node.worldPosition);
+            console.log('  BackButton尺寸:', backTransform?.contentSize);
+            console.log('  BackButton锚点:', backTransform?.anchorPoint);
+            console.log('  BackButtonactive:', this.backButton.node.active);
+
             this.backButton.node.off(Button.EventType.CLICK); // 先移除旧的事件
             this.backButton.node.on(Button.EventType.CLICK, this.onBackToLevelSelect, this);
         } else {
@@ -331,7 +350,7 @@ export class BoardController extends Component {
 
     // 添加返回关卡选择的方法
     private onBackToLevelSelect() {
-        console.log("Returning to level selection");
+        console.log("返回关卡选择页面");
         
         // 隐藏游戏UI
         if (this.uiRoot) {
@@ -352,6 +371,7 @@ export class BoardController extends Component {
             if (levelSelection && levelSelection.show) {
                 levelSelection.show();
             }
+            
             // 隐藏结算弹窗（如果在显示）
             this.hideSettlementPanel();
         } else {
@@ -1255,5 +1275,38 @@ export class BoardController extends Component {
         this.pegNodes.set(key, pegNode);
         
         console.log(`Spawned peg at (${r}, ${c})`);
+    }
+
+    private debugUIHierarchy() {
+        console.log('=== UI层级调试 ===');
+        
+        // 遍历Canvas的所有子节点
+        const canvas = find('Canvas');
+        if (canvas) {
+            console.log('Canvas子节点:');
+            canvas.children.forEach((child, index) => {
+                const transform = child.getComponent(UITransform);
+                console.log(`  [${index}] ${child.name}: pos=${child.position}, active=${child.active}, size=${transform?.contentSize?.width}x${transform?.contentSize?.height}`);
+            });
+        }
+        
+        // 检查GameUI层级
+        const gameUI = find('Canvas/GameUI');
+        if (gameUI) {
+            console.log('GameUI子节点:');
+            gameUI.children.forEach((child, index) => {
+                console.log(`  [${index}] ${child.name}: active=${child.active}`);
+            });
+        }
+        
+        // 检查UIRoot层级
+        const uiRoot = find('Canvas/GameUI/UIRoot');
+        if (uiRoot) {
+            console.log('UIRoot子节点:');
+            uiRoot.children.forEach((child, index) => {
+                const transform = child.getComponent(UITransform);
+                console.log(`  [${index}] ${child.name}: pos=${child.position}, active=${child.active}, size=${transform?.contentSize?.width}x${transform?.contentSize?.height}`);
+            });
+        }
     }
 }
