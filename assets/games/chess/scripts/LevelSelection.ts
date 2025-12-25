@@ -44,7 +44,11 @@ export class LevelSelection extends Component {
     protected onLoad() {
         this.loadLevelProgress();
         this.initUI();
-        this.generateLevelCards();
+        
+        // 直接生成卡片，不需要延迟
+        setTimeout(() => {
+            this.generateLevelCards();
+        }, 100); // 给UI一点时间初始化
         
         if (this.backButton) {
             this.backButton.node.on(Button.EventType.CLICK, this.onBackToGame, this);
@@ -115,16 +119,11 @@ export class LevelSelection extends Component {
     }
     
     private initUI() {
-        console.log('初始化关卡选择UI - 使用LevelCard实际尺寸');
-        
-        // 屏幕尺寸（中心坐标系）
-        const screenWidth = 750;
-        const screenHeight = 1334;
+        console.log('初始化关卡选择UI - 使用手动布局');
         
         // 1. 设置标题位置
         if (this.titleLabel) {
             this.titleLabel.string = `钻石棋 - 关卡选择`;
-            
             const titleTransform = this.titleLabel.node.getComponent(UITransform);
             if (titleTransform) {
                 titleTransform.setAnchorPoint(0.5, 0.5);
@@ -132,21 +131,14 @@ export class LevelSelection extends Component {
             this.titleLabel.node.setPosition(0, 550, 0);
         }
         
-        // 2. 设置ScrollView位置和尺寸
+        // 2. 设置ScrollView
         if (this.scrollView && this.scrollView.node) {
             const scrollTransform = this.scrollView.node.getComponent(UITransform);
             if (scrollTransform) {
                 scrollTransform.setAnchorPoint(0.5, 0.5);
                 this.scrollView.node.setPosition(0, -50, 0);
-                
-                // 【可选】如果需要更宽，可以增加ScrollView宽度
-                scrollTransform.width = 720; // 从700增加到720
+                scrollTransform.width = 720;
                 scrollTransform.height = 1000;
-                
-                console.log('ScrollView设置:', {
-                    位置: this.scrollView.node.position,
-                    尺寸: `${scrollTransform.width}×${scrollTransform.height}`
-                });
             }
             
             if (this.levelContainer) {
@@ -154,91 +146,231 @@ export class LevelSelection extends Component {
             }
         }
         
-        // 3. 设置LevelContainer布局
+        // 3. 确保LevelContainer在正确位置
         if (this.levelContainer) {
-            const uiTransform = this.levelContainer.getComponent(UITransform);
-            if (uiTransform) {
-                uiTransform.setAnchorPoint(0.5, 0.5);
-                this.levelContainer.setPosition(0, 0, 0);
+            // 确保位置正确
+            this.levelContainer.setPosition(0, 0, 0);
+            
+            // 移除所有Layout组件
+            const layoutComponents = this.levelContainer.getComponents(Layout);
+            for (let i = layoutComponents.length - 1; i >= 0; i--) {
+                layoutComponents[i].destroy();
             }
             
-            const layout = this.levelContainer.getComponent(Layout) || this.levelContainer.addComponent(Layout);
-            
-            layout.type = Layout.Type.GRID;
-            layout.resizeMode = Layout.ResizeMode.CONTAINER;
-            
-            const cardsPerRow = 5;
-            
-            // 【关键修改】使用LevelCard预制体的实际尺寸
-            const cardWidth = 100;   // LevelCard预制体宽度
-            const cardHeight = 100;  // LevelCard预制体高度
-            
-            // 计算每行5个是否合适
-            const containerWidth = 720; // 或720，如果ScrollView加宽了
-            const totalCardWidth = cardWidth * cardsPerRow;
-            const totalSpacing = 20 * (cardsPerRow - 1); // 假设间距20
-            const totalPadding = 30 * 2; // 左右内边距
-            
-            const neededWidth = totalPadding + totalCardWidth + totalSpacing;
-            console.log(`布局计算: 需要宽度=${neededWidth}, 容器宽度=${containerWidth}`);
-            
-            if (neededWidth > containerWidth) {
-                console.warn(`警告：每行${cardsPerRow}个卡片需要${neededWidth}宽度，但容器只有${containerWidth}`);
-                // 可以自动调整间距或内边距
-                const availableSpace = containerWidth - totalPadding - totalCardWidth;
-                const spacing = availableSpace / (cardsPerRow - 1);
-                
-                layout.paddingLeft = 15;
-                layout.paddingRight = 15;
-                layout.spacingX = Math.max(10, spacing); // 最小间距10
-            } else {
-                // 使用合适的间距
-                layout.paddingLeft = 20;
-                layout.paddingRight = 20;
-                layout.spacingX = 20;
+            // 确保有UITransform
+            let uiTransform = this.levelContainer.getComponent(UITransform);
+            if (!uiTransform) {
+                uiTransform = this.levelContainer.addComponent(UITransform);
             }
             
-            layout.paddingTop = 30;
-            layout.paddingBottom = 30;
-            layout.spacingY = 20;
+            uiTransform.setAnchorPoint(0.5, 0.5);
             
-            // 设置卡片尺寸
-            layout.cellSize = new Size(cardWidth, cardHeight);
+            // 【关键修改】设置合适的初始尺寸
+            // view节点的宽度是700，我们要适应它
+            uiTransform.setContentSize(700, 1000); // 宽度700，高度先设大一点
             
-            layout.startAxis = Layout.AxisDirection.HORIZONTAL;
-            layout.constraint = Layout.Constraint.FIXED_ROW;
-            layout.constraintNum = cardsPerRow;
-            layout.verticalDirection = Layout.VerticalDirection.TOP_TO_BOTTOM;
-            layout.horizontalDirection = Layout.HorizontalDirection.LEFT_TO_RIGHT;
+            // 【关键】确保LevelContainer的父节点位置正确
+            const parentNode = this.levelContainer.parent;
+            if (parentNode && parentNode.name === 'view') {
+                parentNode.setPosition(0, 0, 0);
+                console.log('已设置view节点位置为(0, 0, 0)');
+            }
             
-            console.log('卡片布局设置:', {
-                卡片实际尺寸: '100×100',
-                每行数量: cardsPerRow,
-                内边距: `${layout.paddingTop}/${layout.paddingLeft}/${layout.paddingBottom}/${layout.paddingRight}`,
-                水平间距: layout.spacingX,
-                垂直间距: layout.spacingY
-            });
+            console.log('LevelContainer初始化完成，尺寸:', uiTransform.contentSize);
         }
     }
 
+    private setupLevelContainerLayout() {
+        console.log('开始设置LevelContainer布局');
+        
+        if (!this.levelContainer) return;
+        
+        // 再次确保位置正确
+        this.levelContainer.setPosition(0, 0, 0);
+        
+        // 添加Layout组件
+        const layout = this.levelContainer.addComponent(Layout);
+        
+        // 【关键设置】配置网格布局
+        layout.type = Layout.Type.GRID;
+        layout.resizeMode = Layout.ResizeMode.CONTAINER;
+        
+        // 每行5个卡片
+        const cardsPerRow = 5;
+        const cardWidth = 100;
+        const cardHeight = 100;
+        
+        // 计算合适的间距 - 需要考虑到view节点的实际显示区域
+        const effectiveWidth = 700; // ScrollView的有效宽度（考虑滚动条）
+        const totalCardWidth = cardWidth * cardsPerRow;
+        const availableSpace = effectiveWidth - totalCardWidth;
+        const spacingX = Math.max(10, availableSpace / (cardsPerRow + 1));
+        
+        console.log('布局计算:', {
+            有效宽度: effectiveWidth,
+            总卡片宽度: totalCardWidth,
+            可用空间: availableSpace,
+            计算出的间距: spacingX
+        });
+        
+        // 设置内边距和间距
+        layout.paddingLeft = Math.floor(spacingX);
+        layout.paddingRight = Math.floor(spacingX);
+        layout.paddingTop = 30;
+        layout.paddingBottom = 30;
+        layout.spacingX = Math.floor(spacingX);
+        layout.spacingY = 20;
+        
+        // 必须设置正确的cellSize
+        layout.cellSize = new Size(cardWidth, cardHeight);
+        
+        // 【关键】确保起始轴是水平
+        layout.startAxis = Layout.AxisDirection.HORIZONTAL;
+        
+        // 【关键】设置约束
+        layout.constraint = Layout.Constraint.FIXED_ROW;
+        layout.constraintNum = cardsPerRow;
+        
+        // 【关键】设置方向
+        layout.verticalDirection = Layout.VerticalDirection.TOP_TO_BOTTOM;
+        layout.horizontalDirection = Layout.HorizontalDirection.LEFT_TO_RIGHT;
+        
+        layout.affectedByScale = true;
+        
+        console.log('卡片布局设置完成:', {
+            卡片尺寸: `${cardWidth}×${cardHeight}`,
+            每行数量: cardsPerRow,
+            水平间距: layout.spacingX,
+            垂直间距: layout.spacingY,
+            起始轴: layout.startAxis === 0 ? 'HORIZONTAL' : 'VERTICAL',
+            约束: layout.constraint === 1 ? 'FIXED_ROW' : 'OTHER'
+        });
+        
+        // 立即更新布局
+        layout.updateLayout();
+        
+        // 检查布局状态
+        setTimeout(() => {
+            console.log('布局设置后检查...');
+            this.debugLayoutState();
+        }, 50);
+    }
+
+    private debugLayoutState() {
+        if (!this.levelContainer) return;
+        
+        const layout = this.levelContainer.getComponent(Layout);
+        if (!layout) {
+            console.error('没有Layout组件');
+            return;
+        }
+        
+        console.log('布局组件状态:', {
+            type: Layout.Type[layout.type],
+            startAxis: layout.startAxis,
+            constraint: Layout.Constraint[layout.constraint],
+            constraintNum: layout.constraintNum,
+            cellSize: `宽${layout.cellSize.width}×高${layout.cellSize.height}`,
+            spacingX: layout.spacingX,
+            spacingY: layout.spacingY,
+            padding: `左${layout.paddingLeft}/右${layout.paddingRight}/上${layout.paddingTop}/下${layout.paddingBottom}`
+        });
+        
+        // 检查子节点
+        const children = this.levelContainer.children;
+        console.log(`LevelContainer有 ${children.length} 个子节点`);
+        
+        if (children.length > 0) {
+            // 检查前几个节点的位置
+            for (let i = 0; i < Math.min(3, children.length); i++) {
+                const child = children[i];
+                console.log(`节点 ${i} (${child.name}):`, {
+                    位置: child.position,
+                    世界位置: child.worldPosition,
+                    父节点: child.parent?.name
+                });
+            }
+            
+            // 检查是否是纵向排列
+            if (children.length >= 2) {
+                const x1 = children[0].position.x;
+                const x2 = children[1].position.x;
+                console.log(`前两个节点的X坐标: ${x1}, ${x2}, 差值: ${Math.abs(x1 - x2)}`);
+                
+                if (Math.abs(x1 - x2) < 1) {
+                    console.warn('⚠️ 前两个节点X坐标几乎相同，可能是纵向排列');
+                    
+                    // 尝试紧急修复
+                    this.emergencyFixLayout();
+                }
+            }
+        }
+    }
+
+    private emergencyFixLayout() {
+        console.log('执行紧急布局修复...');
+        
+        if (!this.levelContainer) return;
+        
+        const children = this.levelContainer.children;
+        const cardsPerRow = 5;
+        const cardWidth = 100;
+        const cardHeight = 100;
+        const spacingX = 36;
+        const spacingY = 20;
+        const paddingLeft = 36;
+        const paddingRight = 36;
+        const paddingTop = 30;
+        
+        // 计算每行起始位置
+        const totalRowWidth = (cardWidth * cardsPerRow) + (spacingX * (cardsPerRow - 1));
+        const startX = -(totalRowWidth / 2) + paddingLeft + (cardWidth / 2);
+        const startY = -paddingTop;
+        
+        console.log('紧急修复参数:', {
+            总行宽度: totalRowWidth,
+            起始X: startX,
+            起始Y: startY
+        });
+        
+        for (let i = 0; i < children.length; i++) {
+            const card = children[i];
+            const row = Math.floor(i / cardsPerRow);
+            const col = i % cardsPerRow;
+            
+            const x = startX + col * (cardWidth + spacingX);
+            const y = startY - row * (cardHeight + spacingY);
+            
+            card.setPosition(x, y, 0);
+            
+            if (i < 2) {
+                console.log(`紧急修复卡片 ${i}: 行${row}, 列${col}, 位置(${x.toFixed(1)}, ${y.toFixed(1)})`);
+            }
+        }
+        
+        console.log('紧急修复完成');
+    }
+
     private generateLevelCards() {
-        console.log('开始生成关卡卡片');
-        console.log('总关卡数:', LEVELS_DATA?.length);
+        console.log('=== 开始生成关卡卡片 ===');
         
         if (!this.levelCardPrefab || !this.levelContainer) {
-            console.error("错误：Level card prefab 或 Level container 未赋值");
+            console.error("缺少必要的组件");
             return;
         }
         
+        // 【关键】移除Layout组件，完全使用手动布局
+        const layout = this.levelContainer.getComponent(Layout);
+        if (layout) {
+            console.log('移除Layout组件，使用手动布局');
+            layout.destroy();
+        }
+        
+        // 清空现有卡片
         this.levelContainer.destroyAllChildren();
+        console.log('已清空所有卡片');
         
-        // 检查关卡数据
-        if (!LEVELS_DATA || LEVELS_DATA.length === 0) {
-            console.error('错误：LEVELS_DATA为空或未定义！请检查GameConfig.ts文件');
-            return;
-        }
-
-        console.log('=== 卡片生成详情 ===');
+        console.log('=== 开始生成关卡卡片（共' + LEVELS_DATA.length + '个）===');
         
         // 生成所有卡片
         for (let i = 0; i < LEVELS_DATA.length; i++) {
@@ -254,17 +386,127 @@ export class LevelSelection extends Component {
             cardNode.parent = this.levelContainer;
             cardNode.name = `LevelCard_${i}`;
             
-            console.log(`生成卡片 ${i+1}，名称: LevelCard_${i}`);
-
+            // 确保卡片有正确的UITransform
+            let cardTransform = cardNode.getComponent(UITransform);
+            if (!cardTransform) {
+                cardTransform = cardNode.addComponent(UITransform);
+            }
+            cardTransform.setContentSize(100, 100);
+            cardTransform.setAnchorPoint(0.5, 0.5);
+            
             this.setupLevelCard(cardNode, levelData);
         }
         
         console.log(`已生成 ${LEVELS_DATA.length} 个关卡卡片`);
         
-        // 延迟更新布局并计算容器高度
-        this.scheduleOnce(() => {
-            this.updateContainerSize(); 
-        }, 0.1);
+        // 【关键】使用手动网格布局
+        setTimeout(() => {
+            this.manualGridLayout();
+        }, 100);
+    }
+
+    // 【新增】纯手动网格布局方法
+    private manualGridLayout() {
+        console.log('执行手动网格布局...');
+        
+        if (!this.levelContainer) return;
+        
+        const children = this.levelContainer.children;
+        if (children.length === 0) return;
+        
+        // 布局参数
+        const cardsPerRow = 5;           // 每行5个
+        const cardWidth = 100;           // 卡片宽度
+        const cardHeight = 100;          // 卡片高度
+        const spacingX = 36;             // 水平间距
+        const spacingY = 20;             // 垂直间距
+        const paddingLeft = 36;          // 左内边距
+        const paddingRight = 36;         // 右内边距
+        const paddingTop = 30;           // 上内边距
+        const paddingBottom = 30;        // 下内边距
+        
+        // 【关键修改】使用正确的坐标系
+        // LevelContainer锚点是(0.5, 0.5)，所以中心是(0, 0)
+        
+        // 计算每行的总宽度
+        const totalRowWidth = (cardWidth * cardsPerRow) + (spacingX * (cardsPerRow - 1));
+        
+        // 【关键修改】起始X位置：从左边开始（负的半个宽度）
+        const startX = -(totalRowWidth / 2) + (cardWidth / 2);
+        
+        // 【关键修改】起始Y位置：从上面开始（正的半个容器高度减去上内边距）
+        // 由于是TOP_TO_BOTTOM，Y应该从正数开始
+        const startY = paddingTop;
+        
+        console.log('手动布局参数:', {
+            每行总宽度: totalRowWidth,
+            起始X: startX,
+            起始Y: startY,
+            卡片尺寸: `${cardWidth}×${cardHeight}`,
+            每行数量: cardsPerRow,
+            水平间距: spacingX,
+            垂直间距: spacingY
+        });
+        
+        // 计算行数
+        const totalRows = Math.ceil(children.length / cardsPerRow);
+        
+        // 布局所有卡片
+        for (let i = 0; i < children.length; i++) {
+            const card = children[i];
+            if (!card.name.startsWith('LevelCard_')) continue;
+            
+            const row = Math.floor(i / cardsPerRow);
+            const col = i % cardsPerRow;
+            
+            // 计算位置
+            const x = startX + col * (cardWidth + spacingX);
+            const y = startY - row * (cardHeight + spacingY); // 注意：Y是递减的
+            
+            card.setPosition(x, y, 0);
+            
+            console.log(`布局卡片 ${i} (${card.name}): 行${row}, 列${col}, 位置(${x.toFixed(1)}, ${y.toFixed(1)})`);
+        }
+        
+        // 更新容器高度
+        const containerHeight = paddingTop + paddingBottom + 
+                            (totalRows * cardHeight) + 
+                            ((totalRows - 1) * spacingY);
+        
+        const uiTransform = this.levelContainer.getComponent(UITransform);
+        if (uiTransform) {
+            uiTransform.height = containerHeight;
+            console.log(`设置容器高度: ${containerHeight}, 宽度: ${uiTransform.width}`);
+        }
+        
+        // 【重要】立即检查卡片是否可见
+        setTimeout(() => {
+            console.log('=== 卡片可见性检查 ===');
+            console.log('Canvas位置:', find('Canvas')?.position);
+            console.log('ScrollView位置:', this.scrollView?.node?.position);
+            console.log('LevelContainer位置:', this.levelContainer?.position);
+            console.log('LevelContainer尺寸:', this.levelContainer?.getComponent(UITransform)?.contentSize);
+            
+            for (let i = 0; i < Math.min(3, children.length); i++) {
+                const card = children[i];
+                const worldPos = card.worldPosition;
+                console.log(`卡片 ${i}: 本地位置(${card.position.x.toFixed(1)}, ${card.position.y.toFixed(1)}), 世界位置(${worldPos.x.toFixed(1)}, ${worldPos.y.toFixed(1)})`);
+            }
+            
+            // 检查卡片是否在屏幕内
+            const firstCard = children[0];
+            if (firstCard) {
+                const worldPos = firstCard.worldPosition;
+                console.log(`第一个卡片的世界位置: (${worldPos.x}, ${worldPos.y})`);
+                
+                // 屏幕中心是(0, 0)，范围大约是(-375, 667)到(375, -667)
+                if (worldPos.x > -375 && worldPos.x < 375 && worldPos.y > -667 && worldPos.y < 667) {
+                    console.log('✅ 卡片应该在屏幕内');
+                } else {
+                    console.warn('⚠️ 卡片可能在屏幕外');
+                }
+            }
+        }, 50);
     }
     
     private setupLevelCard(cardNode: Node, levelData: LevelData) {
@@ -332,16 +574,40 @@ export class LevelSelection extends Component {
     }
     
     private updateContainerSize() {
-        if (!this.levelContainer) return;
+        if (!this.levelContainer) {
+            console.error('LevelContainer为空，无法更新尺寸');
+            return;
+        }
         
         const layout = this.levelContainer.getComponent(Layout);
-        if (!layout) return;
+        if (!layout) {
+            console.warn('LevelContainer没有Layout组件');
+            return;
+        }
         
+        console.log('=== 更新容器尺寸（开始）===');
+        console.log('更新前Layout信息:', {
+            cellSize: layout.cellSize,
+            constraintNum: layout.constraintNum,
+            spacingX: layout.spacingX,
+            spacingY: layout.spacingY
+        });
+        
+        // 再次强制更新布局
         layout.updateLayout();
+        console.log('Layout已强制更新');
+        
+        // 重新获取布局后的信息
+        console.log('更新后Layout信息:', {
+            cellSize: layout.cellSize,
+            constraintNum: layout.constraintNum,
+            spacingX: layout.spacingX,
+            spacingY: layout.spacingY
+        });        
         
         // 计算容器高度
         const totalCards = LEVELS_DATA.length;
-        const cardsPerRow = layout.constraintNum || 5; // 改为从布局获取
+        const cardsPerRow = layout.constraintNum || 5;
         const rows = Math.ceil(totalCards / cardsPerRow);
         const cellHeight = layout.cellSize.height;
         const spacingY = layout.spacingY;
@@ -352,20 +618,74 @@ export class LevelSelection extends Component {
         
         const uiTransform = this.levelContainer.getComponent(UITransform);
         if (uiTransform) {
+            const oldHeight = uiTransform.height;
             uiTransform.height = totalHeight;
+            
             console.log(`容器信息:`, {
-                总卡片: totalCards,
-                每行: cardsPerRow,
-                行数: rows,
-                卡片高: cellHeight,
-                容器高: totalHeight
+                总卡片数: totalCards,
+                每行卡片数: cardsPerRow,
+                总行数: rows,
+                卡片高度: cellHeight,
+                垂直间距: spacingY,
+                上内边距: paddingTop,
+                下内边距: paddingBottom,
+                旧高度: oldHeight,
+                新高度: totalHeight,
+                容器尺寸: `${uiTransform.width}×${uiTransform.height}`,
+                锚点: `(${uiTransform.anchorX}, ${uiTransform.anchorY})`
             });
+            
+            // 检查是否需要调整水平尺寸
+            const containerWidth = uiTransform.width;
+            const totalCardWidth = layout.cellSize.width * cardsPerRow;
+            const totalSpacing = layout.spacingX * (cardsPerRow - 1);
+            const totalPadding = layout.paddingLeft + layout.paddingRight;
+            const neededWidth = totalPadding + totalCardWidth + totalSpacing;
+            
+            console.log(`宽度检查:`, {
+                容器宽度: containerWidth,
+                需要的宽度: neededWidth,
+                差值: containerWidth - neededWidth,
+                建议: containerWidth >= neededWidth ? '宽度足够' : '宽度不足，建议调整'
+            });
+        } else {
+            console.error('LevelContainer没有UITransform组件');
         }
         
         // 滚动到顶部
         if (this.scrollView) {
             this.scrollView.scrollToTop();
+            console.log('已滚动到顶部');
         }
+        
+        // 打印最终布局信息
+        setTimeout(() => {
+            console.log('=== 最终布局检查 ===');
+            const children = this.levelContainer.children;
+            console.log('子节点总数:', children.length);
+            
+            // 按行分组显示
+            for (let row = 0; row < rows; row++) {
+                const startIdx = row * cardsPerRow;
+                const endIdx = Math.min(startIdx + cardsPerRow, children.length);
+                const rowCards = [];
+                
+                for (let i = startIdx; i < endIdx; i++) {
+                    const card = children[i];
+                    const pos = card.position;
+                    rowCards.push({
+                        名称: card.name,
+                        位置: `(${pos.x.toFixed(0)}, ${pos.y.toFixed(0)})`
+                    });
+                }
+                
+                if (rowCards.length > 0) {
+                    console.log(`第 ${row + 1} 行 (${rowCards.length}个卡片):`, rowCards);
+                }
+            }
+            
+            console.log('=== 布局检查完成 ===');
+        }, 200);
     }
     
     private refreshLevelCards() {
