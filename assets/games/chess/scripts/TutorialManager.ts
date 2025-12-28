@@ -15,28 +15,73 @@ export class TutorialManager extends Component {
     private tutorialContents = [
         {
             title: "钻石棋游戏教学",
-            content: `## 游戏目标
-通过跳吃的方式，让棋盘上的棋子尽可能减少，最终目标是：
-- **天才**：只剩1颗棋子在中心位置
-- **大师**：只剩1颗棋子（非中心）
-- **其他评价**：根据剩余棋子数量评价
+            content: `<color=#4CAF50><size=30><b>游戏目标</b></size></color>
+    <color=#2196F3><b>核心目标</b></color>：通过跳吃的方式，让棋盘上的棋子尽可能减少。
 
-## 游戏规则
-1. **移动方式**：选中一颗棋子，拖动到目标位置
-2. **跳吃条件**：只能跳过相邻棋子，跳到空位
-3. **被吃棋子**：被跳过的棋子会被移除
-4. **胜利条件**：只剩1颗棋子
-5. **失败条件**：无合法移动且棋子数>1
+    <color=#FF9800><b>最终评价</b></color>：
+    • <color=#E91E63><b>天才</b></color>：只剩1颗棋子在<color=#9C27B0>中心位置(3,3)</color>
+    • <color=#FF5722><b>大师</b></color>：只剩1颗棋子（非中心）
+    • <color=#FFC107><b>尖子</b></color>：剩余3颗棋子
+    • <color=#8BC34A><b>聪明</b></color>：剩余4颗棋子
+    • <color=#00BCD4><b>颇好</b></color>：剩余5颗棋子
 
-## 操作说明
-- **选中棋子**：点击棋子（变为黄色）
-- **移动棋子**：拖动到可跳位置（绿色提示）
-- **取消移动**：拖动到无效位置（红色提示）
-- **悔棋**：点击悔棋按钮（最多5次）
-- **重玩**：点击重玩按钮重新开始
-- **关卡选择**：返回按钮选择其他关卡`
+    <br/>
+    <color=#4CAF50><size=30><b>游戏规则</b></size></color>
+
+    <color=#2196F3><b>1. 移动方式</b></color>
+    • 选中一颗棋子（会变<color=#FFEB3B>黄色</color>）
+    • 拖动到目标位置
+
+    <color=#2196F3><b>2. 跳吃条件</b></color>
+    • 只能跳过<color=#FF9800>相邻的棋子</color>
+    • 跳到<color=#4CAF50>空位</color>（显示绿色提示）
+    • 被跳过的棋子会被<color=#F44336>移除</color>
+
+    <color=#2196F3><b>3. 无效移动</b></color>
+    • 拖动到已有棋子的位置（红色提示）
+    • 拖动到棋盘外
+    • 拖动距离不合适
+
+    <color=#2196F3><b>4. 胜利条件</b></color>
+    • 只剩1颗棋子 → <color=#4CAF50>游戏胜利</color>
+
+    <color=#2196F3><b>5. 失败条件</b></color>
+    • 无合法移动且棋子数>1 → <color=#F44336>游戏结束</color>
+
+    <br/>
+    <color=#4CAF50><size=30><b>操作说明</b></size></color>
+
+    <color=#2196F3><b>鼠标/触摸操作</b></color>
+    • <color=#FFEB3B>点击棋子</color>：选中（变为黄色）
+    • <color=#4CAF50>拖动到绿色位置</color>：执行跳吃
+    • <color=#F44336>拖动到红色位置</color>：取消，棋子归位
+    • <color=#9E9E9E>松开无效位置</color>：自动返回原位
+
+    <color=#2196F3><b>游戏界面按钮</b></color>
+    • <color=#2196F3>【重玩】</color>：重新开始当前关卡
+    • <color=#FF9800>【悔棋】</color>：撤销上一步操作（最多5次）
+    • <color=#9C27B0>【返回】</color>：回到关卡选择页面
+    • <color=#4CAF50>【教学】</color>：查看本教学（随时可看）
+
+    <br/>
+    <color=#4CAF50><size=30><b>高级技巧</b></size></color>
+
+    <color=#2196F3><b>策略建议</b></color>
+    1. <color=#FF9800>先观察全局</color>：不要急于移动
+    2. <color=#4CAF50>中心优先</color>：尽量让棋子靠近中心
+    3. <color=#9C27B0>连锁跳吃</color>：规划连续跳吃路线
+    4. <color=#00BCD4>保留后路</color>：不要把自己堵死
+
+    <br/>
+    <color=#4CAF50><size=30><b>关卡系统</b></size></color>
+
+    • <color=#2196F3>125个精心设计的关卡</color>
+    • <color=#4CAF50>逐级解锁</color>：完成当前关卡解锁下一关
+    • <color=#FF9800>进度保存</color>：自动保存最佳成绩
+    • <color=#9C27B0>随时重玩</color>：可重复挑战提高评价
+
+    <color=#E91E63><b>祝你游戏愉快！</b></color>`
         },
-        // 可以添加更多教学内容，比如高级技巧等
     ];
     
     protected onLoad() {
@@ -96,29 +141,26 @@ export class TutorialManager extends Component {
             titleLabel.string = tutorialData.title;
         }
         
-        // 设置内容
+        // 设置内容 - 现在使用 Label 而不是 RichText
         const contentText = this.tutorialPanel.getChildByPath('PopupWindow/ContentScrollView/view/content/TextContent');
         if (contentText) {
-            // 尝试使用RichText
-            const richText = contentText.getComponent(RichText);
-            if (richText) {
-                // 处理Markdown格式（简化版）
-                let formattedContent = tutorialData.content
-                    .replace(/## (.*?)\n/g, '<size=30><color=#4CAF50><b>$1</b></color></size>\n')
-                    .replace(/\*\*(.*?)\*\*/g, '<color=#FF9800><b>$1</b></color>')
-                    .replace(/\n/g, '<br/>');
+            // 使用 Label 组件
+            const label = contentText.getComponent(Label);
+            if (label) {
+                // 直接使用纯文本（去掉富文本标签）
+                const plainText = tutorialData.content
+                    .replace(/<[^>]*>/g, '') // 移除所有HTML标签
+                    .replace(/&nbsp;/g, ' ')  // 替换空格
+                    .replace(/&lt;/g, '<')    // 替换 <
+                    .replace(/&gt;/g, '>')    // 替换 >
+                    .replace(/&amp;/g, '&')   // 替换 &
+                    .replace(/\\n/g, '\n')    // 替换换行符
+                    .trim();
                 
-                richText.string = formattedContent;
+                label.string = plainText;
+                console.log('[Tutorial] 教学内容已设置到Label');
             } else {
-                // 使用普通Label
-                const label = contentText.getComponent(Label);
-                if (label) {
-                    // 移除Markdown格式
-                    const plainText = tutorialData.content
-                        .replace(/#/g, '')
-                        .replace(/\*\*/g, '');
-                    label.string = plainText;
-                }
+                console.warn('[Tutorial] TextContent节点没有Label组件');
             }
         }
         
