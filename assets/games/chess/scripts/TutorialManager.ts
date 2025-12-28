@@ -141,27 +141,28 @@ export class TutorialManager extends Component {
             titleLabel.string = tutorialData.title;
         }
         
-        // 设置内容 - 现在使用 Label 而不是 RichText
+        // 设置内容
         const contentText = this.tutorialPanel.getChildByPath('PopupWindow/ContentScrollView/view/content/TextContent');
         if (contentText) {
-            // 使用 Label 组件
             const label = contentText.getComponent(Label);
             if (label) {
-                // 直接使用纯文本（去掉富文本标签）
-                const plainText = tutorialData.content
-                    .replace(/<[^>]*>/g, '') // 移除所有HTML标签
-                    .replace(/&nbsp;/g, ' ')  // 替换空格
-                    .replace(/&lt;/g, '<')    // 替换 <
-                    .replace(/&gt;/g, '>')    // 替换 >
-                    .replace(/&amp;/g, '&')   // 替换 &
-                    .replace(/\\n/g, '\n')    // 替换换行符
-                    .trim();
-                
+                // 【关键修改】使用专门的HTML清理方法
+                const plainText = this.cleanHtmlToPlainText(tutorialData.content);
                 label.string = plainText;
-                console.log('[Tutorial] 教学内容已设置到Label');
+                
+                console.log('[Tutorial] 教学内容已设置到Label, 字符数:', plainText.length);
+                
+                console.log('[Tutorial] 教学内容预览:', plainText.substring(0, 100) + '...');
             } else {
-                console.warn('[Tutorial] TextContent节点没有Label组件');
+                console.error('[Tutorial] TextContent节点没有Label组件！');
+                
+                console.log('[Tutorial] TextContent节点组件:', contentText.getComponents(Component));
             }
+        } else {
+            console.error('[Tutorial] 找不到TextContent节点！路径检查：');
+            console.log('[Tutorial] 弹窗节点:', this.tutorialPanel?.name);
+            console.log('[Tutorial] PopupWindow:', this.tutorialPanel?.getChildByName('PopupWindow')?.name);
+            console.log('[Tutorial] ContentScrollView:', this.tutorialPanel?.getChildByPath('PopupWindow/ContentScrollView')?.name);
         }
         
         // 调整滚动视图
@@ -174,6 +175,46 @@ export class TutorialManager extends Component {
         }
     }
     
+    /**
+     * 将HTML内容转换为纯文本
+     */
+    private cleanHtmlToPlainText(html: string): string {
+        if (!html) return '';
+        
+        let text = html;
+        
+        // 1. 替换特定的HTML实体
+        const htmlEntities: {[key: string]: string} = {
+            '&nbsp;': ' ',
+            '&lt;': '<',
+            '&gt;': '>',
+            '&amp;': '&',
+            '&quot;': '"',
+            '&#39;': "'",
+            '&apos;': "'"
+        };
+        
+        Object.keys(htmlEntities).forEach(entity => {
+            text = text.replace(new RegExp(entity, 'g'), htmlEntities[entity]);
+        });
+        
+        // 2. 替换换行标签为实际换行符
+        text = text.replace(/<br\s*\/?>/gi, '\n');
+        text = text.replace(/<\/p>/gi, '\n');
+        text = text.replace(/<\/div>/gi, '\n');
+        
+        // 3. 移除所有HTML标签
+        text = text.replace(/<[^>]*>/g, '');
+        
+        // 4. 清理多余的空白字符
+        text = text.replace(/\n\s*\n/g, '\n\n'); // 多个空行合并为双空行
+        text = text.replace(/[ \t]+/g, ' ');      // 合并多个空格
+        text = text.replace(/^\s+|\s+$/g, '');    // 去除首尾空格
+        text = text.replace(/\n\s+|\s+\n/g, '\n'); // 清理行首行尾空格
+        
+        return text;
+    }
+
     /**
      * 绑定按钮事件
      */
