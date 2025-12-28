@@ -4,6 +4,7 @@ import { LevelSelection } from './LevelSelection';
 import { _decorator, Component, Node, Prefab, instantiate, UITransform, Vec3, v3, EventTouch, Label, tween, UIOpacity, Sprite, Color, Button, find, SpriteFrame } from 'cc';
 import { Peg } from './Peg';
 import { BOARD_SIZE, TILE_STATE, LEVELS_DATA, evaluateResult, CENTER_POS } from './GameConfig'; 
+import { TutorialManager } from './TutorialManager';
 
 const { ccclass, property } = _decorator;
 
@@ -31,9 +32,12 @@ export class BoardController extends Component {
 
     @property(Node)
     public levelSelectionNode: Node = null; // 关卡选择页面节点
+
+    @property(Prefab)
+    public tutorialPanelPrefab: Prefab = null; // 教学弹窗预制体
     
-    // @property(Button)
-    // public backToLevelSelectButton: Button = null; 
+    private tutorialManager: TutorialManager = null; // 教学管理器
+    private tutorialButton: Button = null; // 教学入口按钮
 
     // ===== 棋盘背景相关 =====
     private boardTileNodes: Node[] = []; // 存储棋盘格子节点
@@ -84,6 +88,7 @@ export class BoardController extends Component {
         // 1. 初始化UI（必须在其他逻辑之前）
         this.initUI();
         this.debugUIHierarchy();
+        this.initTutorialSystem();
         
         // 2. 确保BoardRoot在UI上层
         if (this.boardRoot && this.uiRoot) {
@@ -242,7 +247,10 @@ export class BoardController extends Component {
             console.warn('[UI] BackButton not found in UI prefab!');
         }
 
-        // 6. 初始化UI状态
+        // 6. 创建教学入口按钮
+        this.createTutorialButton();
+
+        // 7. 初始化UI状态
         if (this.tipsLabel) {
             this.tipsLabel.node.active = false; // 初始隐藏提示
         }
@@ -280,6 +288,11 @@ export class BoardController extends Component {
         
         // 隐藏结算弹窗（如果正在显示）
         this.hideSettlementPanel();
+
+        // 关闭教学弹窗（如果正在显示）
+        if (this.tutorialManager && this.tutorialManager.isTutorialShowing()) {
+            this.tutorialManager.hideTutorial();
+        }
 
         this.boardRoot.destroyAllChildren();  
         
@@ -344,7 +357,11 @@ export class BoardController extends Component {
         
         // 保存初始状态
         this.saveCurrentState();
-        
+
+        // 显示教学入口按钮
+        if (this.tutorialButton) {
+            this.tutorialButton.node.active = true; // 始终显示
+        }
         console.log(`Level ${levelIndex} loaded: ${level.name}, pegs count: ${this.countPegs()}, max undo: ${this.maxUndoCount}`);
     }
 
@@ -352,6 +369,11 @@ export class BoardController extends Component {
     private onBackToLevelSelect() {
         console.log("返回关卡选择页面");
         
+        // 关闭教学弹窗（如果正在显示）
+        if (this.tutorialManager && this.tutorialManager.isTutorialShowing()) {
+            this.tutorialManager.hideTutorial();
+        }
+
         // 隐藏游戏UI
         if (this.uiRoot) {
             this.uiRoot.active = false;
@@ -836,6 +858,70 @@ export class BoardController extends Component {
         this.nextLevel();
     }
 
+
+    // ==================== 教学系统相关方法 ====================
+    private showTutorialPanel() {
+        console.log('[UI] 显示教学弹窗');
+        
+        if (this.tutorialManager) {
+            this.tutorialManager.showTutorial(this.currentLevelIndex);
+            this.pauseGameInteraction(true);
+        } else {
+            console.warn('[UI] Tutorial manager not initialized');
+            this.createEmergencyTutorialPanel();
+        }
+    }
+
+    private createEmergencyTutorialPanel() {
+        if (!this.tutorialPanelPrefab) {
+            console.error('[UI] Cannot create tutorial panel: prefab missing');
+            return;
+        }
+        
+        const panel = instantiate(this.tutorialPanelPrefab);
+        const canvas = find('Canvas');
+        if (canvas) {
+            panel.parent = canvas;
+            panel.setSiblingIndex(canvas.children.length);
+            
+            const closeButton = panel.getChildByPath('PopupWindow/CloseButton')?.getComponent(Button);
+            const confirmButton = panel.getChildByPath('PopupWindow/BtnContainer/ConfirmButton')?.getComponent(Button);
+            
+            const hidePanel = () => {
+                panel.destroy();
+                this.pauseGameInteraction(false);
+            };
+            
+            if (closeButton) {
+                closeButton.node.on(Button.EventType.CLICK, hidePanel, this);
+            }
+            if (confirmButton) {
+                confirmButton.node.on(Button.EventType.CLICK, hidePanel, this);
+            }
+        }
+    }
+
+    private pauseGameInteraction(pause: boolean) {
+        // 暂停棋子交互
+        this.pegNodes.forEach((node) => {
+            const button = node.getComponent(Button);
+            if (button) {
+                button.interactable = !pause;
+            }
+        });
+        
+        // 暂停游戏按钮
+        if (this.retryButton) this.retryButton.interactable = !pause;
+        if (this.undoButton) this.undoButton.interactable = !pause;
+        if (this.backButton) this.backButton.interactable = !pause;
+        
+        // 暂停结算弹窗（如果有）
+        if (this.settlementPanel && this.settlementPanel.active) {
+            if (this.settlementRetryBtn) this.settlementRetryBtn.interactable = !pause;
+            if (this.settlementNextBtn) this.settlementNextBtn.interactable = !pause;
+        }
+    }
+
     // ==================== 游戏流程控制 ====================
     public retryLevel() {
         console.log("Retrying current level");
@@ -1275,6 +1361,72 @@ export class BoardController extends Component {
         this.pegNodes.set(key, pegNode);
         
         console.log(`Spawned peg at (${r}, ${c})`);
+    }
+
+
+    private initTutorialSystem() {
+        // 创建教学管理器节点
+        const tutorialManagerNode = new Node('TutorialManager');
+        tutorialManagerNode.parent = this.node;
+        
+        // 添加教学管理器组件
+        this.tutorialManager = tutorialManagerNode.addComponent(TutorialManager);
+        
+        if (this.tutorialPanelPrefab) {
+            this.tutorialManager.tutorialPanelPrefab = this.tutorialPanelPrefab;
+        }
+        
+        console.log('[Tutorial] Tutorial system initialized');
+    }
+
+    // ========== 在这里添加 createTutorialButton 方法 ==========
+    private createTutorialButton() {
+        // 创建教学入口容器
+        const tutorialContainer = new Node('TutorialEntry');
+        tutorialContainer.parent = this.uiRoot.getChildByPath('UIRoot');
+        
+        // 设置位置在右上角
+        tutorialContainer.setPosition(500, 320, 0);
+        
+        const transform = tutorialContainer.addComponent(UITransform);
+        transform.setContentSize(120, 50);
+        transform.setAnchorPoint(0.5, 0.5);
+        
+        // 创建问号图标
+        const iconNode = new Node('QuestionIcon');
+        iconNode.parent = tutorialContainer;
+        iconNode.setPosition(-25, 0, 0);
+        
+        const iconSprite = iconNode.addComponent(Sprite);
+        const iconTransform = iconNode.addComponent(UITransform);
+        iconTransform.setContentSize(30, 30);
+        
+        // 创建"教学"文字
+        const textNode = new Node('TutorialText');
+        textNode.parent = tutorialContainer;
+        textNode.setPosition(20, 0, 0);
+        
+        const textLabel = textNode.addComponent(Label);
+        textLabel.string = '教学';
+        textLabel.fontSize = 24;
+        textLabel.color = Color.WHITE;
+        textLabel.horizontalAlign = Label.HorizontalAlign.LEFT;
+        
+        const textTransform = textNode.addComponent(UITransform);
+        textTransform.setContentSize(60, 30);
+        
+        // 添加按钮组件
+        const tutorialButton = tutorialContainer.addComponent(Button);
+        tutorialButton.transition = Button.Transition.COLOR;
+        tutorialButton.normalColor = new Color(0, 0, 0, 0);
+        tutorialButton.hoverColor = new Color(100, 100, 100, 100);
+        tutorialButton.pressedColor = new Color(150, 150, 150, 150);
+        tutorialButton.disabledColor = new Color(50, 50, 50, 50);
+        
+        tutorialButton.node.on(Button.EventType.CLICK, this.showTutorialPanel, this);
+        
+        this.tutorialButton = tutorialButton;
+        console.log('[UI] 教学入口按钮创建完成');
     }
 
     private debugUIHierarchy() {

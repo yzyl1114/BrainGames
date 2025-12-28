@@ -1427,6 +1427,10 @@
     "levelSelectionNode": {
       "__id__": 3
     },
+    "tutorialPanelPrefab": {
+      "__uuid__": "5dbaa331-6625-4973-b500-7d728ad9d90f",
+      "__expectedType__": "cc.Prefab"
+    },
     "_id": "d12wtTpwVPBJgKytR8jEPP"
   },
   {
