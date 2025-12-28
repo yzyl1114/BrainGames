@@ -42,7 +42,7 @@ export class TutorialManager extends Component {
     protected onLoad() {
         // 确保预制体已加载
         if (!this.tutorialPanelPrefab) {
-            console.error('[Tutorial] Tutorial panel prefab not assigned!');
+            console.log('[Tutorial] Tutorial panel prefab will be set later.');
         }
     }
     
@@ -182,11 +182,15 @@ export class TutorialManager extends Component {
         return this.isShowing;
     }
     
+    public setTutorialPrefab(prefab: Prefab) {
+        this.tutorialPanelPrefab = prefab;
+        console.log('[Tutorial] Tutorial prefab set');
+    }
+
     /**
      * 根据关卡动态调整教学内容
      */
     public setCurrentLevel(levelIndex: number) {
-        // 可以根据关卡难度显示不同的教学重点
         console.log(`[Tutorial] Current level set to: ${levelIndex}`);
     }
     

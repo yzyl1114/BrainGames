@@ -268,7 +268,7 @@ export class BoardController extends Component {
         // 保存当前关卡索引
         this.currentLevelIndex = levelIndex;
         
-        // 【修复3新增】确保游戏UI和棋盘显示
+        // 确保游戏UI和棋盘显示
         if (this.uiRoot) {
             this.uiRoot.active = true;
         }
@@ -276,7 +276,7 @@ export class BoardController extends Component {
             this.boardRoot.active = true;
         }
         
-        // 【修复3新增】隐藏关卡选择页（如果显示）
+        // 隐藏关卡选择页（如果显示）
         if (this.levelSelectionNode) {
             this.levelSelectionNode.active = false;
         }
@@ -361,6 +361,9 @@ export class BoardController extends Component {
         // 显示教学入口按钮
         if (this.tutorialButton) {
             this.tutorialButton.node.active = true; // 始终显示
+            console.log('[UI] 教学入口按钮已激活');
+        } else {
+            console.warn('[UI] 教学入口按钮未找到');
         }
         console.log(`Level ${levelIndex} loaded: ${level.name}, pegs count: ${this.countPegs()}, max undo: ${this.maxUndoCount}`);
     }
@@ -910,16 +913,19 @@ export class BoardController extends Component {
             }
         });
         
-        // 暂停游戏按钮
+        // 【重要修复】只暂停游戏按钮，不暂停返回按钮
+        // 返回按钮应该始终可用
         if (this.retryButton) this.retryButton.interactable = !pause;
         if (this.undoButton) this.undoButton.interactable = !pause;
-        if (this.backButton) this.backButton.interactable = !pause;
+        // 【修改】不暂停返回按钮：if (this.backButton) this.backButton.interactable = !pause;
         
         // 暂停结算弹窗（如果有）
         if (this.settlementPanel && this.settlementPanel.active) {
             if (this.settlementRetryBtn) this.settlementRetryBtn.interactable = !pause;
             if (this.settlementNextBtn) this.settlementNextBtn.interactable = !pause;
         }
+        
+        console.log('[UI] 游戏交互状态:', pause ? '暂停' : '恢复', '返回按钮始终可用');
     }
 
     // ==================== 游戏流程控制 ====================
@@ -1365,6 +1371,8 @@ export class BoardController extends Component {
 
 
     private initTutorialSystem() {
+        console.log('[Tutorial] 初始化教学系统...');
+        
         // 创建教学管理器节点
         const tutorialManagerNode = new Node('TutorialManager');
         tutorialManagerNode.parent = this.node;
@@ -1372,48 +1380,76 @@ export class BoardController extends Component {
         // 添加教学管理器组件
         this.tutorialManager = tutorialManagerNode.addComponent(TutorialManager);
         
+        // 检查并设置预制体
         if (this.tutorialPanelPrefab) {
             this.tutorialManager.tutorialPanelPrefab = this.tutorialPanelPrefab;
+            console.log('[Tutorial] 教学弹窗预制体已设置');
+        } else {
+            console.warn('[Tutorial] 教学弹窗预制体未分配，请在编辑器中设置');
+            // 可以尝试从资源动态加载
+            // this.loadTutorialPrefabFromResources();
         }
         
         console.log('[Tutorial] Tutorial system initialized');
     }
 
-    // ========== 在这里添加 createTutorialButton 方法 ==========
+    // 可选：动态加载预制体
+    private loadTutorialPrefabFromResources() {
+        console.log('[Tutorial] 尝试从资源动态加载教学弹窗预制体...');
+        // 这里可以根据你的资源管理方式实现
+    }
+
     private createTutorialButton() {
-        // 创建教学入口容器
+        console.log('[UI] 开始创建教学入口按钮...');
+        
         const tutorialContainer = new Node('TutorialEntry');
-        tutorialContainer.parent = this.uiRoot.getChildByPath('UIRoot');
+        const uiRootNode = this.uiRoot?.getChildByPath('UIRoot');
         
-        // 设置位置在右上角
-        tutorialContainer.setPosition(500, 320, 0);
+        if (!uiRootNode) {
+            console.error('[UI] 找不到UIRoot节点！');
+            return;
+        }
         
-        const transform = tutorialContainer.addComponent(UITransform);
-        transform.setContentSize(120, 50);
-        transform.setAnchorPoint(0.5, 0.5);
+        // 【修改位置】根据Canvas尺寸调整
+        const canvasWidth = 750; // 从日志获取的Canvas宽度
+        const canvasHeight = 1334;
+        
+        // 放在右上角，但不要超出边界
+        tutorialContainer.parent = uiRootNode;
+        tutorialContainer.setPosition(355, 647, 0); 
+            
+        // 添加UITransform组件
+        const containerTransform = tutorialContainer.addComponent(UITransform);
+        containerTransform.setContentSize(120, 50);
+        containerTransform.setAnchorPoint(0.5, 0.5);
         
         // 创建问号图标
         const iconNode = new Node('QuestionIcon');
         iconNode.parent = tutorialContainer;
         iconNode.setPosition(-25, 0, 0);
         
-        const iconSprite = iconNode.addComponent(Sprite);
-        const iconTransform = iconNode.addComponent(UITransform);
+        // 【修复】只获取，不重复添加
+        const iconTransform = iconNode.getComponent(UITransform) || iconNode.addComponent(UITransform);
         iconTransform.setContentSize(30, 30);
+        iconTransform.setAnchorPoint(0.5, 0.5);
+        
+        const iconSprite = iconNode.addComponent(Sprite);
+        // 设置问号图标资源（如果有的话）
         
         // 创建"教学"文字
         const textNode = new Node('TutorialText');
         textNode.parent = tutorialContainer;
         textNode.setPosition(20, 0, 0);
         
+        const textTransform = textNode.getComponent(UITransform) || textNode.addComponent(UITransform);
+        textTransform.setContentSize(60, 30);
+        textTransform.setAnchorPoint(0.5, 0.5);
+        
         const textLabel = textNode.addComponent(Label);
         textLabel.string = '教学';
         textLabel.fontSize = 24;
-        textLabel.color = Color.WHITE;
+        textLabel.color = Color.BLACK;
         textLabel.horizontalAlign = Label.HorizontalAlign.LEFT;
-        
-        const textTransform = textNode.addComponent(UITransform);
-        textTransform.setContentSize(60, 30);
         
         // 添加按钮组件
         const tutorialButton = tutorialContainer.addComponent(Button);
@@ -1425,8 +1461,11 @@ export class BoardController extends Component {
         
         tutorialButton.node.on(Button.EventType.CLICK, this.showTutorialPanel, this);
         
+        console.log('[UI] 按钮创建完成，位置:', tutorialContainer.position);
+        console.log('[UI] 按钮世界位置:', tutorialContainer.worldPosition);
+        console.log('[UI] BackButton位置:', this.backButton?.node?.position);
+
         this.tutorialButton = tutorialButton;
-        console.log('[UI] 教学入口按钮创建完成');
     }
 
     private debugUIHierarchy() {
