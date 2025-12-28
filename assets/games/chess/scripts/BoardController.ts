@@ -1416,7 +1416,7 @@ export class BoardController extends Component {
         
         // 放在右上角，但不要超出边界
         tutorialContainer.parent = uiRootNode;
-        tutorialContainer.setPosition(335, 647, 0); 
+        tutorialContainer.setPosition(295, 617, 0); 
             
         // 添加UITransform组件
         const containerTransform = tutorialContainer.addComponent(UITransform);

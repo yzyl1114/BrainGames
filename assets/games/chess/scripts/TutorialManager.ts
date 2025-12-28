@@ -116,6 +116,12 @@ export class TutorialManager extends Component {
         
         // 居中显示
         this.tutorialPanel.setPosition(0, 0, 0);
+
+        // 调试层级
+        this.debugPanelHierarchy();
+
+        // 修复背景层级
+        this.fixBackgroundLayer();
         
         // 设置弹窗内容
         this.setupTutorialContent(levelIndex);
@@ -232,16 +238,6 @@ export class TutorialManager extends Component {
             confirmButton.node.off(Button.EventType.CLICK);
             confirmButton.node.on(Button.EventType.CLICK, this.hideTutorial, this);
         }
-        
-        // 背景点击关闭（可选）
-        const background = this.tutorialPanel.getChildByPath('Background');
-        if (background) {
-            const button = background.getComponent(Button) || background.addComponent(Button);
-            button.transition = Button.Transition.COLOR;
-            button.normalColor = Color.TRANSPARENT;
-            button.node.off(Button.EventType.CLICK);
-            button.node.on(Button.EventType.CLICK, this.hideTutorial, this);
-        }
     }
     
     /**
@@ -280,6 +276,86 @@ export class TutorialManager extends Component {
     onDestroy() {
         if (this.tutorialPanel) {
             this.tutorialPanel.destroy();
+        }
+    }
+
+    /**
+     * 修复背景层级
+     */
+    private fixBackgroundLayer() {
+        if (!this.tutorialPanel) return;
+        
+        const background = this.tutorialPanel.getChildByName('Background');
+        if (background) {
+            // 1. 设置Z轴位置（确保在最底层）
+            background.setPosition(0, 0, -10); // Z轴负值，确保在最下面
+            
+            // 2. 确保在兄弟节点中最先（索引最小）
+            background.setSiblingIndex(0);
+            
+            // 3. 检查并设置尺寸（确保覆盖全屏）
+            const bgTransform = background.getComponent(UITransform);
+            if (bgTransform) {
+                const canvas = find('Canvas');
+                if (canvas) {
+                    const canvasTransform = canvas.getComponent(UITransform);
+                    if (canvasTransform) {
+                        bgTransform.setContentSize(canvasTransform.width, canvasTransform.height);
+                        console.log('[Tutorial] 背景尺寸已设为全屏:', bgTransform.contentSize);
+                    }
+                }
+            }
+            
+            // 4. 检查透明度
+            const sprite = background.getComponent(Sprite);
+            if (sprite) {
+                // 确保不是完全透明
+                if (sprite.color.a < 100) {
+                    sprite.color = new Color(sprite.color.r, sprite.color.g, sprite.color.b, 180);
+                    console.log('[Tutorial] 调整背景透明度为180');
+                }
+            }
+            
+            console.log('[Tutorial] 背景层级已修复，位置:', background.position, '兄弟索引:', background.getSiblingIndex());
+        } else {
+            console.warn('[Tutorial] 未找到Background节点');
+            
+            // 调试：列出所有子节点
+            console.log('[Tutorial] 弹窗子节点:');
+            this.tutorialPanel.children.forEach((child, index) => {
+                console.log(`  [${index}] ${child.name}: pos=${child.position}, active=${child.active}`);
+            });
+        }
+    }
+
+    private debugPanelHierarchy() {
+        if (!this.tutorialPanel) return;
+        
+        console.log('=== 教学弹窗层级调试 ===');
+        console.log('弹窗根节点位置:', this.tutorialPanel.position);
+        console.log('弹窗世界位置:', this.tutorialPanel.worldPosition);
+        console.log('弹窗激活状态:', this.tutorialPanel.active);
+        
+        console.log('子节点列表:');
+        this.tutorialPanel.children.forEach((child, index) => {
+            const transform = child.getComponent(UITransform);
+            const sprite = child.getComponent(Sprite);
+            console.log(`  [${index}] ${child.name}:`);
+            console.log(`    位置: ${child.position}`);
+            console.log(`    世界位置: ${child.worldPosition}`);
+            console.log(`    激活: ${child.active}`);
+            console.log(`    尺寸: ${transform?.contentSize?.width}x${transform?.contentSize?.height}`);
+            console.log(`    Sprite颜色: ${sprite?.color?.toString()}`);
+            console.log(`    Sprite透明度: ${sprite?.color?.a}`);
+        });
+        
+        // 检查Canvas上的所有UI
+        const canvas = find('Canvas');
+        if (canvas) {
+            console.log('=== Canvas层级 ===');
+            canvas.children.forEach((child, index) => {
+                console.log(`  [${index}] ${child.name}: pos=${child.position}, active=${child.active}`);
+            });
         }
     }
 }
