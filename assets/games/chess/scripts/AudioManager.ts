@@ -124,7 +124,6 @@ export class AudioManager extends Component {
     
     /**
      * 从本地存储加载静音状态
-     */
     private loadMuteState() {
         try {
             const saved = localStorage.getItem('diamond_chess_muted');
@@ -137,5 +136,11 @@ export class AudioManager extends Component {
             console.warn('Failed to load mute state:', e);
             this.isMuted = false;
         }
+    }
+    */
+
+    private loadMuteState() {
+        // 改为每次默认开启声音
+        this.isMuted = false; // 忽略本地存储
     }
 }
