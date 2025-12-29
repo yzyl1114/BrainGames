@@ -17,6 +17,9 @@ export class BoardController extends Component {
     public PegPrefab: Prefab = null; 
     
     @property(Node)
+    public homePageNode: Node = null; // 新增：首页节点
+    
+    @property(Node)
     public boardRoot: Node = null; 
 
     @property(Node)
@@ -125,29 +128,28 @@ export class BoardController extends Component {
             return; // 添加return，避免后续错误
         }
 
-        // 4. 【重要修改】默认显示关卡选择页
-        if (this.levelSelectionNode) {
-            // 隐藏游戏UI和棋盘
-            if (this.uiRoot) {
-                this.uiRoot.active = false;
-            }
-            if (this.boardRoot) {
-                this.boardRoot.active = false;
-            }
-            
-            // 显示关卡选择页
-            this.levelSelectionNode.active = true;
-            
-            // 初始化关卡选择
-            const levelSelection = this.levelSelectionNode.getComponent(LevelSelection);
-            if (levelSelection && levelSelection.show) {
-                levelSelection.show();
-            }
+        // 4. 默认隐藏游戏相关UI
+        if (this.uiRoot) {
+            this.uiRoot.active = false;  // 隐藏GameUI
+        }
+        if (this.boardRoot) {
+            this.boardRoot.active = false;  // 隐藏棋盘
+        }
+        
+        // 使用新的页面切换方法
+        if (this.homePageNode) {
+            console.log("首页节点已连接，切换到首页");
+            this.switchToHomePage(); // 使用新方法
+        } else if (this.levelSelectionNode) {
+            console.log("没有首页节点，切换到关卡选择页");
+            this.switchToLevelSelection();
         } else {
-            // 如果没有关卡选择页，直接加载第一关（向后兼容）
-            console.warn("LevelSelectionNode not assigned, loading default level");
+            console.log("没有首页和关卡选择页，直接进入游戏");
             this.loadLevel(this.currentLevelIndex);
-        }        
+        }
+
+        // 5. 【关键修改】默认显示首页
+        console.log("游戏初始化完成，等待用户操作");
     }
 
     // ==================== UI 初始化与动态绑定 ====================
@@ -164,6 +166,8 @@ export class BoardController extends Component {
         if (canvas) {
             this.uiRoot.parent = canvas;
             this.uiRoot.setSiblingIndex(0); // 设置为第一个子节点
+            // 【重要】初始化时不显示
+            this.uiRoot.active = false;
             
             const backgroundNode = this.uiRoot.getChildByPath('UIRoot/Background');
             if (backgroundNode) {
@@ -295,6 +299,11 @@ export class BoardController extends Component {
             this.levelSelectionNode.active = false;
         }
 
+        // 【重要】隐藏首页（如果显示）
+        if (this.homePageNode) {
+            this.homePageNode.active = false;
+        }
+
         if (!this.boardRoot) {
             console.error("Critical nodes missing, cannot load level");
             return;
@@ -391,31 +400,11 @@ export class BoardController extends Component {
             this.tutorialManager.hideTutorial();
         }
 
-        // 隐藏游戏UI
-        if (this.uiRoot) {
-            this.uiRoot.active = false;
-        }
+        // 隐藏结算弹窗
+        this.hideSettlementPanel();
         
-        // 隐藏棋盘
-        if (this.boardRoot) {
-            this.boardRoot.active = false;
-        }
-        
-        // 显示关卡选择页
-        if (this.levelSelectionNode) {
-            this.levelSelectionNode.active = true;
-            
-            // 调用LevelSelection的show方法刷新数据
-            const levelSelection = this.levelSelectionNode.getComponent(LevelSelection);
-            if (levelSelection && levelSelection.show) {
-                levelSelection.show();
-            }
-            
-            // 隐藏结算弹窗（如果在显示）
-            this.hideSettlementPanel();
-        } else {
-            console.error("LevelSelectionNode not assigned!");
-        }
+        // 使用页面切换方法
+        this.switchToLevelSelection();
     }
 
     // 添加从结算弹窗返回关卡选择的方法
@@ -943,6 +932,79 @@ export class BoardController extends Component {
     }
 
     // ==================== 游戏流程控制 ====================
+    // 新增：页面切换辅助方法
+    private switchToHomePage() {
+        console.log("🚀 切换到首页");
+        
+        // 隐藏游戏相关UI
+        if (this.uiRoot) {
+            this.uiRoot.active = false;
+            console.log("✅ 隐藏GameUI");
+        }
+        if (this.boardRoot) {
+            this.boardRoot.active = false;
+            console.log("✅ 隐藏BoardRoot");
+        }
+        
+        // 显示首页
+        if (this.homePageNode) {
+            this.homePageNode.active = true;
+            console.log("✅ 显示首页");
+        }
+        
+        // 隐藏关卡选择页
+        if (this.levelSelectionNode) {
+            this.levelSelectionNode.active = false;
+            console.log("✅ 隐藏关卡选择页");
+        }
+        
+        // 隐藏结算弹窗（如果正在显示）
+        this.hideSettlementPanel();
+        
+        // 关闭教学弹窗（如果正在显示）
+        if (this.tutorialManager && this.tutorialManager.isTutorialShowing()) {
+            this.tutorialManager.hideTutorial();
+        }
+    }
+
+    private switchToLevelSelection() {
+        console.log("🚀 切换到关卡选择");
+        
+        // 隐藏游戏相关UI
+        if (this.uiRoot) {
+            this.uiRoot.active = false;
+            console.log("✅ 隐藏GameUI");
+        }
+        if (this.boardRoot) {
+            this.boardRoot.active = false;
+            console.log("✅ 隐藏BoardRoot");
+        }
+        
+        // 显示关卡选择页
+        if (this.levelSelectionNode) {
+            this.levelSelectionNode.active = true;
+            const levelSelection = this.levelSelectionNode.getComponent(LevelSelection);
+            if (levelSelection && levelSelection.show) {
+                levelSelection.show();
+            }
+            console.log("✅ 显示关卡选择页");
+        }
+        
+        // 隐藏首页
+        if (this.homePageNode) {
+            this.homePageNode.active = false;
+            console.log("✅ 隐藏首页");
+        }
+        
+        // 隐藏结算弹窗（如果正在显示）
+        this.hideSettlementPanel();
+        
+        // 关闭教学弹窗（如果正在显示）
+        if (this.tutorialManager && this.tutorialManager.isTutorialShowing()) {
+            this.tutorialManager.hideTutorial();
+        }
+    }
+    
     public retryLevel() {
         console.log("Retrying current level");
         this.clearHistory();  // 清空历史记录

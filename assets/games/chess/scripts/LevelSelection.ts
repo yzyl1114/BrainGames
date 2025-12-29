@@ -25,6 +25,12 @@ export class LevelSelection extends Component {
     
     @property(Button)
     public backButton: Button = null; // 返回游戏按钮（如果需要）
+
+    @property(Button)
+    public homeBackButton: Button = null; // 新增：返回首页按钮
+    
+    @property(Node)
+    public homePageNode: Node = null; // 新增：首页节点引用
     
     @property(Label)
     public titleLabel: Label = null; // 标题
@@ -52,6 +58,11 @@ export class LevelSelection extends Component {
         
         if (this.backButton) {
             this.backButton.node.on(Button.EventType.CLICK, this.onBackToGame, this);
+        }
+
+        // 绑定返回按钮事件
+        if (this.homeBackButton) {
+            this.homeBackButton.node.on(Button.EventType.CLICK, this.onBackToHome, this);
         }
     }
     
@@ -814,11 +825,19 @@ export class LevelSelection extends Component {
     private onLevelSelected(levelIndex: number) {
         console.log(`Level selected: ${levelIndex}`);
         
-        // 保存选中的关卡到本地存储，以便游戏场景读取
         localStorage.setItem('diamond_chess_selected_level', levelIndex.toString());
         
-        // 切换到游戏场景
-        this.loadGameScene(levelIndex);
+        // 隐藏关卡选择页
+        this.node.active = false;
+        
+        // 【重要】直接调用BoardController加载关卡
+        const gameManager = find('Canvas/GameManager');
+        if (gameManager) {
+            const boardController = gameManager.getComponent('BoardController') as any;
+            if (boardController && boardController.loadLevel) {
+                boardController.loadLevel(levelIndex);
+            }
+        }
     }
     
     // 加载游戏场景（假设你的游戏场景叫 GameScene）
@@ -844,15 +863,9 @@ export class LevelSelection extends Component {
         }
     }
     
-    // 返回游戏（如果从游戏场景进入）
+    // 如果从游戏场景进入,点击也是回首页
     private onBackToGame() {
-        this.node.active = false;
-        
-        // 激活游戏UI
-        const gameUI = find('Canvas/UIRoot');
-        if (gameUI) {
-            gameUI.active = true;
-        }
+        this.onBackToHome();
     }
     
     // 显示关卡选择页（从游戏场景调用）
@@ -862,9 +875,35 @@ export class LevelSelection extends Component {
         this.refreshLevelCards();
         
         // 隐藏游戏UI
-        const gameUI = find('Canvas/UIRoot');
+        const gameUI = find('Canvas/GameUI');
         if (gameUI) {
             gameUI.active = false;
+        }
+
+        // 【新增】确保首页隐藏
+        const homePage = find('Canvas/HomePage');
+        if (homePage) {
+            homePage.active = false;
+        }
+    }
+
+    // 新增：返回首页方法
+    private onBackToHome() {
+        console.log("返回首页");
+        
+        // 隐藏关卡选择页
+        this.node.active = false;
+        
+        // 显示首页
+        if (this.homePageNode) {
+            const homeController = this.homePageNode.getComponent(HomePageController);
+            if (homeController && homeController.show) {
+                homeController.show();
+            } else {
+                this.homePageNode.active = true;
+            }
+        } else {
+            console.error("HomePageNode not assigned!");
         }
     }
 }
