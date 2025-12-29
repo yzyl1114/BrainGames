@@ -5,6 +5,7 @@ import { _decorator, Component, Node, Prefab, instantiate, UITransform, Vec3, v3
 import { Peg } from './Peg';
 import { BOARD_SIZE, TILE_STATE, LEVELS_DATA, evaluateResult, CENTER_POS } from './GameConfig'; 
 import { TutorialManager } from './TutorialManager';
+import { AudioManager } from './AudioManager';
 
 const { ccclass, property } = _decorator;
 
@@ -41,6 +42,10 @@ export class BoardController extends Component {
 
     // ===== 棋盘背景相关 =====
     private boardTileNodes: Node[] = []; // 存储棋盘格子节点
+
+    // ===== 音频相关属性 =====
+    private audioButton: Button = null; // 音乐开关按钮
+    private audioIcon: Sprite = null;   // 音乐图标Sprite
 
     // ===== 所有UI组件将在代码中动态获取，不再需要编辑器拖拽绑定 =====
     private uiRoot: Node = null; // UI总根节点 (对应预制体中的 UIRoot)
@@ -220,7 +225,7 @@ export class BoardController extends Component {
             this.settlementNextBtn.node.on(Button.EventType.CLICK, this.onSettlementNext, this);
         }
         
-        // 动态绑定BackButton点击事件
+        // 6. 动态绑定BackButton点击事件
         if (this.backButton) {
             console.log('[UI] BackButton found, binding click event');
 
@@ -247,10 +252,13 @@ export class BoardController extends Component {
             console.warn('[UI] BackButton not found in UI prefab!');
         }
 
-        // 6. 创建教学入口按钮
+        // 7. 创建教学入口按钮
         this.createTutorialButton();
 
-        // 7. 初始化UI状态
+        // 8. 创建音乐开关按钮
+        this.createAudioButton(); 
+
+        // 9. 初始化UI状态
         if (this.tipsLabel) {
             this.tipsLabel.node.active = false; // 初始隐藏提示
         }
@@ -1136,6 +1144,12 @@ export class BoardController extends Component {
     private resetPegPosition(peg: Peg) {
         if (!this.activeNode) return;
         
+        // 播放移动失败音效
+        const audioManager = AudioManager.getInstance();
+        if (audioManager && audioManager.playMoveFail) {
+            audioManager.playMoveFail();
+        }
+
         peg.setActive(false);
         
         tween(this.activeNode)
@@ -1156,6 +1170,11 @@ export class BoardController extends Component {
     private executeJump(peg: Peg, targetR: number, targetC: number, eatenPos: { row: number, col: number }) {
         console.log(`Executing jump: peg (${this.activePegRow}, ${this.activePegCol}) -> (${targetR}, ${targetC}), eat (${eatenPos.row}, ${eatenPos.col})`);
         
+        const audioManager = AudioManager.getInstance();
+        if (audioManager && audioManager.playMoveSuccess) {
+            audioManager.playMoveSuccess();
+        }
+
         if (!this.activeNode || !this.activeNode.isValid) {
             console.error("Invalid node in executeJump");
             return;
@@ -1466,6 +1485,125 @@ export class BoardController extends Component {
         console.log('[UI] BackButton位置:', this.backButton?.node?.position);
 
         this.tutorialButton = tutorialButton;
+    }
+
+    private createAudioButton() {
+        console.log('[UI] 创建音乐开关按钮...');
+        
+        const audioContainer = new Node('AudioButton');
+        const uiRootNode = this.uiRoot?.getChildByPath('UIRoot');
+        
+        if (!uiRootNode) {
+            console.error('[UI] 找不到UIRoot节点！');
+            return;
+        }
+        
+        audioContainer.parent = uiRootNode;
+        
+        // 【调整】放在教学按钮下方，确保不重叠
+        // 获取教学按钮位置作为参考
+        let tutorialPos = v3(0, 0, 0);
+        if (this.tutorialButton && this.tutorialButton.node) {
+            tutorialPos = this.tutorialButton.node.position;
+            console.log('[UI] 教学按钮位置:', tutorialPos);
+        }
+        
+        // 计算新位置：教学按钮下方，间距60像素
+        const audioPosX = tutorialPos.x;
+        const audioPosY = tutorialPos.y - 60;
+        
+        audioContainer.setPosition(audioPosX, audioPosY, 0);
+        
+        const transform = audioContainer.addComponent(UITransform);
+        transform.setContentSize(50, 50); // 比教学按钮小一点
+        transform.setAnchorPoint(0.5, 0.5);
+        
+        // 添加图标Sprite
+        const iconSprite = audioContainer.addComponent(Sprite);
+        // 这里需要准备两个图标资源：music_on.png 和 music_off.png
+        // 暂时使用默认颜色占位
+        iconSprite.color = Color.BLUE; // 临时颜色，需替换为图标
+        
+        // 添加按钮组件
+        const audioButton = audioContainer.addComponent(Button);
+        audioButton.transition = Button.Transition.COLOR;
+        audioButton.normalColor = new Color(0, 0, 0, 0);
+        audioButton.hoverColor = new Color(100, 100, 100, 100);
+        audioButton.pressedColor = new Color(150, 150, 150, 150);
+        
+        audioButton.node.on(Button.EventType.CLICK, this.toggleAudio, this);
+        
+        // 保存引用
+        this.audioButton = audioButton;
+        this.audioIcon = iconSprite;
+        
+        // 更新图标显示
+        this.updateAudioButtonIcon();
+        
+        console.log('[UI] 音乐开关按钮创建完成，位置:', audioContainer.position);
+    }
+
+    private toggleAudio() {
+        const audioManager = AudioManager.getInstance();
+        if (audioManager) {
+            const isNowMuted = audioManager.toggleMute();
+            console.log('[Audio] 声音状态切换:', isNowMuted ? '静音' : '开启');
+            
+            // 播放按钮点击音效（静音状态下不播放）
+            if (!isNowMuted && audioManager.playButtonClick) {
+                audioManager.playButtonClick();
+            }
+            
+            // 更新按钮图标
+            this.updateAudioButtonIcon();
+        } else {
+            console.warn('[Audio] AudioManager 未初始化');
+            // 临时本地逻辑（如果AudioManager尚未实现）
+            this.temporaryAudioToggle();
+        }
+    }
+
+    private updateAudioButtonIcon() {
+        if (!this.audioIcon) return;
+        
+        const audioManager = AudioManager.getInstance();
+        let isMuted = false;
+        
+        if (audioManager) {
+            isMuted = audioManager.isMutedState();
+        } else {
+            // 临时逻辑：检查本地存储
+            try {
+                const muted = localStorage.getItem('diamond_chess_audio_muted');
+                isMuted = muted === 'true';
+            } catch (e) {
+                console.warn('无法访问本地存储:', e);
+            }
+        }
+        
+        // 根据静音状态切换颜色（需替换为实际图标）
+        if (isMuted) {
+            this.audioIcon.color = Color.RED;    // 静音状态：红色
+        } else {
+            this.audioIcon.color = Color.GREEN;  // 开启状态：绿色
+        }
+        
+        console.log('[UI] 更新音乐按钮图标，状态:', isMuted ? '静音' : '开启');
+    }
+
+    // 临时音频切换方法（如果AudioManager尚未实现）
+    private temporaryAudioToggle() {
+        try {
+            const muted = localStorage.getItem('diamond_chess_audio_muted');
+            const newMuted = muted !== 'true'; // 切换状态
+            
+            localStorage.setItem('diamond_chess_audio_muted', newMuted.toString());
+            console.log('[Audio] 临时音频切换:', newMuted ? '静音' : '开启');
+            
+            this.updateAudioButtonIcon();
+        } catch (e) {
+            console.error('临时音频切换失败:', e);
+        }
     }
 
     private debugUIHierarchy() {
