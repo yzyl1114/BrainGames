@@ -19,13 +19,53 @@ export class HomePageController extends Component {
     protected onLoad() {
         console.log("HomePageController: onLoad");
         
-        // 绑定按钮事件
-        if (this.chessGameButton) {
-            this.chessGameButton.node.on(Button.EventType.CLICK, this.onChessGameClicked, this);
+        // 【添加】调试信息
+        console.log("🔍 HomePage节点调试:");
+        console.log("节点位置:", this.node.position);
+        console.log("节点缩放:", this.node.scale);
+        console.log("节点active:", this.node.active);
+        
+        const transform = this.node.getComponent(cc.UITransform);
+        if (transform) {
+            console.log("节点尺寸:", transform.contentSize);
         }
         
-        // 初始化UI状态
-        this.initUI();
+        // 检查子节点
+        console.log("📦 子节点列表:");
+        this.node.children.forEach((child, index) => {
+            console.log(`  [${index}] ${child.name}:`, {
+                active: child.active,
+                position: child.position,
+                scale: child.scale
+            });
+        });
+        
+        // 【添加】专门检查游戏卡片
+        const cardNode = this.node.getChildByName('ChessGameCard');
+        if (cardNode) {
+            console.log("🎮 找到游戏卡片:", {
+                name: cardNode.name,
+                active: cardNode.active,
+                position: cardNode.position,
+                scale: cardNode.scale,
+                worldPos: cardNode.worldPosition
+            });
+            
+            const cardTransform = cardNode.getComponent(cc.UITransform);
+            if (cardTransform) {
+                console.log("卡片尺寸:", cardTransform.contentSize);
+            }
+        } else {
+            console.error("❌ 未找到ChessGameCard节点！请检查预制体结构");
+        }
+        
+        // 绑定按钮事件
+        if (this.chessGameButton) {
+            console.log("✅ 找到ChessGameButton按钮");
+            this.chessGameButton.node.on(cc.Button.EventType.CLICK, this.onChessGameClicked, this);
+        } else {
+            console.error("❌ ChessGameButton按钮未找到或未连接");
+        }
         
         // 【重要】确保首页是唯一显示的页面
         this.ensureOnlyHomePageVisible();

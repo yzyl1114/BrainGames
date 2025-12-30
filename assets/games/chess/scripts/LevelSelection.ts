@@ -1,5 +1,6 @@
 import { _decorator, Component, Node, Prefab, instantiate, Label, Button, Sprite, Color, ScrollView, UITransform, Layout, SpriteFrame, find, Size } from 'cc';
 import { LEVELS_DATA } from './GameConfig';
+import { HomePageController } from './HomePageController';
 
 const { ccclass, property } = _decorator;
 
