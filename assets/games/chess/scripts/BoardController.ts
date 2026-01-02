@@ -56,6 +56,9 @@ export class BoardController extends Component {
     @property(SpriteFrame)
     private musicOffSprite: SpriteFrame = null;
 
+    @property(SpriteFrame)
+    private tutorialIconSprite: SpriteFrame = null;
+
     // ===== 所有UI组件将在代码中动态获取，不再需要编辑器拖拽绑定 =====
     private uiRoot: Node = null; // UI总根节点 (对应预制体中的 UIRoot)
 
@@ -658,7 +661,7 @@ export class BoardController extends Component {
         const remainingUndo = this.maxUndoCount - this.undoCount;
         
         // 使用提示显示成功信息
-        this.showTips(`悔棋成功！剩余棋子: ${remainingPegs}，剩余悔棋: ${remainingUndo}次`);
+        this.showTips(`悔棋成功！剩余悔棋${remainingUndo}次`);
         
         console.log(`Undo successful. Steps: ${this.stepCount}, Undo used: ${this.undoCount}/${this.maxUndoCount}, History: ${this.moveHistory.length}`);
     }
@@ -1497,60 +1500,55 @@ export class BoardController extends Component {
             return;
         }
         
-        // 【修改位置】根据Canvas尺寸调整
-        const canvasWidth = 750; // 从日志获取的Canvas宽度
-        const canvasHeight = 1334;
-        
-        // 放在右上角，但不要超出边界
+        // 放在右上角
         tutorialContainer.parent = uiRootNode;
-        tutorialContainer.setPosition(295, 617, 0); 
-            
+        tutorialContainer.setPosition(295, 550, 0);
+        
         // 添加UITransform组件
         const containerTransform = tutorialContainer.addComponent(UITransform);
-        containerTransform.setContentSize(120, 50);
+        containerTransform.setContentSize(60, 60);
         containerTransform.setAnchorPoint(0.5, 0.5);
         
         // 创建问号图标
         const iconNode = new Node('QuestionIcon');
         iconNode.parent = tutorialContainer;
-        iconNode.setPosition(-25, 0, 0);
+        iconNode.setPosition(0, 0, 0);
         
-        // 【修复】只获取，不重复添加
-        const iconTransform = iconNode.getComponent(UITransform) || iconNode.addComponent(UITransform);
-        iconTransform.setContentSize(30, 30);
+        const iconTransform = iconNode.addComponent(UITransform);
+        iconTransform.setContentSize(60, 60); // 设置图标显示尺寸
         iconTransform.setAnchorPoint(0.5, 0.5);
         
         const iconSprite = iconNode.addComponent(Sprite);
-        // 设置问号图标资源（如果有的话）
         
-        // 创建"教学"文字
-        const textNode = new Node('TutorialText');
-        textNode.parent = tutorialContainer;
-        textNode.setPosition(20, 0, 0);
+        // 设置 Sprite 尺寸模式
+        iconSprite.sizeMode = Sprite.SizeMode.CUSTOM; // 使用自定义尺寸
+        iconSprite.type = Sprite.Type.SIMPLE;
+        iconSprite.trim = false; // 关闭裁切
         
-        const textTransform = textNode.getComponent(UITransform) || textNode.addComponent(UITransform);
-        textTransform.setContentSize(60, 30);
-        textTransform.setAnchorPoint(0.5, 0.5);
-        
-        const textLabel = textNode.addComponent(Label);
-        textLabel.string = '教学';
-        textLabel.fontSize = 24;
-        textLabel.color = Color.BLACK;
-        textLabel.horizontalAlign = Label.HorizontalAlign.LEFT;
+        // 使用上传的问号图标
+        if (this.tutorialIconSprite) {
+            iconSprite.spriteFrame = this.tutorialIconSprite;
+            console.log('[UI] 使用自定义教学图标');
+            
+            // 【可选】如果你希望完全填充，也可以这样设置：
+            // iconSprite.sizeMode = Sprite.SizeMode.CUSTOM;
+        } else {
+            console.warn('[UI] 教学图标未设置，使用默认颜色');
+            iconSprite.color = Color.BLUE;
+        }
         
         // 添加按钮组件
         const tutorialButton = tutorialContainer.addComponent(Button);
         tutorialButton.transition = Button.Transition.COLOR;
-        tutorialButton.normalColor = new Color(0, 0, 0, 0);
-        tutorialButton.hoverColor = new Color(100, 100, 100, 100);
-        tutorialButton.pressedColor = new Color(150, 150, 150, 150);
-        tutorialButton.disabledColor = new Color(50, 50, 50, 50);
+        tutorialButton.normalColor = new Color(255, 255, 255, 255);
+        tutorialButton.hoverColor = new Color(200, 200, 255, 255);
+        tutorialButton.pressedColor = new Color(150, 150, 255, 255);
+        tutorialButton.disabledColor = new Color(100, 100, 100, 100);
         
         tutorialButton.node.on(Button.EventType.CLICK, this.showTutorialPanel, this);
         
-        console.log('[UI] 按钮创建完成，位置:', tutorialContainer.position);
-        console.log('[UI] 按钮世界位置:', tutorialContainer.worldPosition);
-        console.log('[UI] BackButton位置:', this.backButton?.node?.position);
+        console.log('[UI] 教学图标按钮创建完成');
+        console.log('[UI] 图标尺寸:', iconTransform.contentSize);
 
         this.tutorialButton = tutorialButton;
     }
@@ -1567,7 +1565,7 @@ export class BoardController extends Component {
         }
         
         audioContainer.parent = uiRootNode;
-        audioContainer.setPosition(295, 550, 0);
+        audioContainer.setPosition(295, 480, 0);
         
         const transform = audioContainer.addComponent(UITransform);
         transform.setContentSize(60, 60); 
@@ -1576,7 +1574,7 @@ export class BoardController extends Component {
         // 添加图标Sprite
         const iconSprite = audioContainer.addComponent(Sprite);
         
-        // 【关键】先设置白色，确保可见
+        // 先设置白色，确保可见
         iconSprite.color = Color.WHITE;
 
         if (this.musicOnSprite) {
@@ -1594,7 +1592,7 @@ export class BoardController extends Component {
         // 添加按钮组件
         const audioButton = audioContainer.addComponent(Button);
         
-        // 【关键修改】禁用颜色过渡，使用纯按钮交互
+        // 禁用颜色过渡，使用纯按钮交互
         audioButton.transition = Button.Transition.NONE; // 不改变颜色
         audioButton.interactable = true;
         audioButton.node.on(Button.EventType.CLICK, this.toggleAudio, this);

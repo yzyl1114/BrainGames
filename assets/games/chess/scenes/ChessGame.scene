@@ -2067,6 +2067,10 @@
       "__uuid__": "2d655066-94e6-49c6-a90f-8f49065d8501@f9941",
       "__expectedType__": "cc.SpriteFrame"
     },
+    "tutorialIconSprite": {
+      "__uuid__": "ad762e2f-9ebf-4f9f-9878-726a4b17af3a@f9941",
+      "__expectedType__": "cc.SpriteFrame"
+    },
     "_id": "d12wtTpwVPBJgKytR8jEPP"
   },
   {
