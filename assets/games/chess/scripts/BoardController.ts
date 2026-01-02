@@ -354,7 +354,7 @@ export class BoardController extends Component {
         
         // 更新游戏标题
         if (this.gameTitleLabel) {
-            this.gameTitleLabel.string = `钻石棋游戏 - 关卡 ${levelIndex + 1}: ${level.name}`;
+            this.gameTitleLabel.string = `钻石棋游戏 - 关卡 ${levelIndex + 1}`;
         }
         
         // 更新计步器显示
@@ -1597,12 +1597,6 @@ export class BoardController extends Component {
         // 【关键修改】禁用颜色过渡，使用纯按钮交互
         audioButton.transition = Button.Transition.NONE; // 不改变颜色
         audioButton.interactable = true;
-        
-        // 移除所有颜色设置
-        // audioButton.normalColor = ... // 不需要了
-        // audioButton.hoverColor = ...  // 不需要了
-        // audioButton.pressedColor = ... // 不需要了
-        
         audioButton.node.on(Button.EventType.CLICK, this.toggleAudio, this);
         
         // 【可选】添加悬停效果（通过代码而不是Button颜色）
