@@ -131,91 +131,24 @@ export class LevelSelection extends Component {
     }
     
     private initUI() {
-        console.log('初始化关卡选择UI - 使用手动布局');
+        console.log('初始化关卡选择UI - 使用编辑器布局');
         
-        // 1. 设置标题位置
-        if (this.titleLabel) {
-            this.titleLabel.string = `钻石棋 - 关卡选择`;
-            const titleTransform = this.titleLabel.node.getComponent(UITransform);
-            if (titleTransform) {
-                titleTransform.setAnchorPoint(0.5, 0.5);
-            }
-            this.titleLabel.node.setPosition(0, 550, 0);
-        }
-        
-        // 2. 【关键修改】设置ScrollView和容器的正确位置
-        if (this.scrollView && this.scrollView.node) {
-            const scrollTransform = this.scrollView.node.getComponent(UITransform);
-            if (scrollTransform) {
-                scrollTransform.setAnchorPoint(0.5, 0.5);
-                
-                // 【重要】设置ScrollView在屏幕中间偏下
-                this.scrollView.node.setPosition(0, -50, 0); 
-                
-                scrollTransform.width = 720;
-                scrollTransform.height = 1000; 
-                
-                console.log('ScrollView设置:', {
-                    位置: this.scrollView.node.position,
-                    尺寸: `${scrollTransform.width}×${scrollTransform.height}`,
-                    锚点: `(${scrollTransform.anchorX}, ${scrollTransform.anchorY})`
-                });
-            }
-            
-            // 【关键】确保content正确设置
-            if (this.levelContainer) {
+        // 确保ScrollView的content正确连接
+        if (this.scrollView && this.levelContainer) {
+            // 只有在未连接时才设置
+            if (this.scrollView.content !== this.levelContainer) {
                 this.scrollView.content = this.levelContainer;
+                console.log('已设置ScrollView content');
             }
         }
         
-        // 3. 确保LevelContainer在正确位置
+        // 清理可能存在的Layout组件（如果你在代码中布局）
         if (this.levelContainer) {
-            // 【重要】LevelContainer应该位于ScrollView的content区域顶部
-            this.levelContainer.setPosition(0, 0, 0);
-            
-            // 移除所有Layout组件
             const layoutComponents = this.levelContainer.getComponents(Layout);
             for (let i = layoutComponents.length - 1; i >= 0; i--) {
                 layoutComponents[i].destroy();
             }
-            
-            // 确保有UITransform
-            let uiTransform = this.levelContainer.getComponent(UITransform);
-            if (!uiTransform) {
-                uiTransform = this.levelContainer.addComponent(UITransform);
-            }
-            
-            uiTransform.setAnchorPoint(0.5, 0.5);
-            
-            // 【修改】设置合理的初始尺寸
-            uiTransform.setContentSize(700, 400); // 高度先设小一点，后面会根据卡片数量调整
-            
-            // 【关键】确保LevelContainer的父节点位置正确
-            const parentNode = this.levelContainer.parent;
-            if (parentNode && parentNode.name === 'view') {
-                parentNode.setPosition(0, 0, 0);
-                
-                const parentTransform = parentNode.getComponent(UITransform);
-                if (parentTransform) {
-                    console.log('view节点信息:', {
-                        尺寸: `${parentTransform.width}×${parentTransform.height}`,
-                        锚点: `(${parentTransform.anchorX}, ${parentTransform.anchorY})`,
-                        位置: parentNode.position
-                    });
-                    
-                    // 确保view节点的尺寸正确
-                    parentTransform.setContentSize(700, 800);
-                    parentTransform.setAnchorPoint(0.5, 0.5);
-                }
-                
-                console.log('已设置view节点位置为(0, 0, 0)');
-            }
-            
-            console.log('LevelContainer初始化完成:', {
-                尺寸: uiTransform.contentSize,
-                锚点: `(${uiTransform.anchorX}, ${uiTransform.anchorY})`,
-                位置: this.levelContainer.position
-            });
+            console.log('已清理Layout组件，使用编辑器布局');
         }
     }
 
