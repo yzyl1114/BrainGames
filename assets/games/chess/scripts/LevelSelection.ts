@@ -150,10 +150,10 @@ export class LevelSelection extends Component {
                 scrollTransform.setAnchorPoint(0.5, 0.5);
                 
                 // 【重要】设置ScrollView在屏幕中间偏下
-                this.scrollView.node.setPosition(0, -100, 0); // 向下移动一些
+                this.scrollView.node.setPosition(0, -50, 0); 
                 
                 scrollTransform.width = 720;
-                scrollTransform.height = 800; // 【减小高度】给标题留空间
+                scrollTransform.height = 1000; 
                 
                 console.log('ScrollView设置:', {
                     位置: this.scrollView.node.position,

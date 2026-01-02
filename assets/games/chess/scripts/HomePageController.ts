@@ -41,7 +41,7 @@ export class HomePageController extends Component {
         });
         
         // 【添加】专门检查游戏卡片
-        const cardNode = this.node.getChildByName('ChessGameCard');
+        const cardNode = this.node.getChildByName('GamesLayout')?.getChildByName('ChessGameCard');
         if (cardNode) {
             console.log("🎮 找到游戏卡片:", {
                 name: cardNode.name,
