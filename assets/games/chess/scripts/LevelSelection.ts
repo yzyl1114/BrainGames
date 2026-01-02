@@ -569,7 +569,8 @@ export class LevelSelection extends Component {
     private setupLevelCard(cardNode: Node, levelData: LevelData) {
         // 获取卡片组件
         const levelIndexLabel = cardNode.getChildByPath('LevelIndex')?.getComponent(Label);
-        const scoreLabel = cardNode.getChildByPath('Score')?.getComponent(Label); // 保留用于显示评价
+        const scoreNode = cardNode.getChildByName('Score');
+        const scoreLabel = scoreNode?.getComponent(Label);
         const lockIcon = cardNode.getChildByPath('LockIcon');
         const completedIcon = cardNode.getChildByPath('CompletedIcon');
         const cardBg = cardNode.getComponent(Sprite) || 
@@ -577,22 +578,31 @@ export class LevelSelection extends Component {
         
         const levelIndex = levelData.levelIndex;
         
-        // 【修改】只设置关卡序号，去掉关卡名称
+        // 只设置关卡序号
         if (levelIndexLabel) {
-            levelIndexLabel.string = `${levelIndex + 1}`; // 只显示数字，如"1"
+            levelIndexLabel.string = `${levelIndex + 1}`;
         }
         
-        // 【修改】已完成的评价放在下方
-        if (scoreLabel) {
+        // 立即设置评价文字
+        if (scoreLabel && scoreNode) {
+            scoreNode.active = true;
+            
             if (levelData.isCompleted) {
-                scoreLabel.string = `${levelData.bestScore}`; // 只显示评价，如"天才"
-                scoreLabel.color = Color.GREEN;
-                scoreLabel.node.active = true; // 确保显示
+                scoreLabel.string = `${levelData.bestScore}`;
+                scoreLabel.color = Color.WHITE;
+                scoreLabel.fontSize = 16;
+                scoreLabel.enableOutline = true;
+                scoreLabel.outlineColor = Color.BLACK;
+                scoreLabel.outlineWidth = 1;
             } else {
                 scoreLabel.string = levelData.isUnlocked ? "未完成" : "未解锁";
                 scoreLabel.color = levelData.isUnlocked ? Color.WHITE : Color.GRAY;
-                scoreLabel.node.active = true;
+                scoreLabel.fontSize = 16;
             }
+            
+            // 确保位置
+            scoreNode.setPosition(0, -40, 0);
+            scoreNode.setSiblingIndex(99);
         }
         
         // 设置图标状态
@@ -607,11 +617,11 @@ export class LevelSelection extends Component {
         // 设置卡片背景颜色
         if (cardBg) {
             if (!levelData.isUnlocked) {
-                cardBg.color = Color.fromHEX(new Color(), "#666666"); // 未解锁灰色
+                cardBg.color = Color.fromHEX(new Color(), "#666666");
             } else if (levelData.isCompleted) {
-                cardBg.color = Color.fromHEX(new Color(), "#4CAF50"); // 已完成绿色
+                cardBg.color = Color.fromHEX(new Color(), "#4CAF50");
             } else {
-                cardBg.color = Color.fromHEX(new Color(), "#2196F3"); // 已解锁蓝色
+                cardBg.color = Color.fromHEX(new Color(), "#2196F3");
             }
         }
         
@@ -626,7 +636,7 @@ export class LevelSelection extends Component {
             }, this);
         }
     }
-    
+
     private updateContainerSize() {
         if (!this.levelContainer) {
             console.error('LevelContainer为空，无法更新尺寸');
