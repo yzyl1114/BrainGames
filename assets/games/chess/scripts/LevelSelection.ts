@@ -169,8 +169,8 @@ export class LevelSelection extends Component {
         
         // 每行5个卡片
         const cardsPerRow = 5;
-        const cardWidth = 100;
-        const cardHeight = 100;
+        const cardWidth = 90;
+        const cardHeight = 90;
         
         // 计算合适的间距 - 需要考虑到view节点的实际显示区域
         const effectiveWidth = 700; // ScrollView的有效宽度（考虑滚动条）
@@ -286,13 +286,13 @@ export class LevelSelection extends Component {
         
         const children = this.levelContainer.children;
         const cardsPerRow = 5;
-        const cardWidth = 100;
-        const cardHeight = 100;
-        const spacingX = 36;
+        const cardWidth = 90;
+        const cardHeight = 90;
+        const spacingX = 20;
         const spacingY = 20;
-        const paddingLeft = 36;
-        const paddingRight = 36;
-        const paddingTop = 30;
+        const paddingLeft = 50;
+        const paddingRight = 50;
+        const paddingTop = 40;
         
         // 计算每行起始位置
         const totalRowWidth = (cardWidth * cardsPerRow) + (spacingX * (cardsPerRow - 1));
@@ -464,9 +464,9 @@ export class LevelSelection extends Component {
         
         // 布局参数 - 使用实际卡片尺寸
         const cardsPerRow = 5;
-        const cardWidth = 80;          // 卡片实际宽度（已在预制体中设置）
-        const cardHeight = 80;         // 卡片实际高度
-        const spacingX = 25;           // 水平间距
+        const cardWidth = 90;          // 卡片实际宽度（已在预制体中设置）
+        const cardHeight = 90;         // 卡片实际高度
+        const spacingX = 20;           // 水平间距
         const spacingY = 20;           // 垂直间距
         const paddingTop = 40;         // 上内边距
         const paddingBottom = 40;      // 下内边距
@@ -590,14 +590,14 @@ export class LevelSelection extends Component {
             if (levelData.isCompleted) {
                 scoreLabel.string = `${levelData.bestScore}`;
                 scoreLabel.color = Color.WHITE;
-                scoreLabel.fontSize = 16;
-                scoreLabel.enableOutline = true;
+                scoreLabel.fontSize = 18;
+                scoreLabel.enableOutline = false;//描边
                 scoreLabel.outlineColor = Color.BLACK;
                 scoreLabel.outlineWidth = 1;
             } else {
                 scoreLabel.string = levelData.isUnlocked ? "未完成" : "未解锁";
                 scoreLabel.color = levelData.isUnlocked ? Color.WHITE : Color.GRAY;
-                scoreLabel.fontSize = 16;
+                scoreLabel.fontSize = 18;
             }
             
             // 确保位置
