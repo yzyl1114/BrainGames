@@ -3,10 +3,7 @@
   "panel": {
     "filterType": "info",
     "filterTypes": [
-      "error",
-      "log",
-      "info",
-      "warn"
+      "error"
     ]
   }
 }
