@@ -478,7 +478,34 @@ export class BoardController extends Component {
             return;
         }
         
-        // 显示提示
+        // 获取背景节点
+        const tipsBackground = this.tipsLabel.node.parent?.getChildByName('TipsBackground');
+        
+        if (tipsBackground) {
+            // 根据文字长度调整背景大小
+            const labelWidth = this.tipsLabel.node.getComponent(UITransform).width;
+            const textLength = message.length;
+            
+            // 计算合适的背景宽度（文字宽度 + 边距）
+            const minWidth = 200;
+            const maxWidth = 500;
+            const padding = 40; // 左右边距
+            
+            // 估算文字宽度（假设每个字符20像素）
+            const estimatedTextWidth = textLength * 20;
+            const backgroundWidth = Math.max(minWidth, Math.min(maxWidth, estimatedTextWidth + padding));
+            
+            // 设置背景尺寸
+            const backgroundTransform = tipsBackground.getComponent(UITransform);
+            if (backgroundTransform) {
+                backgroundTransform.setContentSize(backgroundWidth, 60);
+            }
+            
+            // 显示背景
+            tipsBackground.active = true;
+        }
+        
+        // 显示提示文字
         this.tipsLabel.string = message;
         this.tipsLabel.node.active = true;
         
@@ -486,12 +513,27 @@ export class BoardController extends Component {
         const opacity = this.tipsLabel.node.getComponent(UIOpacity) || this.tipsLabel.node.addComponent(UIOpacity);
         opacity.opacity = 0;
         
+        // 同时控制背景的淡入淡出
+        let backgroundOpacity = null;
+        if (tipsBackground) {
+            backgroundOpacity = tipsBackground.getComponent(UIOpacity) || tipsBackground.addComponent(UIOpacity);
+            backgroundOpacity.opacity = 0;
+        }
+        
         tween(opacity)
             .to(0.3, { opacity: 255 })
+            .call(() => {
+                if (backgroundOpacity) {
+                    tween(backgroundOpacity).to(0.3, { opacity: 200 }).start();
+                }
+            })
             .delay(duration)
             .to(0.3, { opacity: 0 })
             .call(() => {
                 this.tipsLabel.node.active = false;
+                if (tipsBackground) {
+                    tipsBackground.active = false;
+                }
             })
             .start();
     }
