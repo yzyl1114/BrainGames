@@ -661,7 +661,7 @@ export class BoardController extends Component {
         const remainingUndo = this.maxUndoCount - this.undoCount;
         
         // 使用提示显示成功信息
-        this.showTips(`悔棋成功！剩余悔棋${remainingUndo}次`);
+        this.showTips(`悔棋成功`);
         
         console.log(`Undo successful. Steps: ${this.stepCount}, Undo used: ${this.undoCount}/${this.maxUndoCount}, History: ${this.moveHistory.length}`);
     }
