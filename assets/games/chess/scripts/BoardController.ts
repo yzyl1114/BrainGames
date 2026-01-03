@@ -478,64 +478,121 @@ export class BoardController extends Component {
             return;
         }
         
+        console.log(`[Tips] 显示提示: "${message}"`);
+        
         // 获取背景节点
-        const tipsBackground = this.tipsLabel.node.parent?.getChildByName('TipsBackground');
+        let tipsBackground: Node | null = null;
+        
+        tipsBackground = this.tipsLabel.node.getChildByName('TipsBackground') || null;
         
         if (tipsBackground) {
-            // 根据文字长度调整背景大小
-            const labelWidth = this.tipsLabel.node.getComponent(UITransform).width;
-            const textLength = message.length;
+            console.log(`[Tips] 找到背景框，active: ${tipsBackground.active}`);
             
-            // 计算合适的背景宽度（文字宽度 + 边距）
+            // 根据文字长度调整背景大小
+            const textLength = message.length;
             const minWidth = 200;
             const maxWidth = 500;
-            const padding = 40; // 左右边距
-            
-            // 估算文字宽度（假设每个字符20像素）
+            const padding = 40;
             const estimatedTextWidth = textLength * 20;
             const backgroundWidth = Math.max(minWidth, Math.min(maxWidth, estimatedTextWidth + padding));
             
-            // 设置背景尺寸
             const backgroundTransform = tipsBackground.getComponent(UITransform);
             if (backgroundTransform) {
                 backgroundTransform.setContentSize(backgroundWidth, 60);
             }
             
-            // 显示背景
+            // 【关键修改】直接显示，不通过动画
             tipsBackground.active = true;
+            
+            // 【关键修改】确保背景不透明
+            const bgOpacity = tipsBackground.getComponent(UIOpacity);
+            if (bgOpacity) {
+                bgOpacity.opacity = 180; // 直接设置为180（70%透明）
+            } else {
+                // 如果没有UIOpacity组件，通过Sprite颜色设置透明度
+                const bgSprite = tipsBackground.getComponent(Sprite);
+                if (bgSprite) {
+                    bgSprite.color = new Color(bgSprite.color.r, bgSprite.color.g, bgSprite.color.b, 180);
+                }
+            }
+        } else {
+            console.log(`[Tips] 未找到背景框`);
+        }
+        
+        // 保存原始节点信息
+        const canvas = find('Canvas');
+        const originalParent = this.tipsLabel.node.parent;
+        const originalPosition = this.tipsLabel.node.position.clone();
+        const originalSiblingIndex = this.tipsLabel.node.getSiblingIndex();
+        
+        // 临时将节点移到Canvas最上层
+        if (canvas) {
+            // Tips文字移到Canvas最上层
+            this.tipsLabel.node.parent = canvas;
+            this.tipsLabel.node.setSiblingIndex(canvas.children.length - 1);
+            this.tipsLabel.node.setPosition(originalPosition);
+            
+            // 背景也移到Canvas上层（在文字下面）
+            if (tipsBackground && tipsBackground.isValid) {
+                tipsBackground.parent = canvas;
+                tipsBackground.setSiblingIndex(canvas.children.length - 2);
+                // 不需要设置位置，因为相对位置已经正确
+            }
         }
         
         // 显示提示文字
         this.tipsLabel.string = message;
         this.tipsLabel.node.active = true;
         
-        // 淡入淡出效果
-        const opacity = this.tipsLabel.node.getComponent(UIOpacity) || this.tipsLabel.node.addComponent(UIOpacity);
-        opacity.opacity = 0;
-        
-        // 同时控制背景的淡入淡出
-        let backgroundOpacity = null;
-        if (tipsBackground) {
-            backgroundOpacity = tipsBackground.getComponent(UIOpacity) || tipsBackground.addComponent(UIOpacity);
-            backgroundOpacity.opacity = 0;
+        // 【关键修改】直接设置文字不透明，不要动画
+        const opacity = this.tipsLabel.node.getComponent(UIOpacity);
+        if (opacity) {
+            opacity.opacity = 255; // 直接设置为完全不透明
         }
         
-        tween(opacity)
-            .to(0.3, { opacity: 255 })
-            .call(() => {
-                if (backgroundOpacity) {
-                    tween(backgroundOpacity).to(0.3, { opacity: 200 }).start();
-                }
-            })
-            .delay(duration)
-            .to(0.3, { opacity: 0 })
-            .call(() => {
-                this.tipsLabel.node.active = false;
-                if (tipsBackground) {
-                    tipsBackground.active = false;
-                }
-            })
-            .start();
+        console.log(`[Tips] 显示完成，等待${duration}秒后隐藏`);
+        
+        // 定时隐藏
+        this.scheduleOnce(() => {
+            console.log(`[Tips] 隐藏提示`);
+            
+            this.tipsLabel.node.active = false;
+            if (tipsBackground) {
+                tipsBackground.active = false;
+            }
+            
+            // 将节点移回原位
+            this.restoreTipsToOriginalPosition(
+                originalParent, 
+                originalPosition, 
+                originalSiblingIndex,
+                tipsBackground
+            );
+        }, duration);
+    }
+
+    // 简化版的恢复方法
+    private restoreTipsToOriginalPosition(
+        originalParent: Node | null, 
+        originalPosition: Vec3, 
+        originalSiblingIndex: number,
+        tipsBackground: Node | null
+    ) {
+        // 恢复Tips文字节点
+        if (originalParent && this.tipsLabel && this.tipsLabel.isValid) {
+            this.tipsLabel.node.parent = originalParent;
+            this.tipsLabel.node.setSiblingIndex(originalSiblingIndex);
+            this.tipsLabel.node.setPosition(originalPosition);
+        }
+        
+        // 恢复背景节点
+        if (tipsBackground && tipsBackground.isValid) {
+            const originalBgParent = this.tipsLabel.node; // 背景应该在TipsLabel下
+            if (originalBgParent) {
+                tipsBackground.parent = originalBgParent;
+                tipsBackground.setSiblingIndex(0); // 背景在文字下面
+            }
+        }
     }
 
     // ==================== 棋盘生成方法 ====================
