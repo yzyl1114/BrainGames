@@ -320,15 +320,21 @@ export class BoardController extends Component {
             this.tutorialManager.hideTutorial();
         }
 
-        this.boardRoot.destroyAllChildren();  
+        this.destroyAllPegsOnly();  // 只销毁棋子，不销毁背景
         
         this.activeNode = null;
         this.activePegRow = -1;
         this.activePegCol = -1;
-        this.pegNodes.clear();
         
-        // 清空旧的棋盘节点数组
-        this.clearBoardBackground();
+        // 【修改这里】检查是否需要重新生成背景
+        // 只有当没有背景或背景为空时才重新生成
+        if (this.boardTileNodes.length === 0) {
+            console.log(`首次生成关卡 ${levelIndex} 的背景`);
+            this.clearBoardBackground();
+            this.generateBoardBackground(levelIndex);
+        } else {
+            console.log(`使用现有的背景，关卡 ${levelIndex}`);
+        }
 
         // 重置游戏状态
         this.stepCount = 0;
@@ -391,6 +397,13 @@ export class BoardController extends Component {
         } else {
             console.warn('[UI] 教学入口按钮未找到');
         }
+        
+        // 【在这里添加调试】
+        this.scheduleOnce(() => {
+            console.log('=== loadLevel 后层级检查 ===');
+            this.debugBoardHierarchy();
+        }, 0.1);
+
         console.log(`Level ${levelIndex} loaded: ${level.name}, pegs count: ${this.countPegs()}, max undo: ${this.maxUndoCount}`);
     }
 
@@ -580,6 +593,61 @@ export class BoardController extends Component {
         this.boardTileNodes = [];
     }
 
+    private destroyAllPegsOnly() {
+        // 只销毁棋子节点，不销毁背景
+        this.pegNodes.forEach((node) => {
+            if (node && node.isValid) {
+                node.destroy();
+            }
+        });
+        this.pegNodes.clear();
+    }
+
+    // ==================== 调试方法 ====================
+    private debugBoardHierarchy() {
+        console.log('=== 棋盘节点层级调试 ===');
+        console.log(`BoardRoot 子节点数量: ${this.boardRoot.children.length}`);
+        console.log(`棋盘背景节点数量: ${this.boardTileNodes.length}`);
+        console.log(`棋子节点数量: ${this.pegNodes.size}`);
+        
+        // 分类统计
+        let tileCount = 0;
+        let borderCount = 0;
+        let pegCount = 0;
+        let otherCount = 0;
+        
+        this.boardRoot.children.forEach((child, index) => {
+            const name = child.name;
+            if (name.includes('BoardTile')) {
+                tileCount++;
+            } else if (name.includes('Border')) {
+                borderCount++;
+            } else if (name.includes('Peg')) {
+                pegCount++;
+            } else {
+                otherCount++;
+                console.log(`  其他节点 [${index}]: ${name}`);
+            }
+        });
+        
+        console.log(`分类统计:`);
+        console.log(`  - 棋盘格子: ${tileCount}`);
+        console.log(`  - 边框: ${borderCount}`);
+        console.log(`  - 棋子: ${pegCount}`);
+        console.log(`  - 其他: ${otherCount}`);
+        
+        // 检查背景节点引用是否有效
+        let validTileRefs = 0;
+        this.boardTileNodes.forEach((node, index) => {
+            if (node && node.isValid) {
+                validTileRefs++;
+            } else {
+                console.warn(`背景节点引用 [${index}] 无效`);
+            }
+        });
+        console.log(`有效的背景节点引用: ${validTileRefs}/${this.boardTileNodes.length}`);
+    }
+
     // ==================== 悔棋与历史记录系统 ====================
     private saveCurrentState() {
         // 深拷贝棋盘状态
@@ -615,13 +683,13 @@ export class BoardController extends Component {
     public undoMove() {
         // 检查是否有历史记录
         if (this.moveHistory.length <= 1) {
-            this.showTips("无法悔棋：已经是初始状态");
+            this.showTips("已是初始状态");
             return;
         }
         
         // 检查悔棋次数是否用完
         if (this.undoCount >= this.maxUndoCount) {
-            this.showTips(`悔棋次数已用完（最多${this.maxUndoCount}次）`);
+            this.showTips(`悔棋次数已用完`);
             return;
         }
         
@@ -639,9 +707,8 @@ export class BoardController extends Component {
         // 恢复步数
         this.stepCount = lastState.stepCount;
         
-        // 清空当前所有棋子
-        this.boardRoot.destroyAllChildren();
-        this.pegNodes.clear();
+        // 只销毁棋子，不销毁背景
+        this.destroyAllPegsOnly();
         
         // 重新生成棋子
         for (const pegInfo of lastState.pegsInfo) {
@@ -663,6 +730,12 @@ export class BoardController extends Component {
         // 使用提示显示成功信息
         this.showTips(`悔棋成功`);
         
+        // 【在这里添加调试】
+        this.scheduleOnce(() => {
+            console.log('=== undoMove 后层级检查 ===');
+            this.debugBoardHierarchy();
+        }, 0.1);
+
         console.log(`Undo successful. Steps: ${this.stepCount}, Undo used: ${this.undoCount}/${this.maxUndoCount}, History: ${this.moveHistory.length}`);
     }
     
@@ -1434,7 +1507,10 @@ export class BoardController extends Component {
         }
         
         const pegNode = instantiate(this.PegPrefab);
+        
+        // 确保棋子显示在背景之上
         pegNode.parent = this.boardRoot;
+        pegNode.setSiblingIndex(this.boardRoot.children.length); // 放在最后面（最上层）
         
         const uiTransform = pegNode.getComponent(UITransform);
         if (uiTransform) {
@@ -1456,7 +1532,7 @@ export class BoardController extends Component {
         const key = `${r},${c}`;
         this.pegNodes.set(key, pegNode);
         
-        console.log(`Spawned peg at (${r}, ${c})`);
+        console.log(`Spawned peg at (${r}, ${c}), 层级索引: ${pegNode.getSiblingIndex()}`);
     }
 
 
