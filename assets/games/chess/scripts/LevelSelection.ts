@@ -589,19 +589,19 @@ export class LevelSelection extends Component {
             
             if (levelData.isCompleted) {
                 scoreLabel.string = `${levelData.bestScore}`;
-                scoreLabel.color = Color.WHITE;
-                scoreLabel.fontSize = 18;
+                scoreLabel.color = Color.BLACK;
+                scoreLabel.fontSize = 24;
                 scoreLabel.enableOutline = false;//描边
                 scoreLabel.outlineColor = Color.BLACK;
                 scoreLabel.outlineWidth = 1;
             } else {
                 scoreLabel.string = levelData.isUnlocked ? "未完成" : "未解锁";
-                scoreLabel.color = levelData.isUnlocked ? Color.WHITE : Color.GRAY;
-                scoreLabel.fontSize = 18;
+                scoreLabel.color = levelData.isUnlocked ? Color.BLACK : Color.GRAY;
+                scoreLabel.fontSize = 24;
             }
             
             // 确保位置
-            scoreNode.setPosition(0, -40, 0);
+            scoreNode.setPosition(0, -70, 0);
             scoreNode.setSiblingIndex(99);
         }
         
