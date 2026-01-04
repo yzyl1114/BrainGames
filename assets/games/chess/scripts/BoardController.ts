@@ -873,55 +873,17 @@ export class BoardController extends Component {
                 `游戏结束! 剩余 ${remainingPegs} 颗. 评价: ${resultText}. 步数: ${stepCount}`);
             return;
         }
-        console.log("🔄 显示结算弹窗（层级调整方案）...");
-        // ========== 调试信息 ==========
-        console.log("🔍 调试信息：");
-        
-        // 获取Canvas并检查层级
-        const canvas = find('Canvas');
-        if (canvas) {
-            console.log("Canvas子节点顺序:");
-            canvas.children.forEach((child, index) => {
-                console.log(`  [${index}] ${child.name}`);
-            });
-            
-            // 【方案3】将BoardRoot移到GameUI下面
-            if (this.boardRoot && this.uiRoot) {
-                const boardRootIndex = this.boardRoot.getSiblingIndex();
-                const uiRootIndex = this.uiRoot.getSiblingIndex();
-                
-                console.log(`BoardRoot索引: ${boardRootIndex}, UI Root索引: ${uiRootIndex}`);
-                
-                if (boardRootIndex > uiRootIndex) {
-                    // BoardRoot在UI上面，需要移到下面
-                    this.boardRoot.setSiblingIndex(uiRootIndex);
-                    console.log(`✅ 将BoardRoot移到UI下面: ${boardRootIndex} → ${uiRootIndex}`);
-                } else {
-                    console.log(`ℹ️ BoardRoot已在UI下面 (${boardRootIndex} <= ${uiRootIndex})`);
-                }
-            }
-        }
-        
-        // 检查结算弹窗位置
-        if (this.settlementPanel) {
-            const parent = this.settlementPanel.parent;
-            console.log(`结算弹窗信息:`);
-            console.log(`  - 父节点: ${parent?.name}`);
-            console.log(`  - 当前兄弟索引: ${this.settlementPanel.getSiblingIndex()}`);
-            console.log(`  - 父节点子节点总数: ${parent?.children.length || 0}`);
-        }
-        
-        // 检查BoardRoot位置
-        if (this.boardRoot) {
-            console.log(`BoardRoot信息:`);
-            console.log(`  - 父节点: ${this.boardRoot.parent?.name}`);
-            console.log(`  - 兄弟索引: ${this.boardRoot.getSiblingIndex()}`);
-        }
-        // ========== 调试信息结束 ==========
+        console.log("显示结算弹窗...");
         
         // 隐藏不需要的UI元素
         this.hideGameUIForSettlement();
         
+        // 【额外添加】隐藏棋盘（BoardRoot）
+        if (this.boardRoot) {
+            this.boardRoot.active = false;
+            console.log("隐藏BoardRoot（棋盘）");
+        }
+
         // 显示结算弹窗
         this.settlementPanel.active = true;
         
@@ -931,38 +893,35 @@ export class BoardController extends Component {
         }
         
         // 设置弹窗内容
-        this.settlementTitle.string = isVictory ? "恭喜完成！" : "游戏结束！";
+        this.settlementTitle.string = isVictory ? "恭喜过关" : "游戏结束";
         
-        let centerText = "";
-        if (isVictory && isCenterPeg) {
-            centerText = "\n(成功将棋子移至中心！)";
-        }
-        this.settlementResult.string = `评价: ${resultText}${centerText}`;
-        this.settlementStats.string = `剩余棋子: ${remainingPegs}颗\n步数: ${stepCount}步`;
+        this.settlementResult.string = `评价: ${resultText}`;
+        this.settlementStats.string = `使用${stepCount}步  剩余${remainingPegs}子`;
         
         // 设置下一关按钮状态
         if (this.settlementNextBtn) {
             const isLastLevel = this.currentLevelIndex >= LEVELS_DATA.length - 1;
-            this.settlementNextBtn.interactable = isVictory && !isLastLevel;
-            
             const nextBtnLabel = this.settlementNextBtn.node.getComponentInChildren(Label);
             if (nextBtnLabel) {
                 if (isLastLevel) {
                     nextBtnLabel.string = "返回关卡选择";
+                    this.settlementNextBtn.interactable = true;
                     // 修改按钮点击事件
                     this.settlementNextBtn.node.off(Button.EventType.CLICK);
                     this.settlementNextBtn.node.on(Button.EventType.CLICK, () => {
                         this.onSettlementBackToLevelSelect();
                     }, this);                    
                 } else if (!isVictory) {
-                    nextBtnLabel.string = "未完成";
-                } else {
                     nextBtnLabel.string = "下一关";
+                    this.settlementNextBtn.interactable = false;//未通关
+                } else {                    
+                    nextBtnLabel.string = "下一关";//正常通关
+                    this.settlementNextBtn.interactable = true;
                 }
             }
         }
         
-        console.log("✅ 结算弹窗显示完成");
+        console.log("结算弹窗显示完成");
     }
 
     // ========== 隐藏游戏UI元素 ==========
@@ -988,10 +947,17 @@ export class BoardController extends Component {
             this.tipsLabel.node.active = false;
         }
         
-        console.log("📱 隐藏了游戏UI元素（标题、计步器、按钮）");
+        // 隐藏教学和音乐按钮
+        if (this.tutorialButton) {
+            this.tutorialButton.node.active = false;
+        }
+        if (this.audioButton) {
+            this.audioButton.node.active = false;
+        }
+
+        console.log("隐藏了游戏UI元素（标题、计步器、按钮）");
     }
 
-    // 在restoreGameUIAfterSettlement中恢复
     private restoreGameUIAfterSettlement() {
         // 恢复BoardRoot层级
         const canvas = find('Canvas');
@@ -1000,6 +966,12 @@ export class BoardController extends Component {
             this.boardRoot.setSiblingIndex(2);
         }
         
+        // 恢复显示棋盘
+        if (this.boardRoot) {
+            this.boardRoot.active = true;
+            console.log("显示BoardRoot（棋盘）");
+        }
+
         // 恢复UI元素
         if (this.gameTitleLabel && this.gameTitleLabel.node) {
             this.gameTitleLabel.node.active = true;
@@ -1014,7 +986,15 @@ export class BoardController extends Component {
             buttonContainer.active = true;
         }
         
-        console.log("📱 恢复了游戏UI元素和层级");
+        // 恢复教学和音乐按钮
+        if (this.tutorialButton) {
+            this.tutorialButton.node.active = true;
+        }
+        if (this.audioButton) {
+            this.audioButton.node.active = true;
+        }
+
+        console.log("恢复了游戏UI元素和层级");
     }
     
     private hideSettlementPanel() {
