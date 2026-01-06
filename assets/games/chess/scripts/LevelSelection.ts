@@ -1,5 +1,5 @@
 import { _decorator, Component, Node, Prefab, instantiate, Label, Button, Sprite, Color, ScrollView, UITransform, Layout, SpriteFrame, find, Size } from 'cc';
-import { LEVELS_DATA } from './GameConfig';
+import { LEVELS_DATA, evaluateResult } from './GameConfig';
 import { HomePageController } from './HomePageController';
 
 const { ccclass, property } = _decorator;
@@ -588,10 +588,14 @@ export class LevelSelection extends Component {
             scoreNode.active = true;
             
             if (levelData.isCompleted) {
-                scoreLabel.string = `${levelData.bestScore}`;
+                const scoreText = levelData.bestScore;
+                const starCount = (scoreText.match(/★/g) || []).length;
+                scoreLabel.string = `${starCount}星`;
+                
+                //scoreLabel.string = `${levelData.bestScore}`;
                 scoreLabel.color = Color.BLACK;
                 scoreLabel.fontSize = 24;
-                scoreLabel.enableOutline = false;//描边
+                scoreLabel.enableOutline = false;//无描边
                 scoreLabel.outlineColor = Color.BLACK;
                 scoreLabel.outlineWidth = 1;
             } else {

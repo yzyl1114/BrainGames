@@ -16,8 +16,8 @@ export const CENTER_POS = { row: 3, col: 3 };
 // 关卡数据 (数组中包含对象，每个对象有 name 和 layout)
 // -1: 无效位置, 0: 空位, 1: 棋子
 export const LEVELS_DATA = [
-    // 关卡 0: 出人头地
-    { name: "出人头地", layout: [
+    // 关卡 0
+    { name: "出人头地",stepLimit: 10,layout: [
         [-1, -1, 0, 0, 0, -1, -1],
         [-1, -1, 0, 1, 0, -1, -1],
         [0, 0, 1, 1, 1, 0, 0],
@@ -26,8 +26,8 @@ export const LEVELS_DATA = [
         [-1, -1, 0, 0, 0, -1, -1],
         [-1, -1, 0, 0, 0, -1, -1],
     ]},
-    // 关卡 1: 三长两短
-    { name: "三长两短", layout: [
+    // 关卡 1
+    { name: "三长两短",stepLimit: 15,layout: [
         [-1, -1, 0, 0, 0, -1, -1],
         [-1, -1, 1, 1, 0, -1, -1],
         [0, 0, 0, 0, 1, 0, 0],
@@ -36,8 +36,8 @@ export const LEVELS_DATA = [
         [-1, -1, 1, 1, 0, -1, -1],
         [-1, -1, 0, 0, 0, -1, -1],
     ]},
-    // 关卡 2: 十字架 (传统起点布局)
-    { name: "十字架", layout: [
+    // 关卡 2
+    { name: "十字架",stepLimit: 15,layout: [
         [-1, -1, 1, 1, 1, -1, -1],
         [-1, -1, 1, 1, 1, -1, -1],
         [1, 1, 1, 1, 1, 1, 1],
@@ -46,8 +46,8 @@ export const LEVELS_DATA = [
         [-1, -1, 1, 1, 1, -1, -1],
         [-1, -1, 1, 1, 1, -1, -1],
     ]},
-    // 关卡 3: 大十字
-    { name: "大十字", layout: [
+    // 关卡 3
+    { name: "大十字",stepLimit: 25,layout: [
         [-1, -1, 0, 1, 0, -1, -1],
         [-1, -1, 1, 1, 1, -1, -1],
         [1, 1, 1, 0, 1, 1, 1],
@@ -56,8 +56,8 @@ export const LEVELS_DATA = [
         [-1, -1, 1, 1, 1, -1, -1],
         [-1, -1, 0, 1, 0, -1, -1],
     ]},
-    // 关卡 4: 古字形
-    { name: "古字形", layout: [
+    // 关卡 4
+    { name: "古字形",stepLimit: 25,layout: [
         [-1, -1, 1, 0, 1, -1, -1],
         [-1, -1, 1, 0, 1, -1, -1],
         [1, 1, 1, 0, 1, 1, 1],
@@ -70,12 +70,13 @@ export const LEVELS_DATA = [
 ];
 
 // 评价系统
-export function evaluateResult(remainingPegs: number, isCenterPeg: boolean): string {
-    if (remainingPegs === 1 && isCenterPeg) return "天才";
-    if (remainingPegs === 1) return "大师 (非中心)";
-    if (remainingPegs === 2) return "大师";
-    if (remainingPegs === 3) return "尖子";
-    if (remainingPegs === 4) return "聪明";
-    if (remainingPegs === 5) return "颇好";
-    return "还需努力";
+export function evaluateResult(usedSteps: number, stepLimit: number): string {
+    const remainingSteps = stepLimit - usedSteps;
+    
+    // 直接根据剩余步数判断
+    if (remainingSteps >= stepLimit * 0.7) return "★★★★★";
+    if (remainingSteps >= stepLimit * 0.5) return "★★★★☆";
+    if (remainingSteps >= stepLimit * 0.3) return "★★★☆☆";
+    if (remainingSteps >= stepLimit * 0.1) return "★★☆☆☆";
+    return "★☆☆☆☆";
 }

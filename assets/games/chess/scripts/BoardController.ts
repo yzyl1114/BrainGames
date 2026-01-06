@@ -17,7 +17,7 @@ export class BoardController extends Component {
     public PegPrefab: Prefab = null; 
     
     @property(Node)
-    public homePageNode: Node = null; // 新增：首页节点
+    public homePageNode: Node = null; // 首页节点
     
     @property(Node)
     public boardRoot: Node = null; 
@@ -59,6 +59,10 @@ export class BoardController extends Component {
     @property(SpriteFrame)
     private tutorialIconSprite: SpriteFrame = null;
 
+    // ===== 步数限制相关 =====
+    private stepLimit: number = 0; // 当前关卡的步数限制
+    private remainingSteps: number = 0; // 剩余步数（倒数）
+
     // ===== 所有UI组件将在代码中动态获取，不再需要编辑器拖拽绑定 =====
     private uiRoot: Node = null; // UI总根节点 (对应预制体中的 UIRoot)
 
@@ -80,7 +84,7 @@ export class BoardController extends Component {
 
     // ===== 游戏状态变量 =====
     private currentLevelIndex: number = 0;
-    private boardState: number[][] = []; 
+    private boardState: number[][] = [];     
     private activeNode: Node | null = null; 
     private activePegRow: number = -1;
     private activePegCol: number = -1;
@@ -151,7 +155,7 @@ export class BoardController extends Component {
             this.loadLevel(this.currentLevelIndex);
         }
 
-        // 5. 【关键修改】默认显示首页
+        // 5. 默认显示首页
         console.log("游戏初始化完成，等待用户操作");
     }
 
@@ -169,7 +173,7 @@ export class BoardController extends Component {
         if (canvas) {
             this.uiRoot.parent = canvas;
             this.uiRoot.setSiblingIndex(0); // 设置为第一个子节点
-            // 【重要】初始化时不显示
+            // 初始化时不显示
             this.uiRoot.active = false;
             
             const backgroundNode = this.uiRoot.getChildByPath('UIRoot/Background');
@@ -209,7 +213,7 @@ export class BoardController extends Component {
         this.retryButton = getComponent('UIRoot/ButtonContainer/RetryButton', Button);
         this.undoButton = getComponent('UIRoot/ButtonContainer/UndoButton', Button);
         
-        // 【修改这里】直接查找BackButton，而不是通过属性绑定
+        // 直接查找BackButton，而不是通过属性绑定
         this.backButton = getComponent('UIRoot/BackButton', Button); 
 
         // 4. 动态查找并绑定结算弹窗组件
@@ -302,7 +306,7 @@ export class BoardController extends Component {
             this.levelSelectionNode.active = false;
         }
 
-        // 【重要】隐藏首页（如果显示）
+        // 隐藏首页（如果显示）
         if (this.homePageNode) {
             this.homePageNode.active = false;
         }
@@ -326,8 +330,7 @@ export class BoardController extends Component {
         this.activePegRow = -1;
         this.activePegCol = -1;
         
-        // 【修改这里】检查是否需要重新生成背景
-        // 只有当没有背景或背景为空时才重新生成
+        // 检查是否需要重新生成背景，只有当没有背景或背景为空时才重新生成
         if (this.boardTileNodes.length === 0) {
             console.log(`首次生成关卡 ${levelIndex} 的背景`);
             this.clearBoardBackground();
@@ -361,12 +364,16 @@ export class BoardController extends Component {
 
         const level = LEVELS_DATA[levelIndex];
         
+        // 【新增】初始化步数限制
+        this.stepLimit = level.stepLimit || 30; // 默认30步
+        this.remainingSteps = this.stepLimit; // 初始化剩余步数
+
         // 更新游戏标题
         if (this.gameTitleLabel) {
             this.gameTitleLabel.string = `钻石棋游戏 - 关卡 ${levelIndex + 1}`;
         }
         
-        // 更新计步器显示
+        // 更新计步器显示（使用剩余步数）
         this.updateStepCounter();
         
         // 加载关卡布局
@@ -397,14 +404,8 @@ export class BoardController extends Component {
         } else {
             console.warn('[UI] 教学入口按钮未找到');
         }
-        
-        // 【在这里添加调试】
-        this.scheduleOnce(() => {
-            console.log('=== loadLevel 后层级检查 ===');
-            this.debugBoardHierarchy();
-        }, 0.1);
 
-        console.log(`Level ${levelIndex} loaded: ${level.name}, pegs count: ${this.countPegs()}, max undo: ${this.maxUndoCount}`);
+        console.log(`Level ${levelIndex} loaded: ${level.name}, pegs count: ${this.countPegs()}, max undo: ${this.maxUndoCount}, step limit: ${this.stepLimit}`);
     }
 
     // 添加返回关卡选择的方法
@@ -469,7 +470,8 @@ export class BoardController extends Component {
         }
         
         const remainingUndo = this.maxUndoCount - this.undoCount;
-        this.stepCounterLabel.string = `步数: ${this.stepCount} | 剩余悔棋: ${remainingUndo}次`;
+        // 【修改】从正数计步改为倒数计步
+        this.stepCounterLabel.string = `剩余步数: ${this.remainingSteps} | 剩余悔棋: ${remainingUndo}`;
     }
     
     private showTips(message: string, duration: number = 2.0) {
@@ -501,10 +503,10 @@ export class BoardController extends Component {
                 backgroundTransform.setContentSize(backgroundWidth, 60);
             }
             
-            // 【关键修改】直接显示，不通过动画
+            // 直接显示，不通过动画
             tipsBackground.active = true;
             
-            // 【关键修改】确保背景不透明
+            // 确保背景不透明
             const bgOpacity = tipsBackground.getComponent(UIOpacity);
             if (bgOpacity) {
                 bgOpacity.opacity = 180; // 直接设置为180（70%透明）
@@ -544,7 +546,7 @@ export class BoardController extends Component {
         this.tipsLabel.string = message;
         this.tipsLabel.node.active = true;
         
-        // 【关键修改】直接设置文字不透明，不要动画
+        // 直接设置文字不透明，不要动画
         const opacity = this.tipsLabel.node.getComponent(UIOpacity);
         if (opacity) {
             opacity.opacity = 255; // 直接设置为完全不透明
@@ -765,10 +767,23 @@ export class BoardController extends Component {
             }
         }
         
+        // 计算已用步数
+        const usedSteps = this.stepLimit - this.remainingSteps;
+        
+        // 检查是否重复保存相同状态
+        if (this.moveHistory.length > 0) {
+            const lastState = this.moveHistory[this.moveHistory.length - 1];
+            // 如果当前状态和上一个状态相同（步数和棋子数都相同），不保存
+            if (lastState.stepCount === usedSteps && lastState.pegsInfo.length === pegsInfo.length) {
+                console.log(`[SaveState] 跳过保存：状态未改变（已用步数: ${usedSteps}, 棋子数: ${pegsInfo.length})`);
+                return;
+            }
+        }
+        
         this.moveHistory.push({
             boardState: boardCopy,
             pegsInfo: pegsInfo,
-            stepCount: this.stepCount
+            stepCount: usedSteps // 保存已用步数
         });
         
         // 限制历史记录长度（防止内存占用过大）
@@ -776,27 +791,48 @@ export class BoardController extends Component {
             this.moveHistory.shift();
         }
         
-        console.log(`State saved. History size: ${this.moveHistory.length}, Step: ${this.stepCount}`);
+        console.log(`[SaveState] 状态已保存。历史记录: ${this.moveHistory.length}, 已用步数: ${usedSteps}, 剩余步数: ${this.remainingSteps}, 棋子数: ${pegsInfo.length}`);
     }
     
     public undoMove() {
+        console.log(`[Undo] 开始悔棋，当前历史记录长度: ${this.moveHistory.length}`);
+
         // 检查是否有历史记录
         if (this.moveHistory.length <= 1) {
             this.showTips("已是初始状态");
+            console.log(`[Undo] 无法悔棋：历史记录只有${this.moveHistory.length}个状态`);
             return;
         }
         
         // 检查悔棋次数是否用完
         if (this.undoCount >= this.maxUndoCount) {
             this.showTips(`悔棋次数已用完`);
+            console.log(`[Undo] 无法悔棋：已使用${this.undoCount}/${this.maxUndoCount}次悔棋`);
             return;
         }
         
-        // 弹出当前状态（不需要）
-        this.moveHistory.pop();
+        // 获取当前状态信息（用于调试）
+        const currentUsedSteps = this.stepLimit - this.remainingSteps;
+        console.log(`[Undo] 当前状态：剩余步数=${this.remainingSteps}, 已用步数=${currentUsedSteps}, 棋子数=${this.countPegs()}`);
         
-        // 获取上一步状态
+        // 弹出当前状态
+        const currentState = this.moveHistory.pop();
+        console.log(`[Undo] 弹出当前状态，弹出状态的步数：${currentState?.stepCount}, 棋子数：${currentState?.pegsInfo.length}`);
+        
+        // 获取上一步状态（现在这是最新的状态）
+        if (this.moveHistory.length === 0) {
+            console.error("[Undo] 错误：弹出当前状态后历史记录为空！");
+            // 重新加载关卡
+            this.retryLevel();
+            return;
+        }
+        
         const lastState = this.moveHistory[this.moveHistory.length - 1];
+        console.log(`[Undo] 获取上一步状态，上一步的步数：${lastState.stepCount}, 棋子数：${lastState.pegsInfo.length}`);
+        
+        // 计算步数变化
+        const stepDifference = (currentState?.stepCount || 0) - lastState.stepCount;
+        console.log(`[Undo] 步数差值：${stepDifference}（应该为1）`);
         
         // 恢复棋盘状态
         for (let i = 0; i < BOARD_SIZE; i++) {
@@ -805,11 +841,16 @@ export class BoardController extends Component {
         
         // 恢复步数
         this.stepCount = lastState.stepCount;
+
+        // 正确恢复剩余步数
+        this.remainingSteps = this.stepLimit - lastState.stepCount;
+        console.log(`[Undo] 恢复后：剩余步数=${this.remainingSteps}, 已用步数=${lastState.stepCount}`);
         
         // 只销毁棋子，不销毁背景
         this.destroyAllPegsOnly();
         
         // 重新生成棋子
+        console.log(`[Undo] 重新生成${lastState.pegsInfo.length}个棋子`);
         for (const pegInfo of lastState.pegsInfo) {
             this.spawnPeg(pegInfo.row, pegInfo.col);
         }
@@ -823,19 +864,16 @@ export class BoardController extends Component {
         // 更新计步器
         this.updateStepCounter();
         
-        const remainingPegs = this.countPegs();
-        const remainingUndo = this.maxUndoCount - this.undoCount;
-        
         // 使用提示显示成功信息
         this.showTips(`悔棋成功`);
-        
-        // 【在这里添加调试】
-        this.scheduleOnce(() => {
-            console.log('=== undoMove 后层级检查 ===');
-            this.debugBoardHierarchy();
-        }, 0.1);
 
-        console.log(`Undo successful. Steps: ${this.stepCount}, Undo used: ${this.undoCount}/${this.maxUndoCount}, History: ${this.moveHistory.length}`);
+        console.log(`[Undo] 悔棋成功。当前：剩余步数=${this.remainingSteps}, 棋子数=${this.countPegs()}, 已用悔棋=${this.undoCount}/${this.maxUndoCount}, 历史记录=${this.moveHistory.length}`);
+    
+        // 调试：输出当前所有历史记录
+        console.log(`[Undo] 历史记录详情：`);
+        this.moveHistory.forEach((state, index) => {
+            console.log(`  [${index}] 步数: ${state.stepCount}, 棋子数: ${state.pegsInfo.length}`);
+        });
     }
     
     private clearHistory() {
@@ -896,7 +934,7 @@ export class BoardController extends Component {
         this.settlementTitle.string = isVictory ? "恭喜过关" : "游戏结束";
         
         this.settlementResult.string = `评价: ${resultText}`;
-        this.settlementStats.string = `使用${stepCount}步  剩余${remainingPegs}子`;
+        this.settlementStats.string = `移动${stepCount}步  剩余${remainingPegs}子`;
         
         // 设置下一关按钮状态
         if (this.settlementNextBtn) {
@@ -1071,7 +1109,7 @@ export class BoardController extends Component {
             }
         });
         
-        // 【重要修复】只暂停游戏按钮，不暂停返回按钮
+        // 只暂停游戏按钮，不暂停返回按钮
         // 返回按钮应该始终可用
         if (this.retryButton) this.retryButton.interactable = !pause;
         if (this.undoButton) this.undoButton.interactable = !pause;
@@ -1087,7 +1125,7 @@ export class BoardController extends Component {
     }
 
     // ==================== 游戏流程控制 ====================
-    // 新增：页面切换辅助方法
+    // 页面切换辅助方法
     private switchToHomePage() {
         console.log("🚀 切换到首页");
         
@@ -1393,6 +1431,14 @@ export class BoardController extends Component {
     private executeJump(peg: Peg, targetR: number, targetC: number, eatenPos: { row: number, col: number }) {
         console.log(`Executing jump: peg (${this.activePegRow}, ${this.activePegCol}) -> (${targetR}, ${targetC}), eat (${eatenPos.row}, ${eatenPos.col})`);
         
+        // 【新增】检查剩余步数
+        if (this.remainingSteps <= 0) {
+            console.log("步数已用尽，无法移动");
+            this.showTips("步数已用尽！");
+            this.resetPegPosition(peg);
+            return;
+        }
+
         const audioManager = AudioManager.getInstance();
         if (audioManager && audioManager.playMoveSuccess) {
             audioManager.playMoveSuccess();
@@ -1402,9 +1448,6 @@ export class BoardController extends Component {
             console.error("Invalid node in executeJump");
             return;
         }
-        
-        // 保存当前状态到历史记录（在跳吃之前）
-        this.saveCurrentState();
         
         peg.setActive(false);
         
@@ -1460,15 +1503,21 @@ export class BoardController extends Component {
                 this.pegNodes.delete(originalKey);
                 this.pegNodes.set(newKey, this.activeNode);
                 
-                // 增加步数
-                this.stepCount++;
-                
+                // 【关键修复】在这里减少步数
+                this.remainingSteps--;
+                console.log(`[ExecuteJump] 剩余步数减少为: ${this.remainingSteps}`);
+
+                // 【关键修复】在这里保存状态！在移动完成后保存
+                this.saveCurrentState();
+
                 // 更新计步器
                 this.updateStepCounter();
                 
-                console.log(`Jump completed. Step: ${this.stepCount}, Board updated.`);
+                console.log(`Jump completed. 剩余步数: ${this.remainingSteps}/${this.stepLimit}, Board updated.`);
                 this.resetActiveState();
-                this.checkGameState();
+                
+                // 【新增】检查游戏状态（包括步数是否用尽）
+                this.checkGameState();        
             })
             .start();
     }
@@ -1492,25 +1541,35 @@ export class BoardController extends Component {
             }
         }
         
-        console.log(`[GameState] 剩余棋子: ${remainingPegs}, 位置: ${JSON.stringify(pegPositions)}`);
+        console.log(`[GameState] 剩余棋子: ${remainingPegs}, 位置: ${JSON.stringify(pegPositions)}, 剩余步数: ${this.remainingSteps}`);
         
-        // 情况1: 胜利 (只剩1颗)
+        // 情况1: 胜利 (只剩1颗) 
         if (remainingPegs === 1) {
             console.log(`[GameState] ✅ 检测到胜利条件：只剩1颗棋子`);
             const isCenter = this.boardState[CENTER_POS.row][CENTER_POS.col] === TILE_STATE.PEG;
-            const result = evaluateResult(remainingPegs, isCenter);
+            //const result = evaluateResult(remainingPegs, isCenter);
+            const result = evaluateResult(this.stepLimit - this.remainingSteps, this.stepLimit);
             
-            console.log(`[GameState] 胜利详情：中心=${isCenter}, 评价=${result}, 步数=${this.stepCount}`);
-            
-            // 更新关卡进度
-            this.updateLevelProgress(this.currentLevelIndex, result, this.stepCount, isCenter);
+            console.log(`[GameState] 胜利详情：中心=${isCenter}, 评价=${result}, 剩余步数=${this.remainingSteps}`);
         
+            // 更新关卡进度
+            this.updateLevelProgress(this.currentLevelIndex, result, this.stepLimit - this.remainingSteps, isCenter);
+    
             // 显示胜利结算弹窗
-            this.showSettlementPanel(true, remainingPegs, result, this.stepCount, isCenter);
+            this.showSettlementPanel(true, remainingPegs, result, this.stepLimit - this.remainingSteps, isCenter);
             return;
         }
 
-        // 情况2: 检查是否还有合法移动 (只有当棋子数>1时才检查)
+        // 情况2: 步数用尽（游戏失败）
+        if (this.remainingSteps <= 0) {
+            console.log(`[GameState] ❌ 检测到步数用尽`);
+            const result = "步数用尽";
+            // 显示失败结算弹窗
+            this.showSettlementPanel(false, remainingPegs, result, this.stepLimit - this.remainingSteps);
+            return;
+        }
+
+        // 情况3: 检查是否还有合法移动 (只有当棋子数>1时才检查)
         if (remainingPegs > 1) {
             const hasMove = this.hasValidMove();
             console.log(`[GameState] 剩余${remainingPegs}颗棋子，检查是否有合法移动: ${hasMove}`);
@@ -1521,9 +1580,10 @@ export class BoardController extends Component {
                 if (this.boardState[CENTER_POS.row][CENTER_POS.col] === TILE_STATE.PEG) {
                     foundCenterPeg = true;
                 }
-                const result = evaluateResult(remainingPegs, foundCenterPeg);
+                //const result = evaluateResult(remainingPegs, foundCenterPeg);
+                const result = "无路可走";
                 // 显示失败结算弹窗
-                this.showSettlementPanel(false, remainingPegs, result, this.stepCount);
+                this.showSettlementPanel(false, remainingPegs, result, this.stepLimit - this.remainingSteps);
             } else {
                 console.log(`[GameState] 游戏继续，仍有合法移动`);
             }
@@ -1839,7 +1899,7 @@ export class BoardController extends Component {
         borderSprite.color = Color.RED; // 红色边框
         borderSprite.type = Sprite.Type.SIMPLE;
         
-        // 【修复】检查是否已有UITransform，避免重复添加
+        // 检查是否已有UITransform，避免重复添加
         let borderTransform = borderNode.getComponent(UITransform);
         if (!borderTransform) {
             borderTransform = borderNode.addComponent(UITransform);
