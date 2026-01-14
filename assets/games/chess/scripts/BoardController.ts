@@ -370,7 +370,7 @@ export class BoardController extends Component {
 
         // 更新游戏标题
         if (this.gameTitleLabel) {
-            this.gameTitleLabel.string = `钻石棋游戏 - 关卡 ${levelIndex + 1}`;
+            this.gameTitleLabel.string = `关卡 ${levelIndex + 1}`;
         }
         
         // 更新计步器显示（使用剩余步数）
