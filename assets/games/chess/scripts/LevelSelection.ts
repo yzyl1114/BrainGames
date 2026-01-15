@@ -648,8 +648,6 @@ export class LevelSelection extends Component {
                 scoreLabel.fontSize = 24;
             }
             
-            // 确保位置
-            scoreNode.setPosition(0, -70, 0);
             scoreNode.setSiblingIndex(99);
         }
         
