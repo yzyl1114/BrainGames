@@ -594,7 +594,7 @@ export class LevelSelection extends Component {
             
             if (scoreNode) {
                 // 将评分标签移动到卡片更下方，确保不会重叠
-                scoreNode.setPosition(0, -50, 0); // 从 -70 调整到 -50
+                scoreNode.setPosition(0, -70, 0);
                 
                 // 如果卡片有锁定或完成图标，也需要调整
                 const lockIcon = card.getChildByName('LockIcon');
