@@ -48,7 +48,7 @@ export class HomePageController extends Component {
 
     private initUI() {
         if (this.titleLabel) {
-            this.titleLabel.string = "我CPU烧了";
+            this.titleLabel.string = "独粒钻石棋";
         }
     }
     
