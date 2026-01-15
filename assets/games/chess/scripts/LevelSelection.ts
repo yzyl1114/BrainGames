@@ -27,6 +27,9 @@ export class LevelSelection extends Component {
     @property(Button)
     public backButton: Button = null; // 返回游戏按钮（如果需要）
 
+    @property(Node)
+    public titleBar: Node = null; // 标题栏容器
+
     @property(Button)
     public homeBackButton: Button = null; // 新增：返回首页按钮
     
@@ -49,9 +52,35 @@ export class LevelSelection extends Component {
     private currentMaxUnlockedLevel: number = 0;
     
     protected onLoad() {
+
         this.loadLevelProgress();
         this.initUI();
+        this.initTitleBar(); // 初始化标题栏
         
+        // 如果 titleBar 是 null，检查编辑器中是否连接了
+        if (!this.titleBar) {
+            console.error('⚠️ TitleBar 未在编辑器中连接到脚本！');
+            // 尝试通过路径查找
+            const foundTitleBar = this.node.getChildByName('TitleBar');
+            if (foundTitleBar) {
+                console.log('通过路径找到 TitleBar:', foundTitleBar.name);
+                this.titleBar = foundTitleBar;
+            }
+        }
+        
+        // 检查 TitleBar 的所有子节点
+        if (this.titleBar) {
+            console.log('TitleBar 子节点详情:');
+            this.titleBar.children.forEach((child, index) => {
+                console.log(`  [${index}] ${child.name}:`, {
+                    激活: child.active,
+                    位置: child.position,
+                    本地位置: child.getPosition(),
+                    世界位置: child.worldPosition
+                });
+            });
+        }
+
         // 直接生成卡片，不需要延迟
         setTimeout(() => {
             this.generateLevelCards();
@@ -67,6 +96,74 @@ export class LevelSelection extends Component {
         }
     }
     
+    //初始化标题栏
+    private initTitleBar() {
+        console.log('=== initTitleBar 开始 ===');
+        
+        if (!this.titleBar) {
+            console.error('❌ TitleBar节点未分配');
+            // 尝试查找
+            const foundTitleBar = this.node.getChildByName('TitleBar');
+            if (foundTitleBar) {
+                console.log('✅ 通过路径找到 TitleBar:', foundTitleBar.name);
+                this.titleBar = foundTitleBar;
+            } else {
+                console.error('❌ 未找到 TitleBar 节点');
+                return;
+            }
+        }
+        
+        console.log('TitleBar 信息:', {
+            名称: this.titleBar.name,
+            激活: this.titleBar.active,
+            位置: this.titleBar.position,
+            世界位置: this.titleBar.worldPosition,
+            子节点数: this.titleBar.children.length,
+            父节点: this.titleBar.parent?.name
+        });
+        
+        // 确保标题栏在最上层显示
+        this.titleBar.setSiblingIndex(999);
+        
+        // 调整 TitleBar 的位置
+        // 注意：Canvas 中心是 (0,0)，顶部是 (0, 667)，因为 Canvas 高度是 1334
+        const canvasHeight = 1334;
+        const titleBarY = canvasHeight / 2 - 60; // 距离顶部 60 像素
+        
+        this.titleBar.setPosition(0, titleBarY, 0);
+        console.log(`✅ 设置 TitleBar 位置: (0, ${titleBarY})`);
+        
+        // 设置标题文字
+        if (this.titleLabel) {
+            this.titleLabel.string = "选择关卡";
+            console.log('✅ 设置标题文字: "选择关卡"');
+        } else {
+            console.error('❌ TitleLabel 未连接');
+            // 尝试在 TitleBar 中查找
+            const foundTitleLabel = this.titleBar.getChildByName('TitleLabel');
+            if (foundTitleLabel) {
+                this.titleLabel = foundTitleLabel.getComponent(Label);
+                console.log('✅ 找到 TitleLabel 组件');
+            }
+        }
+        
+        // 绑定返回按钮事件
+        if (this.homeBackButton) {
+            this.homeBackButton.node.on(Button.EventType.CLICK, this.onBackToHome, this);
+            console.log('✅ 绑定返回按钮事件');
+        } else {
+            console.error('❌ HomeBackButton 未连接');
+            // 尝试在 TitleBar 中查找
+            const foundBackButton = this.titleBar.getChildByName('HomeBackButton');
+            if (foundBackButton) {
+                this.homeBackButton = foundBackButton.getComponent(Button);
+                console.log('✅ 找到 HomeBackButton 组件');
+            }
+        }
+        
+        console.log('=== initTitleBar 完成 ===');
+    }
+
     // 加载关卡进度（从本地存储）
     private loadLevelProgress() {
         // 从本地存储读取进度，如果没有则初始化
@@ -864,6 +961,12 @@ export class LevelSelection extends Component {
         this.loadLevelProgress();
         this.refreshLevelCards();
         
+        // 确保标题栏显示
+        if (this.titleBar) {
+            this.titleBar.active = true;
+            this.titleBar.setSiblingIndex(999); // 置顶显示
+        }
+
         // 隐藏游戏UI
         const gameUI = find('Canvas/GameUI');
         if (gameUI) {
