@@ -31,14 +31,14 @@
     "_active": true,
     "_components": [
       {
-        "__id__": 69
+        "__id__": 66
       },
       {
-        "__id__": 71
+        "__id__": 68
       }
     ],
     "_prefab": {
-      "__id__": 73
+      "__id__": 70
     },
     "_lpos": {
       "__type__": "cc.Vec3",
@@ -380,17 +380,17 @@
     "_active": true,
     "_components": [
       {
-        "__id__": 62
+        "__id__": 59
       },
       {
-        "__id__": 64
+        "__id__": 61
       },
       {
-        "__id__": 66
+        "__id__": 63
       }
     ],
     "_prefab": {
-      "__id__": 68
+      "__id__": 65
     },
     "_lpos": {
       "__type__": "cc.Vec3",
@@ -453,13 +453,10 @@
       },
       {
         "__id__": 56
-      },
-      {
-        "__id__": 58
       }
     ],
     "_prefab": {
-      "__id__": 61
+      "__id__": 58
     },
     "_lpos": {
       "__type__": "cc.Vec3",
@@ -1523,76 +1520,6 @@
     "fileId": "82DXqnpBJEvLqxpJQFI95P"
   },
   {
-    "__type__": "cc.Button",
-    "_name": "",
-    "_objFlags": 0,
-    "__editorExtras__": {},
-    "node": {
-      "__id__": 15
-    },
-    "_enabled": true,
-    "__prefab": {
-      "__id__": 59
-    },
-    "clickEvents": [
-      {
-        "__id__": 60
-      }
-    ],
-    "_interactable": true,
-    "_transition": 1,
-    "_normalColor": {
-      "__type__": "cc.Color",
-      "r": 255,
-      "g": 255,
-      "b": 255,
-      "a": 255
-    },
-    "_hoverColor": {
-      "__type__": "cc.Color",
-      "r": 245,
-      "g": 245,
-      "b": 245,
-      "a": 255
-    },
-    "_pressedColor": {
-      "__type__": "cc.Color",
-      "r": 232,
-      "g": 232,
-      "b": 232,
-      "a": 255
-    },
-    "_disabledColor": {
-      "__type__": "cc.Color",
-      "r": 204,
-      "g": 204,
-      "b": 204,
-      "a": 255
-    },
-    "_normalSprite": null,
-    "_hoverSprite": null,
-    "_pressedSprite": null,
-    "_disabledSprite": null,
-    "_duration": 0.1,
-    "_zoomScale": 1.2,
-    "_target": null,
-    "_id": ""
-  },
-  {
-    "__type__": "cc.CompPrefabInfo",
-    "fileId": "54yPyPD3BPbLUx27ZP4HBg"
-  },
-  {
-    "__type__": "cc.ClickEvent",
-    "target": {
-      "__id__": 1
-    },
-    "component": "",
-    "_componentId": "6a8f4LzajlIbrpZMcsLJWvZ",
-    "handler": "onChessGameClicked",
-    "customEventData": ""
-  },
-  {
     "__type__": "cc.PrefabInfo",
     "root": {
       "__id__": 1
@@ -1615,11 +1542,11 @@
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 63
+      "__id__": 60
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 680,
+      "width": 670,
       "height": 840
     },
     "_anchorPoint": {
@@ -1641,9 +1568,9 @@
     "node": {
       "__id__": 14
     },
-    "_enabled": true,
+    "_enabled": false,
     "__prefab": {
-      "__id__": 65
+      "__id__": 62
     },
     "_resizeMode": 1,
     "_layoutType": 3,
@@ -1681,7 +1608,7 @@
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 67
+      "__id__": 64
     },
     "_alignFlags": 18,
     "_target": null,
@@ -1730,14 +1657,14 @@
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 70
+      "__id__": 67
     },
     "levelSelectionNode": null,
     "titleLabel": {
       "__id__": 11
     },
-    "chessGameButton": {
-      "__id__": 58
+    "startGameButton": {
+      "__id__": 51
     },
     "_id": ""
   },
@@ -1755,7 +1682,7 @@
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 72
+      "__id__": 69
     },
     "_contentSize": {
       "__type__": "cc.Size",

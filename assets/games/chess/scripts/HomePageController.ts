@@ -14,14 +14,15 @@ export class HomePageController extends Component {
     public titleLabel: Label = null;
     
     @property(Button)
-    public chessGameButton: Button = null;
+    public startGameButton: Button = null;
     
     protected onLoad() {
-        // 绑定按钮事件
-        if (this.chessGameButton) {
-            this.chessGameButton.node.on(Button.EventType.CLICK, this.onChessGameClicked, this);
+        // 【重要】只绑定开始游戏按钮事件
+        if (this.startGameButton) {
+            console.log('绑定开始游戏按钮事件');
+            this.startGameButton.node.on(Button.EventType.CLICK, this.onStartGameClicked, this);
         } else {
-            console.error("ChessGameButton按钮未找到或未连接");
+            console.error("StartGameButton按钮未找到或未连接");
         }
         
         // 确保首页是唯一显示的页面
@@ -43,6 +44,26 @@ export class HomePageController extends Component {
         const boardRoot = find('Canvas/BoardRoot');
         if (boardRoot) {
             boardRoot.active = false;
+        }
+    }
+
+    private onStartGameClicked() {
+        console.log('开始游戏按钮被点击');
+        
+        // 隐藏首页
+        this.node.active = false;
+        
+        // 显示关卡选择页
+        if (this.levelSelectionNode) {
+            this.levelSelectionNode.active = true;
+            
+            // 刷新关卡选择页数据
+            const levelSelection = this.levelSelectionNode.getComponent(LevelSelection);
+            if (levelSelection && levelSelection.show) {
+                levelSelection.show();
+            }
+        } else {
+            console.error("LevelSelectionNode未分配!");
         }
     }
 
@@ -73,7 +94,6 @@ export class HomePageController extends Component {
     // 从关卡选择页返回到首页
     public show() {
         this.node.active = true;
-        // 确保其他页面隐藏
         this.ensureOnlyHomePageVisible();
     }
 }
