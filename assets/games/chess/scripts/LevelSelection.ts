@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Prefab, instantiate, Label, Button, Sprite, Color, ScrollView, UITransform, Layout, SpriteFrame, find, Size } from 'cc';
+import { _decorator, Component, Node, Prefab, instantiate, Label, Button, Sprite, Color, ScrollView, UITransform, Layout, SpriteFrame, find, Size, Vec3 } from 'cc';
 import { LEVELS_DATA, evaluateResult } from './GameConfig';
 import { HomePageController } from './HomePageController';
 
@@ -453,36 +453,39 @@ export class LevelSelection extends Component {
         }, 100);
     }
 
-    // 纯手动网格布局方法
     private manualGridLayout() {
         console.log('执行手动网格布局...');
         
-        if (!this.levelContainer) return;
+        if (!this.levelContainer || !this.scrollView) return;
         
         const children = this.levelContainer.children;
         if (children.length === 0) return;
         
-        // 布局参数 - 使用实际卡片尺寸
+        // 布局参数
         const cardsPerRow = 5;
-        const cardWidth = 90;          // 卡片实际宽度（已在预制体中设置）
-        const cardHeight = 90;         // 卡片实际高度
-        const spacingX = 20;           // 水平间距
-        const spacingY = 20;           // 垂直间距
-        const paddingTop = 40;         // 上内边距
-        const paddingBottom = 40;      // 下内边距
-        const paddingHorizontal = 50;  // 左右内边距
+        const cardWidth = 90;
+        const cardHeight = 90;
+        const spacingX = 20;
+        const spacingY = 40; // 增加行间距
+        const paddingTop = 60; // 顶部留白
+        const paddingBottom = 40;
+        const paddingHorizontal = 50;
         
-        // 获取LevelContainer的实际尺寸
+        // 获取容器和ScrollView尺寸
         const containerTransform = this.levelContainer.getComponent(UITransform);
-        if (!containerTransform) return;
+        const scrollViewTransform = this.scrollView.node.getComponent(UITransform);
+        if (!containerTransform || !scrollViewTransform) return;
         
-        const containerWidth = containerTransform.width;
-        const containerHeight = containerTransform.height;
+        // 【关键】获取ScrollView的可见区域高度（view的高度）
+        const viewNode = this.scrollView.node.getChildByName('view');
+        const viewTransform = viewNode ? viewNode.getComponent(UITransform) : null;
+        const viewHeight = viewTransform ? viewTransform.height : 900;
         
-        console.log('容器信息:', {
-            宽度: containerWidth,
-            高度: containerHeight,
-            锚点: `(${containerTransform.anchorX}, ${containerTransform.anchorY})`
+        console.log('尺寸信息:', {
+            ScrollView高度: scrollViewTransform.height,
+            View高度: viewHeight,
+            LevelContainer高度: containerTransform.height,
+            LevelContainer锚点: `(${containerTransform.anchorX}, ${containerTransform.anchorY})`
         });
         
         // 计算每行的总宽度
@@ -491,19 +494,19 @@ export class LevelSelection extends Component {
         // 计算起始X：居中显示
         const startX = -totalRowWidth / 2 + cardWidth / 2;
         
-        // 计算起始Y：从容器顶部开始（锚点在中心，顶部是负的）
-        const startY = containerHeight / 2 - paddingTop - cardHeight / 2;
+        // 【关键修复】正确的Y坐标计算
+        // 由于容器锚点在中心(0.5, 0.5)，且我们希望第一行在ScrollView顶部可见
+        // 需要从ScrollView的顶部开始计算
+        const scrollViewTop = scrollViewTransform.height / 2; // 锚点中心到顶部的距离
+        const startY = scrollViewTop - paddingTop - (cardHeight / 2);
         
         console.log('手动布局参数:', {
-            容器尺寸: `${containerWidth}×${containerHeight}`,
             每行总宽度: totalRowWidth,
             起始X: startX.toFixed(1),
             起始Y: startY.toFixed(1),
+            ScrollView顶部Y: scrollViewTop,
             卡片尺寸: `${cardWidth}×${cardHeight}`,
-            每行数量: cardsPerRow,
-            水平间距: spacingX,
-            垂直间距: spacingY,
-            内边距: `上${paddingTop}/下${paddingBottom}/左右${paddingHorizontal}`
+            行间距: spacingY
         });
         
         // 布局所有卡片
@@ -520,7 +523,9 @@ export class LevelSelection extends Component {
             
             card.setPosition(x, y, 0);
             
-            console.log(`布局卡片 ${i}: 行${row}, 列${col}, 位置(${x.toFixed(1)}, ${y.toFixed(1)})`);
+            if (i < 5) {
+                console.log(`布局卡片 ${i}: 行${row}, 列${col}, 位置(${x.toFixed(1)}, ${y.toFixed(1)})`);
+            }
         }
         
         // 计算需要的容器高度
@@ -529,41 +534,80 @@ export class LevelSelection extends Component {
                             (totalRows * cardHeight) + 
                             ((totalRows - 1) * spacingY);
         
-        // 更新容器高度
+        // 确保容器高度足够
         if (containerTransform.height < neededHeight) {
             containerTransform.height = neededHeight;
-            console.log(`更新容器高度: ${neededHeight}`);
+            console.log(`更新容器高度: ${containerTransform.height}`);
         }
+        
+        // 更新ScrollView的content
+        this.scrollView.content = this.levelContainer;
+        
+        // 滚动到顶部
+        this.scrollView.scrollToTop();
+        
+        // 调整评分标签位置
+        this.adjustScoreLabelPositions();
         
         // 最终验证
         setTimeout(() => {
             console.log('=== 最终布局验证 ===');
             
-            // 检查间距是否正确
-            if (children.length >= 2) {
-                const card1 = children[0];
-                const card2 = children[1];
-                const actualSpacing = Math.abs(card2.position.x - card1.position.x);
-                const expectedSpacing = cardWidth + spacingX;
+            if (children.length > 0) {
+                const firstCard = children[0];
+                console.log('第一张卡片信息:', {
+                    本地位置: firstCard.position,
+                    世界位置: firstCard.worldPosition,
+                    在ScrollView内: this.isPositionInScrollView(firstCard.worldPosition)
+                });
+            }
+        }, 100);
+    }
+
+    // 检查位置是否在ScrollView内
+    private isPositionInScrollView(worldPos: Vec3): boolean {
+        if (!this.scrollView) return false;
+        
+        const scrollViewPos = this.scrollView.node.worldPosition;
+        const scrollViewTransform = this.scrollView.node.getComponent(UITransform);
+        
+        if (!scrollViewTransform) return false;
+        
+        const halfWidth = scrollViewTransform.width / 2;
+        const halfHeight = scrollViewTransform.height / 2;
+        
+        const inX = worldPos.x >= scrollViewPos.x - halfWidth && 
+                    worldPos.x <= scrollViewPos.x + halfWidth;
+        const inY = worldPos.y >= scrollViewPos.y - halfHeight && 
+                    worldPos.y <= scrollViewPos.y + halfHeight;
+        
+        return inX && inY;
+    }
+
+    // 新增：调整评分标签位置的方法
+    private adjustScoreLabelPositions() {
+        const children = this.levelContainer.children;
+        
+        for (let i = 0; i < children.length; i++) {
+            const card = children[i];
+            const scoreNode = card.getChildByName('Score');
+            
+            if (scoreNode) {
+                // 将评分标签移动到卡片更下方，确保不会重叠
+                scoreNode.setPosition(0, -50, 0); // 从 -70 调整到 -50
                 
-                console.log(`间距检查: 实际${actualSpacing.toFixed(1)} vs 期望${expectedSpacing}`);
+                // 如果卡片有锁定或完成图标，也需要调整
+                const lockIcon = card.getChildByName('LockIcon');
+                const completedIcon = card.getChildByName('CompletedIcon');
                 
-                if (Math.abs(actualSpacing - expectedSpacing) > 5) {
-                    console.warn('⚠️ 间距不符合期望');
-                } else {
-                    console.log('✅ 间距正确');
+                if (lockIcon) {
+                    lockIcon.setPosition(0, 0, 1);
+                }
+                if (completedIcon) {
+                    completedIcon.setPosition(0, 0, 1);
                 }
             }
-            
-            // 检查是否在可视范围内
-            console.log('ScrollView位置:', this.scrollView?.node?.position);
-            console.log('Canvas中心Y: 667');
-            
-            for (let i = 0; i < Math.min(3, children.length); i++) {
-                const worldPos = children[i].worldPosition;
-                console.log(`卡片 ${i} 世界位置: (${worldPos.x.toFixed(1)}, ${worldPos.y.toFixed(1)})`);
-            }
-        }, 50);
+        }
     }
     
     private setupLevelCard(cardNode: Node, levelData: LevelData) {
