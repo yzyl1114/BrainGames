@@ -1842,6 +1842,14 @@
     "titleLabel": {
       "__id__": 23
     },
+    "starActive": {
+      "__uuid__": "e9ce3551-b7cb-4578-bfc2-a9be9e4a1c49@f9941",
+      "__expectedType__": "cc.SpriteFrame"
+    },
+    "starInactive": {
+      "__uuid__": "1fc98f5f-48a9-466b-9626-293a61fbef0f@f9941",
+      "__expectedType__": "cc.SpriteFrame"
+    },
     "lockedSprite": {
       "__uuid__": "2c1da0e7-a991-4266-8df2-e469146b2afe@f9941",
       "__expectedType__": "cc.SpriteFrame"

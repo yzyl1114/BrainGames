@@ -40,6 +40,12 @@ export class LevelSelection extends Component {
     public titleLabel: Label = null; // 标题
     
     @property(SpriteFrame)
+    public starActive: SpriteFrame = null; // 点亮的星星图标
+    
+    @property(SpriteFrame)
+    public starInactive: SpriteFrame = null; // 未点亮的星星图标
+
+    @property(SpriteFrame)
     public lockedSprite: SpriteFrame = null; // 锁图标
     
     @property(SpriteFrame)
@@ -536,6 +542,14 @@ export class LevelSelection extends Component {
             // 只确保缩放正确
             cardNode.setScale(1, 1, 1);
             
+            // 确保卡片有正确的 UITransform
+            let cardTransform = cardNode.getComponent(UITransform);
+            if (!cardTransform) {
+                cardTransform = cardNode.addComponent(UITransform);
+            }
+            cardTransform.setContentSize(90, 90);
+            cardTransform.setAnchorPoint(0.5, 0.5);
+            
             console.log(`卡片 ${i} 生成完成`);
             
             this.setupLevelCard(cardNode, levelData);
@@ -543,7 +557,7 @@ export class LevelSelection extends Component {
         
         console.log(`已生成 ${LEVELS_DATA.length} 个关卡卡片`);
         
-        // 改回正式布局方法
+        // 应用手动布局
         setTimeout(() => {
             this.manualGridLayout();
             // this.testSimpleLayout(); // 注释掉测试布局
@@ -681,7 +695,7 @@ export class LevelSelection extends Component {
         return inX && inY;
     }
 
-    // 新增：调整评分标签位置的方法
+    // 调整评分标签位置的方法
     private adjustScoreLabelPositions() {
         const children = this.levelContainer.children;
         
@@ -690,18 +704,29 @@ export class LevelSelection extends Component {
             const scoreNode = card.getChildByName('Score');
             
             if (scoreNode) {
-                // 将评分标签移动到卡片更下方，确保不会重叠
-                scoreNode.setPosition(0, -70, 0);
+                // 将评分标签移动到卡片下方
+                scoreNode.setPosition(0, -60, 0);
                 
-                // 如果卡片有锁定或完成图标，也需要调整
-                const lockIcon = card.getChildByName('LockIcon');
-                const completedIcon = card.getChildByName('CompletedIcon');
-                
-                if (lockIcon) {
-                    lockIcon.setPosition(0, 0, 1);
+                // 检查并设置 Score 节点的 UITransform
+                let scoreTransform = scoreNode.getComponent(UITransform);
+                if (!scoreTransform) {
+                    scoreTransform = scoreNode.addComponent(UITransform);
                 }
-                if (completedIcon) {
-                    completedIcon.setPosition(0, 0, 1);
+                scoreTransform.setContentSize(100, 20); // 设置合适的尺寸来容纳5颗星星
+                scoreTransform.setAnchorPoint(0.5, 0.5);
+                
+                // 如果卡片有锁定图标，调整位置
+                const lockIcon = card.getChildByName('LockIcon');
+                if (lockIcon) {
+                    // 确保锁图标显示在卡片右上角
+                    lockIcon.setPosition(25, 25, 10);
+                    
+                    // 调整锁图标的 UITransform
+                    const lockTransform = lockIcon.getComponent(UITransform);
+                    if (lockTransform) {
+                        lockTransform.setContentSize(20, 20);
+                        lockTransform.setAnchorPoint(0.5, 0.5);
+                    }
                 }
             }
         }
@@ -719,43 +744,59 @@ export class LevelSelection extends Component {
         
         const levelIndex = levelData.levelIndex;
         
-        // 只设置关卡序号
+        // 设置关卡序号
         if (levelIndexLabel) {
             levelIndexLabel.string = `${levelIndex + 1}`;
         }
+    
+        if (completedIcon) {
+            completedIcon.active = false;
+        }
+
+        // 2. 调整小锁位置到右上角
+        if (lockIcon) {
+            lockIcon.active = !levelData.isUnlocked;
+            
+            if (!levelData.isUnlocked) {
+                // 调整锁图标位置到右上角
+                lockIcon.setPosition(35, 35, 10); // 右上角
+            } else {
+                // 已解锁的关卡隐藏锁图标
+                lockIcon.active = false;
+            }
+        }
         
-        // 立即设置评价文字
-        if (scoreLabel && scoreNode) {
+        // 显示星星评价系统
+        if (scoreNode) {
             scoreNode.active = true;
             
+            // 清空之前的星星子节点
+            this.clearStarIcons(scoreNode);
+            
+            // 总是显示5颗星星
+            const totalStars = 3;
+            let activeStarCount = 0;
+            
             if (levelData.isCompleted) {
-                const scoreText = levelData.bestScore;
-                const starCount = (scoreText.match(/★/g) || []).length;
-                scoreLabel.string = `${starCount}星`;
-                
-                //scoreLabel.string = `${levelData.bestScore}`;
-                scoreLabel.color = Color.BLACK;
-                scoreLabel.fontSize = 24;
-                scoreLabel.enableOutline = false;//无描边
-                scoreLabel.outlineColor = Color.BLACK;
-                scoreLabel.outlineWidth = 1;
+                // 已完成的关卡：根据评价显示点亮星星数量
+                // 从评价文字中提取星星数量（例如："★★★★☆" 有4颗亮星）
+                activeStarCount = (levelData.bestScore.match(/★/g) || []).length;
             } else {
-                scoreLabel.string = levelData.isUnlocked ? "未完成" : "未解锁";
-                scoreLabel.color = levelData.isUnlocked ? Color.BLACK : Color.GRAY;
-                scoreLabel.fontSize = 24;
+                // 未完成/未解锁的关卡：0颗点亮星星
+                activeStarCount = 0;
+            }
+            
+            // 创建星星图标
+            this.showStarIcons(scoreNode, totalStars, activeStarCount);
+            
+            // 清空文字显示
+            if (scoreLabel) {
+                scoreLabel.string = "";
             }
             
             scoreNode.setSiblingIndex(99);
-        }
+        }       
         
-        // 设置图标状态
-        if (lockIcon) {
-            lockIcon.active = !levelData.isUnlocked;
-        }
-        
-        if (completedIcon) {
-            completedIcon.active = levelData.isCompleted;
-        }
         
         // 设置卡片背景颜色
         if (cardBg) {
@@ -778,6 +819,135 @@ export class LevelSelection extends Component {
                 this.onLevelSelected(levelData.levelIndex);
             }, this);
         }
+    }
+
+    // 清空星星图标的方法
+    private clearStarIcons(scoreNode: Node) {
+        const starNodes: Node[] = [];
+        scoreNode.children.forEach((child) => {
+            if (child.name.startsWith('Star_')) {
+                starNodes.push(child);
+            }
+        });
+        
+        starNodes.forEach((starNode) => {
+            if (starNode && starNode.isValid) {
+                starNode.destroy();
+            }
+        });
+        
+        // 如果存在Label组件，清空文字
+        const scoreLabel = scoreNode.getComponent(Label);
+        if (scoreLabel) {
+            scoreLabel.string = "";
+        }
+        
+        // 如果存在Sprite组件，清空图标
+        const scoreSprite = scoreNode.getComponent(Sprite);
+        if (scoreSprite) {
+            scoreSprite.spriteFrame = null;
+        }
+    }
+
+    // 显示星星图标的方法
+    private showStarIcons(scoreNode: Node, originalTotalStars: number, activeStarCount: number) {
+        if (!this.starActive || !this.starInactive) {
+            console.warn('星星图标未设置，使用文字替代');
+            this.showStarText(scoreNode, originalTotalStars, activeStarCount);
+            return;
+        }
+        
+        // 清空之前的星星
+        this.clearStarIcons(scoreNode);
+        
+        // 设置Score节点本身的Sprite为空
+        const scoreSprite = scoreNode.getComponent(Sprite);
+        if (scoreSprite) {
+            scoreSprite.spriteFrame = null;
+        }
+        
+        // 【修改】将5颗星改为3颗星
+        const displaySize = 14; // 可以稍微大一点，因为只有3颗
+        const starSpacing = 4;  // 间距也可以大一点
+        const totalStars = 3;   // 固定为3颗星
+        const totalWidth = (displaySize * totalStars) + (starSpacing * (totalStars - 1));
+        const startX = -totalWidth / 2 + displaySize / 2;
+        
+        console.log(`[Stars] 创建 ${totalStars} 颗星星，显示尺寸: ${displaySize}x${displaySize}`);
+        
+        for (let i = 0; i < totalStars; i++) {
+            const starNode = new Node(`Star_${i}`);
+            starNode.parent = scoreNode;
+            starNode.setPosition(startX + i * (displaySize + starSpacing), 0, 0);
+            
+            // UITransform
+            const uiTransform = starNode.addComponent(UITransform);
+            uiTransform.setContentSize(displaySize, displaySize);
+            uiTransform.setAnchorPoint(0.5, 0.5);
+            
+            // Sprite组件
+            const starSprite = starNode.addComponent(Sprite);
+            
+            // 三星系统的点亮逻辑（使用originalTotalStars作为原始5星数量）
+            if (activeStarCount >= 5) {
+                // 原5星：全部点亮
+                starSprite.spriteFrame = i < 3 ? this.starActive : this.starInactive;
+            } else if (activeStarCount === 4) {
+                // 原4星：前2.5颗亮（这里显示前2颗亮）
+                starSprite.spriteFrame = i < 2 ? this.starActive : this.starInactive;
+            } else if (activeStarCount === 3) {
+                // 原3星：前2颗亮
+                starSprite.spriteFrame = i < 2 ? this.starActive : this.starInactive;
+            } else if (activeStarCount === 2) {
+                // 原2星：前1颗亮
+                starSprite.spriteFrame = i < 1 ? this.starActive : this.starInactive;
+            } else if (activeStarCount === 1) {
+                // 原1星：前1颗亮
+                starSprite.spriteFrame = i < 1 ? this.starActive : this.starInactive;
+            } else {
+                // 0星：都不亮
+                starSprite.spriteFrame = this.starInactive;
+            }
+            
+            starSprite.sizeMode = Sprite.SizeMode.CUSTOM;
+            starSprite.type = Sprite.Type.SIMPLE;
+            starSprite.trim = false;
+            
+            // 调整缩放
+            const targetScale = 0.25; // 从0.25开始测试
+            starNode.setScale(targetScale, targetScale, 1);
+            
+            console.log(`星星${i}: 位置X=${starNode.position.x.toFixed(1)}, 缩放=${targetScale}`);
+        }
+    }
+
+    // 备选方案：用文字显示星星
+    private showStarText(scoreNode: Node, totalStars: number, activeStarCount: number) {
+        // 清空星星图标
+        this.clearStarIcons(scoreNode);
+        
+        // 临时添加Label组件来显示文字
+        let scoreLabel = scoreNode.getComponent(Label);
+        if (!scoreLabel) {
+            scoreLabel = scoreNode.addComponent(Label);
+        }
+        
+        // 【修改】改为3颗星的文字显示
+        const threeStarActiveCount = Math.min(3, Math.ceil(activeStarCount * 3 / 5)); // 5星转3星
+        
+        let starText = "";
+        for (let i = 0; i < 3; i++) { // 固定3颗星
+            if (i < threeStarActiveCount) {
+                starText += "★"; // 点亮
+            } else {
+                starText += "☆"; // 未点亮
+            }
+        }
+        scoreLabel.string = starText;
+        scoreLabel.fontSize = 16;
+        scoreLabel.color = threeStarActiveCount > 0 ? Color.YELLOW : Color.GRAY;
+        scoreLabel.horizontalAlign = Label.HorizontalAlign.CENTER;
+        scoreLabel.verticalAlign = Label.VerticalAlign.CENTER;
     }
 
     private updateContainerSize() {
