@@ -598,7 +598,7 @@ export class BoardController extends Component {
         const remainingUndo = this.maxUndoCount - this.undoCount;
         
         // 从正数计步改为倒数计步
-        this.stepCounterLabel.string = `剩余步数: ${this.remainingSteps}`;
+        this.stepCounterLabel.string = `剩余${this.remainingSteps}步`;
 
         // 【新增】同时更新悔棋数字徽章
         this.updateUndoBadge();
