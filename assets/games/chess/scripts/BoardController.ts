@@ -43,6 +43,13 @@ export class BoardController extends Component {
     private tutorialManager: TutorialManager = null; // 教学管理器
     private tutorialButton: Button = null; // 教学入口按钮
 
+    // ====== 悔棋数字徽章相关 ======
+    private undoBadgeNode: Node = null; // 悔棋数字徽章节点
+    private undoBadgeLabel: Label = null; // 数字标签
+
+    @property(SpriteFrame)
+    private badgeCircleSprite: SpriteFrame = null;
+    
     // ===== 棋盘背景相关 =====
     private boardTileNodes: Node[] = []; // 存储棋盘格子节点
 
@@ -278,7 +285,16 @@ export class BoardController extends Component {
         // 9. 创建音乐开关按钮
         this.createAudioButton(); 
 
-        // 10. 初始化UI状态
+        // 在创建完所有按钮后，创建悔棋数字徽章，使用标记避免重复创建
+        this.scheduleOnce(() => {
+            if (!this.undoBadgeNode || !this.undoBadgeNode.isValid) {
+                this.createUndoBadge();
+            } else {
+                console.log('[UI] 悔棋数字徽章已存在，跳过创建');
+            }
+        }, 0.1);
+
+        // 初始化UI状态
         if (this.tipsLabel) {
             this.tipsLabel.node.active = false; // 初始隐藏提示
         }
@@ -466,6 +482,113 @@ export class BoardController extends Component {
     }
 
     // ==================== 计步器与提示系统 ====================
+    // 创建悔棋数字徽章
+    private createUndoBadge() {
+        console.log('[UI] 创建悔棋数字徽章...');
+        
+        // 【修复】检查是否已存在
+        if (this.undoBadgeNode && this.undoBadgeNode.isValid) {
+            console.log('[UI] 悔棋数字徽章已存在，跳过创建');
+            return;
+        }
+        
+        // 1. 找到悔棋按钮节点
+        const undoButton = this.uiRoot?.getChildByPath('UIRoot/ButtonContainer/UndoButton');
+        if (!undoButton) {
+            console.warn('[UI] 找不到悔棋按钮节点');
+            return;
+        }
+        
+        // 【修复】检查悔棋按钮上是否已存在徽章
+        const existingBadge = undoButton.getChildByName('UndoBadge');
+        if (existingBadge && existingBadge.isValid) {
+            console.log('[UI] 悔棋按钮上已存在徽章节点，复用');
+            this.undoBadgeNode = existingBadge;
+            
+            // 尝试获取标签组件
+            const labelNode = this.undoBadgeNode.getChildByName('BadgeLabel');
+            if (labelNode) {
+                this.undoBadgeLabel = labelNode.getComponent(Label);
+            }
+            
+            // 初始更新徽章
+            this.updateUndoBadge();
+            return;
+        }
+        
+        // 2. 创建徽章节点
+        this.undoBadgeNode = new Node('UndoBadge');
+        this.undoBadgeNode.parent = undoButton; // 作为悔棋按钮的子节点
+        this.undoBadgeNode.setPosition(90, 15, 10); // 右上角位置（相对于按钮）
+        
+        // 3. 添加背景圆形
+        const badgeBg = new Node('BadgeBg');
+        badgeBg.parent = this.undoBadgeNode;
+        badgeBg.setPosition(0, 0, 0); 
+        
+        const bgSprite = badgeBg.addComponent(Sprite);
+        
+        
+        if (this.badgeCircleSprite) {
+            bgSprite.spriteFrame = this.badgeCircleSprite;
+            bgSprite.color = Color.RED; // 将白色变为红色
+            console.log('[UI] 使用自定义圆形图片作为徽章背景');
+        } else {
+            bgSprite.color = Color.RED;
+            console.warn('[UI] 圆形背景图片未设置，使用纯色');
+        }
+
+        bgSprite.type = Sprite.Type.SIMPLE;
+        bgSprite.sizeMode = Sprite.SizeMode.CUSTOM;
+        
+        // 【修复】检查是否已有UITransform
+        let bgTransform = badgeBg.getComponent(UITransform);
+        if (!bgTransform) {
+            bgTransform = badgeBg.addComponent(UITransform);
+        }
+        bgTransform.setContentSize(30, 30); // 圆形直径30
+        bgTransform.setAnchorPoint(0.5, 0.5);
+        
+        // 4. 添加数字标签
+        const labelNode = new Node('BadgeLabel');
+        labelNode.parent = this.undoBadgeNode;
+        labelNode.setPosition(0, 0, 1);
+        
+        this.undoBadgeLabel = labelNode.addComponent(Label);
+        this.undoBadgeLabel.string = this.maxUndoCount.toString();
+        this.undoBadgeLabel.fontSize = 18;
+        this.undoBadgeLabel.color = Color.WHITE;
+        this.undoBadgeLabel.horizontalAlign = Label.HorizontalAlign.CENTER;
+        this.undoBadgeLabel.verticalAlign = Label.VerticalAlign.CENTER;
+        
+        // 【修复】检查是否已有UITransform
+        let labelTransform = labelNode.getComponent(UITransform);
+        if (!labelTransform) {
+            labelTransform = labelNode.addComponent(UITransform);
+        }
+        labelTransform.setContentSize(30, 30);
+        labelTransform.setAnchorPoint(0.5, 0.5);
+        
+        // 5. 【新增】确保徽章节点在最上层
+        this.undoBadgeNode.setSiblingIndex(undoButton.children.length);
+
+        // 6. 初始更新徽章
+        this.updateUndoBadge();
+        
+        console.log('[UI] 悔棋数字徽章创建完成');
+    }
+
+    // 更新悔棋数字徽章
+    private updateUndoBadge() {
+        if (!this.undoBadgeLabel) return;
+        
+        const remainingUndo = this.maxUndoCount - this.undoCount;
+        this.undoBadgeLabel.string = remainingUndo.toString();
+        
+        console.log(`[UI] 悔棋徽章更新: ${remainingUndo}`);
+    }
+
+    // ==================== 计步器与提示系统 ====================
     private updateStepCounter() {
         if (!this.stepCounterLabel) {
             console.warn("Step counter label not assigned");
@@ -473,8 +596,12 @@ export class BoardController extends Component {
         }
         
         const remainingUndo = this.maxUndoCount - this.undoCount;
-        // 【修改】从正数计步改为倒数计步
-        this.stepCounterLabel.string = `剩余步数: ${this.remainingSteps} | 剩余悔棋: ${remainingUndo}`;
+        
+        // 从正数计步改为倒数计步
+        this.stepCounterLabel.string = `剩余步数: ${this.remainingSteps}`;
+
+        // 【新增】同时更新悔棋数字徽章
+        this.updateUndoBadge();
     }
     
     private showTips(message: string, duration: number = 2.0) {
@@ -864,13 +991,14 @@ export class BoardController extends Component {
         // 更新悔棋计数
         this.undoCount++;
         
-        // 更新计步器
+        // 更新计步器（只显示步数）和悔棋徽章
         this.updateStepCounter();
         
         // 使用提示显示成功信息
         this.showTips(`悔棋成功`);
 
         console.log(`[Undo] 悔棋成功。当前：剩余步数=${this.remainingSteps}, 棋子数=${this.countPegs()}, 已用悔棋=${this.undoCount}/${this.maxUndoCount}, 历史记录=${this.moveHistory.length}`);
+        
     
         // 调试：输出当前所有历史记录
         console.log(`[Undo] 历史记录详情：`);
@@ -995,6 +1123,11 @@ export class BoardController extends Component {
             this.tipsLabel.node.active = false;
         }
         
+        // 【新增】隐藏悔棋数字徽章
+        if (this.undoBadgeNode) {
+            this.undoBadgeNode.active = false;
+        }
+
         // 隐藏教学和音乐按钮
         if (this.tutorialButton) {
             this.tutorialButton.node.active = false;
@@ -1041,6 +1174,11 @@ export class BoardController extends Component {
             buttonContainer.active = true;
         }
         
+        // 【新增】恢复悔棋数字徽章
+        if (this.undoBadgeNode) {
+            this.undoBadgeNode.active = true;
+        }
+
         // 恢复教学和音乐按钮
         if (this.tutorialButton) {
             this.tutorialButton.node.active = true;
@@ -1218,6 +1356,10 @@ export class BoardController extends Component {
     public retryLevel() {
         console.log("Retrying current level");
         this.clearHistory();  // 清空历史记录
+        
+        // 【新增】重置悔棋计数
+        this.undoCount = 0;
+        
         this.loadLevel(this.currentLevelIndex);
     }
     
@@ -1653,6 +1795,11 @@ export class BoardController extends Component {
             this.maxUndoCount = 7; // 31-60关：7次
         } else {
             this.maxUndoCount = 9; // 61+关：9次
+        }
+
+        // 【新增】如果徽章已创建，更新初始值
+        if (this.undoBadgeLabel) {
+            this.updateUndoBadge();
         }
     }
     
