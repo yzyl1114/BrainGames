@@ -206,17 +206,20 @@ export class BoardController extends Component {
             return null;
         };
 
-        // 3. 动态查找并绑定所有通用UI组件
-        this.gameTitleLabel = getComponent('UIRoot/GameTitleLabel', Label);
+        // 3. 【新增】初始化标题栏（放在UI节点查找之前）
+        this.initGameTitleBar();
+
+        // 4. 动态查找并绑定所有通用UI组件
+        this.gameTitleLabel = getComponent('UIRoot/TitleBar/GameTitleLabel', Label);
         this.stepCounterLabel = getComponent('UIRoot/StepCounter', Label);
         this.tipsLabel = getComponent('UIRoot/TipsLabel', Label);
         this.retryButton = getComponent('UIRoot/ButtonContainer/RetryButton', Button);
         this.undoButton = getComponent('UIRoot/ButtonContainer/UndoButton', Button);
         
-        // 直接查找BackButton，而不是通过属性绑定
-        this.backButton = getComponent('UIRoot/BackButton', Button); 
+        // 直接查找BackButton
+        this.backButton = getComponent('UIRoot/TitleBar/BackButton', Button); 
 
-        // 4. 动态查找并绑定结算弹窗组件
+        // 5. 动态查找并绑定结算弹窗组件
         this.settlementPanel = this.uiRoot.getChildByPath('UIRoot/SettlementPanel');
         if (this.settlementPanel) {
             this.settlementTitle = getComponent('UIRoot/SettlementPanel/PopupWindow/TitleLabel', Label);
@@ -228,7 +231,7 @@ export class BoardController extends Component {
             console.warn('[UI] SettlementPanel not found in UI prefab.');
         }
 
-        // 5. 动态绑定按钮点击事件（替代编辑器Click Events设置）
+        // 6. 动态绑定按钮点击事件（替代编辑器Click Events设置）
         if (this.retryButton) {
             this.retryButton.node.on(Button.EventType.CLICK, this.retryLevel, this);
         }
@@ -242,7 +245,7 @@ export class BoardController extends Component {
             this.settlementNextBtn.node.on(Button.EventType.CLICK, this.onSettlementNext, this);
         }
         
-        // 6. 动态绑定BackButton点击事件
+        // 7. 动态绑定BackButton点击事件
         if (this.backButton) {
             console.log('[UI] BackButton found, binding click event');
 
@@ -269,13 +272,13 @@ export class BoardController extends Component {
             console.warn('[UI] BackButton not found in UI prefab!');
         }
 
-        // 7. 创建教学入口按钮
+        // 8. 创建教学入口按钮
         this.createTutorialButton();
 
-        // 8. 创建音乐开关按钮
+        // 9. 创建音乐开关按钮
         this.createAudioButton(); 
 
-        // 9. 初始化UI状态
+        // 10. 初始化UI状态
         if (this.tipsLabel) {
             this.tipsLabel.node.active = false; // 初始隐藏提示
         }
@@ -964,6 +967,13 @@ export class BoardController extends Component {
 
     // ========== 隐藏游戏UI元素 ==========
     private hideGameUIForSettlement() {
+        
+        // 隐藏标题栏
+        const titleBarNode = this.uiRoot?.getChildByPath('UIRoot/TitleBar');
+        if (titleBarNode) {
+            titleBarNode.active = false;
+        }
+        
         // 隐藏标题
         if (this.gameTitleLabel && this.gameTitleLabel.node) {
             this.gameTitleLabel.node.active = false;
@@ -997,6 +1007,7 @@ export class BoardController extends Component {
     }
 
     private restoreGameUIAfterSettlement() {
+        
         // 恢复BoardRoot层级
         const canvas = find('Canvas');
         if (canvas && this.boardRoot) {
@@ -1008,6 +1019,12 @@ export class BoardController extends Component {
         if (this.boardRoot) {
             this.boardRoot.active = true;
             console.log("显示BoardRoot（棋盘）");
+        }
+
+        // 恢复标题栏
+        const titleBarNode = this.uiRoot?.getChildByPath('UIRoot/TitleBar');
+        if (titleBarNode) {
+            titleBarNode.active = true;
         }
 
         // 恢复UI元素
@@ -1704,6 +1721,44 @@ export class BoardController extends Component {
         // 这里可以根据你的资源管理方式实现
     }
 
+    // 【新增】初始化游戏标题栏
+    private initGameTitleBar() {
+        console.log('[UI] 初始化游戏标题栏...');
+        
+        // 1. 找到标题栏节点
+        const titleBarNode = this.uiRoot?.getChildByPath('UIRoot/TitleBar');
+        if (!titleBarNode) {
+            console.warn('[UI] 未找到TitleBar节点，可能未在编辑器中创建');
+            return;
+        }
+        
+        // 2. 设置标题栏位置（与关卡选择页一致）
+        const canvasHeight = 1334;
+        const titleBarY = canvasHeight / 2 - 60;
+        titleBarNode.setPosition(0, titleBarY, 0);
+        
+        console.log(`[UI] 游戏标题栏位置设置: (0, ${titleBarY})`);
+        
+        // 3. 找到标题文字并更新
+        const titleLabel = titleBarNode.getChildByPath('GameTitleLabel')?.getComponent(Label);
+        if (titleLabel) {
+            // 标题文字会在loadLevel时更新为"关卡 X"
+            titleLabel.color = Color.WHITE; // 确保是白色
+        }
+        
+        // 4. 确保返回按钮事件绑定正确
+        const backButton = titleBarNode.getChildByPath('BackButton')?.getComponent(Button);
+        if (backButton) {
+            // 移除旧事件，绑定新事件
+            backButton.node.off(Button.EventType.CLICK);
+            backButton.node.on(Button.EventType.CLICK, this.onBackToLevelSelect, this);
+            console.log('[UI] 标题栏返回按钮事件绑定完成');
+        }
+        
+        // 5. 将标题栏移到合适层级（确保在最上层显示）
+        titleBarNode.setSiblingIndex(999);
+    }
+
     private createTutorialButton() {
         console.log('[UI] 开始创建教学入口按钮...');
         
@@ -1715,9 +1770,11 @@ export class BoardController extends Component {
             return;
         }
         
-        // 放在右上角
+        // 放在底部
         tutorialContainer.parent = uiRootNode;
-        tutorialContainer.setPosition(295, 550, 0);
+        tutorialContainer.setPosition(-180, -567, 0);
+        //tutorialContainer.setPosition(295, 550, 0);
+
         
         // 添加UITransform组件
         const containerTransform = tutorialContainer.addComponent(UITransform);
@@ -1780,7 +1837,9 @@ export class BoardController extends Component {
         }
         
         audioContainer.parent = uiRootNode;
+        //audioContainer.setPosition(-300, 450, 0);
         audioContainer.setPosition(295, 480, 0);
+        
         
         const transform = audioContainer.addComponent(UITransform);
         transform.setContentSize(60, 60); 
