@@ -1,7 +1,7 @@
 // assets/games/chess/scripts/BoardController.ts
 
 import { LevelSelection } from './LevelSelection';
-import { _decorator, Component, Node, Prefab, instantiate, UITransform, Vec3, v3, EventTouch, Label, tween, UIOpacity, Sprite, Color, Button, find, SpriteFrame,resources, director } from 'cc';
+import { _decorator, Component, Node, Prefab, instantiate, UITransform, Vec3, v3, EventTouch, Label, RichText, tween, UIOpacity, Sprite, Color, Button, find, SpriteFrame,resources, director } from 'cc';
 import { Peg } from './Peg';
 import { BOARD_SIZE, TILE_STATE, LEVELS_DATA, evaluateResult, CENTER_POS } from './GameConfig'; 
 import { TutorialManager } from './TutorialManager';
@@ -75,7 +75,7 @@ export class BoardController extends Component {
 
     // 通用UI组件引用
     private gameTitleLabel: Label = null;
-    private stepCounterLabel: Label = null;
+    private stepCounterLabel: RichText = null;
     private tipsLabel: Label = null;
     private retryButton: Button = null;
     private undoButton: Button = null;
@@ -218,7 +218,7 @@ export class BoardController extends Component {
 
         // 4. 动态查找并绑定所有通用UI组件
         this.gameTitleLabel = getComponent('UIRoot/TitleBar/GameTitleLabel', Label);
-        this.stepCounterLabel = getComponent('UIRoot/StepCounter', Label);
+        this.stepCounterLabel = getComponent('UIRoot/StepCounter', RichText);
         this.tipsLabel = getComponent('UIRoot/TipsLabel', Label);
         this.retryButton = getComponent('UIRoot/ButtonContainer/RetryButton', Button);
         this.undoButton = getComponent('UIRoot/ButtonContainer/UndoButton', Button);
@@ -597,10 +597,24 @@ export class BoardController extends Component {
         
         const remainingUndo = this.maxUndoCount - this.undoCount;
         
-        // 从正数计步改为倒数计步
-        this.stepCounterLabel.string = `剩余${this.remainingSteps}步`;
+        //原来的label字符串
+        //this.stepCounterLabel.string = `剩余${this.remainingSteps}步`;
 
-        // 【新增】同时更新悔棋数字徽章
+        // 根据剩余步数设置数字颜色和字号
+        let numberColor = this.remainingSteps >= 3 ? "#333333" : "#FF5555"; // 白色或红色
+        let numberSize = 40; // 数字字号
+        let textSize =28; // 文字字号
+        
+        // 构建富文本字符串
+        const richTextString = 
+            `<color=#333333><size=${textSize}>剩余</size></color>` +
+            `<color=${numberColor}><size=${numberSize}>${this.remainingSteps}</size></color>` +
+            `<color=#333333><size=${textSize}>步</size></color>`;
+        
+        // 设置富文本内容
+        this.stepCounterLabel.string = richTextString;
+
+        // 更新悔棋数字徽章
         this.updateUndoBadge();
     }
     
