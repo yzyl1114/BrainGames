@@ -792,7 +792,7 @@ export class BoardController extends Component {
         if (!uiTransform) {
             uiTransform = tileNode.addComponent(UITransform);
         }
-        uiTransform.setContentSize(TILE_SIZE * 0.9, TILE_SIZE * 0.9); // 稍小于棋子
+        uiTransform.setContentSize(85, 85);
         
         // 保存节点引用
         this.boardTileNodes.push(tileNode);
@@ -1831,7 +1831,7 @@ export class BoardController extends Component {
         
         const uiTransform = pegNode.getComponent(UITransform);
         if (uiTransform) {
-            uiTransform.setContentSize(TILE_SIZE, TILE_SIZE);
+            uiTransform.setContentSize(70, 70); 
         }
         
         const pegComp = pegNode.getComponent(Peg);
