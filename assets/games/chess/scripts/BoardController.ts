@@ -34,6 +34,12 @@ export class BoardController extends Component {
     @property(SpriteFrame)
     public boardBorderSprite: SpriteFrame = null; // 棋盘边框图片（可选）
 
+    @property(SpriteFrame)
+    private starActive: SpriteFrame = null; // 点亮的星星图标
+
+    @property(SpriteFrame)
+    private starInactive: SpriteFrame = null; // 未点亮的星星图标
+
     @property(Node)
     public levelSelectionNode: Node = null; // 关卡选择页面节点
 
@@ -1075,36 +1081,191 @@ export class BoardController extends Component {
             this.settlementPanel.setSiblingIndex(this.settlementPanel.parent.children.length - 1);
         }
         
-        // 设置弹窗内容
-        this.settlementTitle.string = isVictory ? "恭喜过关" : "游戏结束";
+        // ==================== 新增：获取UI组件引用 ====================
+        // 获取按钮容器和单按钮节点（需要在编辑器预制体中修改结构）
+        const victoryButtonContainer = this.settlementPanel.getChildByPath('PopupWindow/VictoryButtonContainer');
+        const failureButtonContainer = this.settlementPanel.getChildByPath('PopupWindow/FailureButtonContainer');
+        const singleVictoryButton = this.settlementPanel.getChildByPath('PopupWindow/VictoryButtonContainer/SettlementSingleNextBtn')?.getComponent(Button);
+        const singleFailureButton = this.settlementPanel.getChildByPath('PopupWindow/FailureButtonContainer/SettlementSingleRetryBtn')?.getComponent(Button);
         
-        this.settlementResult.string = `评价: ${resultText}`;
-        this.settlementStats.string = `移动${stepCount}步  剩余${remainingPegs}子`;
-        
-        // 设置下一关按钮状态
-        if (this.settlementNextBtn) {
-            const isLastLevel = this.currentLevelIndex >= LEVELS_DATA.length - 1;
-            const nextBtnLabel = this.settlementNextBtn.node.getComponentInChildren(Label);
-            if (nextBtnLabel) {
-                if (isLastLevel) {
-                    nextBtnLabel.string = "返回关卡选择";
-                    this.settlementNextBtn.interactable = true;
-                    // 修改按钮点击事件
-                    this.settlementNextBtn.node.off(Button.EventType.CLICK);
-                    this.settlementNextBtn.node.on(Button.EventType.CLICK, () => {
-                        this.onSettlementBackToLevelSelect();
-                    }, this);                    
-                } else if (!isVictory) {
-                    nextBtnLabel.string = "下一关";
-                    this.settlementNextBtn.interactable = false;//未通关
-                } else {                    
-                    nextBtnLabel.string = "下一关";//正常通关
-                    this.settlementNextBtn.interactable = true;
+        // ==================== 设置弹窗内容 ====================
+        if (isVictory) {
+            // 通关状态
+            this.settlementTitle.string = "恭喜过关";
+            
+            // 显示星星评价系统
+            this.showVictoryStars(stepCount);
+            
+            // 设置评价和统计文字
+            this.settlementResult.string = `评价: ${resultText}`;
+            this.settlementStats.string = `移动${stepCount}步  剩余${remainingPegs}子`;
+            
+            // 按钮处理 - 只显示"下一关"按钮，居中显示
+            if (victoryButtonContainer) {
+                victoryButtonContainer.active = true;
+            }
+            if (failureButtonContainer) {
+                failureButtonContainer.active = false;
+            }
+            
+            // 处理"下一关"按钮
+            if (singleVictoryButton) {
+                const isLastLevel = this.currentLevelIndex >= LEVELS_DATA.length - 1;
+                const nextBtnLabel = singleVictoryButton.node.getComponentInChildren(Label);
+                if (nextBtnLabel) {
+                    if (isLastLevel) {
+                        nextBtnLabel.string = "返回关卡选择";
+                        singleVictoryButton.interactable = true;
+                        // 修改按钮点击事件
+                        singleVictoryButton.node.off(Button.EventType.CLICK);
+                        singleVictoryButton.node.on(Button.EventType.CLICK, () => {
+                            this.onSettlementBackToLevelSelect();
+                        }, this);                    
+                    } else {
+                        nextBtnLabel.string = "下一关";
+                        singleVictoryButton.interactable = true;
+                        // 修改按钮点击事件
+                        singleVictoryButton.node.off(Button.EventType.CLICK);
+                        singleVictoryButton.node.on(Button.EventType.CLICK, this.onSettlementNext, this);
+                    }
                 }
+            }
+            
+        } else {
+            // 失败状态
+            this.settlementTitle.string = "游戏结束";
+            
+            // 隐藏星星
+            this.clearVictoryStars();
+            
+            // 设置评价和统计文字
+            this.settlementResult.string = `评价: ${resultText}`;
+            this.settlementStats.string = `移动${stepCount}步  剩余${remainingPegs}子`;
+            
+            // 按钮处理 - 只显示"再试一次"按钮，居中显示
+            if (victoryButtonContainer) {
+                victoryButtonContainer.active = false;
+            }
+            if (failureButtonContainer) {
+                failureButtonContainer.active = true;
+            }
+            
+            // 处理"再试一次"按钮
+            if (singleFailureButton) {
+                singleFailureButton.interactable = true;
+                const retryBtnLabel = singleFailureButton.node.getComponentInChildren(Label);
+                if (retryBtnLabel) {
+                    retryBtnLabel.string = "再试一次";
+                }
+                // 修改按钮点击事件
+                singleFailureButton.node.off(Button.EventType.CLICK);
+                singleFailureButton.node.on(Button.EventType.CLICK, this.onSettlementRetry, this);
             }
         }
         
         console.log("结算弹窗显示完成");
+    }
+
+    // ==================== 新增：显示通关星星评价（3颗星系统）====================
+    private showVictoryStars(stepCount: number) {
+        // 先清除现有的星星
+        this.clearVictoryStars();
+        
+        // 计算星级（使用GameConfig中的evaluateResult函数）
+        const usedSteps = stepCount; // 已用步数
+        const resultText = evaluateResult(usedSteps, this.stepLimit);
+        const starCount5 = (resultText.match(/★/g) || []).length; // 原始5星数量
+        
+        // 将5星转换为3星系统（与关卡列表页一致）
+        let activeStarCount3 = 0;
+        if (starCount5 >= 5) {
+            activeStarCount3 = 3; // 5星 -> 3颗亮
+        } else if (starCount5 === 4) {
+            activeStarCount3 = 2; // 4星 -> 2颗亮
+        } else if (starCount5 === 3) {
+            activeStarCount3 = 2; // 3星 -> 2颗亮
+        } else if (starCount5 === 2) {
+            activeStarCount3 = 1; // 2星 -> 1颗亮
+        } else if (starCount5 === 1) {
+            activeStarCount3 = 1; // 1星 -> 1颗亮
+        } else {
+            activeStarCount3 = 0; // 0星 -> 0颗亮
+        }
+        
+        console.log(`胜利评价: ${resultText}, 原始5星数量: ${starCount5}, 转换后3星数量: ${activeStarCount3}`);
+        
+        // 获取星星容器（需要在预制体中创建）
+        const starContainer = this.settlementPanel.getChildByPath('PopupWindow/StarContainer');
+        if (!starContainer) {
+            console.warn("未找到StarContainer，无法显示星星");
+            return;
+        }
+        
+        starContainer.active = true;
+        
+        // 显示3颗星星（比关卡列表页大）
+        const totalStars = 3;
+        const starSize = 80; // 结算弹窗的星星要大很多
+        const starSpacing = 40;
+        const totalWidth = (starSize * totalStars) + (starSpacing * (totalStars - 1));
+        const startX = -totalWidth / 2 + starSize / 2;
+        
+        for (let i = 0; i < totalStars; i++) {
+            const starNode = new Node(`VictoryStar_${i}`);
+            starNode.parent = starContainer;
+            starNode.setPosition(startX + i * (starSize + starSpacing), 0, 0);
+            
+            // UITransform
+            const uiTransform = starNode.addComponent(UITransform);
+            uiTransform.setContentSize(starSize, starSize);
+            uiTransform.setAnchorPoint(0.5, 0.5);
+            
+            // Sprite组件
+            const starSprite = starNode.addComponent(Sprite);
+            starSprite.sizeMode = Sprite.SizeMode.CUSTOM;
+            starSprite.type = Sprite.Type.SIMPLE;
+            starSprite.trim = false;
+            
+            // 根据星级设置星星状态
+            if (i < activeStarCount3) {
+                if (this.starActive) {
+                    starSprite.spriteFrame = this.starActive; // 点亮星星
+                    starSprite.color = Color.WHITE;
+                } else {
+                    starSprite.color = Color.YELLOW;
+                }
+            } else {
+                if (this.starInactive) {
+                    starSprite.spriteFrame = this.starInactive; // 未点亮星星
+                    starSprite.color = Color.WHITE;
+                } else {
+                    starSprite.color = Color.GRAY;
+                }
+            }
+        }
+    }
+
+    // ==================== 新增：清空星星图标 ====================
+    private clearVictoryStars() {
+        const starContainer = this.settlementPanel.getChildByPath('PopupWindow/StarContainer');
+        if (!starContainer) return;
+        
+        // 隐藏容器
+        starContainer.active = false;
+        
+        // 销毁所有星星节点
+        const starNodes: Node[] = [];
+        starContainer.children.forEach((child) => {
+            if (child.name.startsWith('VictoryStar_')) {
+                starNodes.push(child);
+            }
+        });
+        
+        starNodes.forEach((starNode) => {
+            if (starNode && starNode.isValid) {
+                starNode.destroy();
+            }
+        });
     }
 
     // ========== 隐藏游戏UI元素 ==========
@@ -1207,6 +1368,8 @@ export class BoardController extends Component {
     private hideSettlementPanel() {
         if (this.settlementPanel) {
             this.settlementPanel.active = false;
+            // 清空星星
+            this.clearVictoryStars();
         }
     }
     

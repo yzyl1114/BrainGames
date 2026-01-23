@@ -2237,6 +2237,14 @@
       "__expectedType__": "cc.SpriteFrame"
     },
     "boardBorderSprite": null,
+    "starActive": {
+      "__uuid__": "e9ce3551-b7cb-4578-bfc2-a9be9e4a1c49@f9941",
+      "__expectedType__": "cc.SpriteFrame"
+    },
+    "starInactive": {
+      "__uuid__": "1fc98f5f-48a9-466b-9626-293a61fbef0f@f9941",
+      "__expectedType__": "cc.SpriteFrame"
+    },
     "levelSelectionNode": {
       "__id__": 13
     },
