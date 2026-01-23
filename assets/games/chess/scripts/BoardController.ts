@@ -433,12 +433,27 @@ export class BoardController extends Component {
 
     // 添加更新关卡进度的方法
     private updateLevelProgress(levelIndex: number, score: string, stepCount: number, isCenterPeg: boolean = false) {
+        console.log('===================');
+        console.log('【updateLevelProgress】开始更新关卡进度');
+        console.log(`关卡索引: ${levelIndex}, 评价: ${score}, 步数: ${stepCount}`);
+        
         // 如果有 LevelSelection 组件，调用其更新方法
         if (this.levelSelectionNode) {
+            console.log(`levelSelectionNode 状态: ${this.levelSelectionNode.active ? '激活' : '未激活'}`);
+            
             const levelSelection = this.levelSelectionNode.getComponent(LevelSelection);
             if (levelSelection && levelSelection.updateLevelProgress) {
+                console.log('找到LevelSelection组件，调用updateLevelProgress');
                 levelSelection.updateLevelProgress(levelIndex, score, stepCount);
+            } else {
+                console.warn('LevelSelection组件未找到或没有updateLevelProgress方法');
+                
+                // 尝试直接获取组件
+                const allComponents = this.levelSelectionNode.getComponents('LevelSelection');
+                console.log(`找到的LevelSelection组件数量: ${allComponents.length}`);
             }
+        } else {
+            console.warn('levelSelectionNode未设置');
         }
         
         // 同时保存到本地存储
@@ -455,9 +470,19 @@ export class BoardController extends Component {
             // 保存单个关卡的进度
             localStorage.setItem(`diamond_chess_level_${levelIndex}`, JSON.stringify(progress));
             
+            // 【新增】同时保存最大解锁关卡
+            const nextLevelIndex = levelIndex + 1;
+            if (nextLevelIndex < 100) { // 假设最多100关
+                localStorage.setItem(`diamond_chess_max_unlocked`, nextLevelIndex.toString());
+            }
+            
+            console.log(`Level ${levelIndex} progress saved: ${score}, ${stepCount} steps`);
+            console.log(`下一关 ${nextLevelIndex} 已标记为解锁`);
         } catch (e) {
             console.error("Failed to save level progress:", e);
         }
+        
+        console.log('===================');
     }
 
     // ==================== 计步器与提示系统 ====================

@@ -172,24 +172,118 @@ export class LevelSelection extends Component {
 
     // 加载关卡进度（从本地存储）
     private loadLevelProgress() {
+        console.log('【loadLevelProgress】从本地存储加载关卡进度');
+        
         // 从本地存储读取进度，如果没有则初始化
         const savedProgress = localStorage.getItem('diamond_chess_level_progress');
         
         if (savedProgress) {
-            const progress = JSON.parse(savedProgress);
-            this.currentMaxUnlockedLevel = progress.maxUnlockedLevel || 0;
-            this.levelDataList = progress.levelDataList || [];
+            try {
+                const progress = JSON.parse(savedProgress);
+                this.currentMaxUnlockedLevel = progress.maxUnlockedLevel || 0;
+                this.levelDataList = progress.levelDataList || [];
+                
+                console.log(`✅ 从本地存储加载进度成功`);
+                console.log(`   最大解锁关卡: ${this.currentMaxUnlockedLevel + 1}`);
+                console.log(`   关卡数据列表长度: ${this.levelDataList.length}`);
+                console.log(`   已解锁关卡数: ${this.levelDataList.filter(level => level.isUnlocked).length}`);
+                
+                // 修复数据一致性（但不会重置数据）
+                this.fixLevelDataConsistency();
+                
+            } catch (e) {
+                console.error('❌ 解析本地存储数据失败:', e);
+                console.log('重新初始化默认数据...');
+                this.initDefaultLevelData();
+                // 这里不调用 saveLevelProgress()，避免覆盖可能存在的正确数据
+            }
         } else {
-            // 初始状态：只有第一关解锁
-            this.currentMaxUnlockedLevel = 0;
-            this.levelDataList = [];
-            this.initLevelData();
+            console.log('⚠️ 本地存储中没有找到进度，初始化默认数据');
+            this.initDefaultLevelData();
+            // 只有完全没有数据时才保存
             this.saveLevelProgress();
         }
     }
-    
+ 
+    // 修复数据一致性的方法
+    private fixLevelDataConsistency() {
+        console.log('【fixLevelDataConsistency】修复数据一致性');
+        
+        // 确保关卡数量正确
+        const expectedLevelCount = LEVELS_DATA.length;
+        
+        // 【重要修改】不要直接重置数据，而是扩展或截断
+        if (this.levelDataList.length !== expectedLevelCount) {
+            console.log(`关卡数量变化: 存储的=${this.levelDataList.length}, 预期的=${expectedLevelCount}`);
+            this.adjustLevelDataCount(expectedLevelCount);
+        }
+        
+        // 确保已完成的关卡是解锁的
+        for (let i = 0; i < this.levelDataList.length; i++) {
+            const levelData = this.levelDataList[i];
+            
+            // 如果关卡已完成但未标记为解锁，修复它
+            if (levelData.isCompleted && !levelData.isUnlocked) {
+                console.log(`修复关卡 ${i + 1}: 已完成但未解锁`);
+                levelData.isUnlocked = true;
+            }
+            
+            // 确保最大解锁关卡正确
+            if (levelData.isUnlocked) {
+                this.currentMaxUnlockedLevel = Math.max(this.currentMaxUnlockedLevel, i);
+            }
+        }
+        
+        console.log(`修复后最大解锁关卡: ${this.currentMaxUnlockedLevel + 1}`);
+    }
+
+    // 【新增】调整关卡数据数量（保留已有进度）
+    private adjustLevelDataCount(expectedLevelCount: number) {
+        console.log(`调整关卡数据: 从 ${this.levelDataList.length} 到 ${expectedLevelCount}`);
+        
+        const oldDataList = [...this.levelDataList]; // 备份旧数据
+        this.levelDataList = [];
+        
+        for (let i = 0; i < expectedLevelCount; i++) {
+            // 尝试从旧数据中获取
+            const oldData = oldDataList[i];
+            
+            if (oldData) {
+                // 保留旧数据
+                this.levelDataList.push({
+                    levelIndex: i,
+                    isUnlocked: oldData.isUnlocked,
+                    bestScore: oldData.bestScore,
+                    stepCount: oldData.stepCount,
+                    isCompleted: oldData.isCompleted
+                });
+                console.log(`保留关卡 ${i + 1} 的进度: 解锁=${oldData.isUnlocked}, 完成=${oldData.isCompleted}`);
+            } else {
+                // 新关卡：默认解锁规则（第一关解锁，其他锁定）
+                const isUnlocked = i === 0 || (i <= this.currentMaxUnlockedLevel);
+                this.levelDataList.push({
+                    levelIndex: i,
+                    isUnlocked: isUnlocked,
+                    bestScore: "",
+                    stepCount: 0,
+                    isCompleted: false
+                });
+                console.log(`创建新关卡 ${i + 1}: 解锁=${isUnlocked}`);
+            }
+        }
+        
+        // 重新计算最大解锁关卡
+        this.currentMaxUnlockedLevel = 0;
+        for (let i = 0; i < this.levelDataList.length; i++) {
+            if (this.levelDataList[i].isUnlocked) {
+                this.currentMaxUnlockedLevel = i;
+            }
+        }
+    }
+
     // 初始化关卡数据
-    private initLevelData() {
+    private initDefaultLevelData() {
+        console.log('初始化默认关卡数据');
         this.levelDataList = [];
         for (let i = 0; i < LEVELS_DATA.length; i++) {
             this.levelDataList.push({
@@ -200,10 +294,13 @@ export class LevelSelection extends Component {
                 isCompleted: false
             });
         }
+        this.currentMaxUnlockedLevel = 0;
     }
     
     // 保存关卡进度到本地存储
     private saveLevelProgress() {
+        console.log('【saveLevelProgress】保存关卡进度到本地存储');
+        
         const progress = {
             maxUnlockedLevel: this.currentMaxUnlockedLevel,
             levelDataList: this.levelDataList,
@@ -211,6 +308,13 @@ export class LevelSelection extends Component {
         };
         
         localStorage.setItem('diamond_chess_level_progress', JSON.stringify(progress));
+        
+        // 调试输出
+        console.log(`保存的数据:`, {
+            maxUnlockedLevel: this.currentMaxUnlockedLevel,
+            levelDataListLength: this.levelDataList.length,
+            unlockedLevels: this.levelDataList.filter(level => level.isUnlocked).length
+        });
         
         // 同时保存每个关卡的独立记录（兼容BoardController的保存方式）
         for (let i = 0; i < this.levelDataList.length; i++) {
@@ -228,11 +332,20 @@ export class LevelSelection extends Component {
         }
         
         console.log(`进度已保存。最大解锁关卡: ${this.currentMaxUnlockedLevel + 1}`);
+        console.log(`总关卡数: ${this.levelDataList.length}, 已解锁关卡数: ${this.levelDataList.filter(level => level.isUnlocked).length}`);
     }
-    
+
     // 更新关卡进度（在游戏完成后调用）
     public updateLevelProgress(levelIndex: number, score: string, stepCount: number) {
-        if (levelIndex >= this.levelDataList.length) return;
+        console.log('===================');
+        console.log('【LevelSelection.updateLevelProgress】');
+        console.log(`接收到的参数: levelIndex=${levelIndex}, score=${score}, stepCount=${stepCount}`);
+        console.log(`当前levelDataList长度: ${this.levelDataList.length}`);
+        
+        if (levelIndex >= this.levelDataList.length) {
+            console.error(`错误: levelIndex(${levelIndex}) >= levelDataList长度(${this.levelDataList.length})`);
+            return;
+        }
         
         // 更新当前关卡
         this.levelDataList[levelIndex].isCompleted = true;
@@ -241,15 +354,27 @@ export class LevelSelection extends Component {
         
         // 解锁下一关（如果存在）
         const nextLevelIndex = levelIndex + 1;
+        console.log(`下一关索引: ${nextLevelIndex}`);
+        
         if (nextLevelIndex < this.levelDataList.length) {
+            console.log(`解锁关卡 ${nextLevelIndex + 1}`);
             this.levelDataList[nextLevelIndex].isUnlocked = true;
             this.currentMaxUnlockedLevel = Math.max(this.currentMaxUnlockedLevel, nextLevelIndex);
+        } else {
+            console.log(`下一关索引 ${nextLevelIndex} 超出范围，无法解锁`);
         }
         
+        console.log(`当前最大解锁关卡索引: ${this.currentMaxUnlockedLevel}`);
+        console.log(`当前最大解锁关卡: ${this.currentMaxUnlockedLevel + 1}`);
+        
+        // 保存关卡进度
         this.saveLevelProgress();
         
-        // 刷新UI
+        // 【关键】立即刷新UI
+        console.log('立即刷新关卡卡片UI...');
         this.refreshLevelCards();
+        
+        console.log('===================');
     }
     
     private initUI() {
@@ -833,10 +958,15 @@ export class LevelSelection extends Component {
         button.interactable = levelData.isUnlocked;
         
         if (levelData.isUnlocked) {
+            console.log(`关卡 ${levelData.levelIndex + 1} 已解锁，设置点击事件`);
             button.node.off(Button.EventType.CLICK);
             button.node.on(Button.EventType.CLICK, () => {
+                console.log(`点击关卡卡片: ${levelData.levelIndex + 1}`);
                 this.onLevelSelected(levelData.levelIndex);
             }, this);
+        } else {
+            console.log(`关卡 ${levelData.levelIndex + 1} 未解锁，禁用按钮`);
+            button.interactable = false;
         }
     }
 
