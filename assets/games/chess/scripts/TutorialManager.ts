@@ -15,35 +15,33 @@ export class TutorialManager extends Component {
     private tutorialContents = [
         {
             title: "钻石棋简明教学",
-            content: `🎯 <b>游戏目标</b>
+            content: `🎯 <color=#333333><b>游戏目标</b></color>
 通过跳吃让棋子减少，直至只剩1颗棋子在中心位置！
 
 
-🎮 <b>如何操作</b>
+🎮 <color=#333333><b>如何操作</b></color>
 1️⃣ 点击选中棋子
 2️⃣ 拖到目标位置松手
 3️⃣ 目标位置无效则棋子归位
 
 
-✅ <b>跳吃规则</b>
+✅ <color=#333333><b>跳吃规则</b></color>
 • 只能跳过相邻棋子
 • 跳到空位（中间有1颗棋子）
 • 被跳棋子自动移除
 
 
-⚡ <b>操作提示</b>
+⚡ <color=#333333><b>操作提示</b></color>
 • 重玩：重新开始当前关
 • 悔棋：撤销上一步
 • 教学：随时查看本说明
 
 
-💡 <b>策略建议</b>
-• 先观察，再移动
-• 优先向中心移动
-• 规划连续跳吃路线
+💡 <color=#333333><b>策略建议</b></color>
+• 先观察，再移动，优先向中心移动，规划连续跳吃路线。
 
 
-祝你玩得开心！`
+<color=#888888><i>祝你玩得开心！</i></color>`
         },
     ];
     
@@ -110,40 +108,53 @@ export class TutorialManager extends Component {
             titleLabel.string = tutorialData.title;
         }
         
-        // 设置内容
+        // 设置内容 - 直接使用富文本
         const contentText = this.tutorialPanel.getChildByPath('PopupWindow/ContentScrollView/view/content/TextContent');
         if (contentText) {
-            const label = contentText.getComponent(Label);
-            if (label) {
-                // 【关键修改】使用专门的HTML清理方法
-                const plainText = this.cleanHtmlToPlainText(tutorialData.content);
-                label.string = plainText;
+            const richText = contentText.getComponent(RichText);
+            if (richText) {
+                richText.string = tutorialData.content;
+                console.log('[Tutorial] 富文本教学内容已设置');
                 
-                console.log('[Tutorial] 教学内容已设置到Label, 字符数:', plainText.length);
-                
-                console.log('[Tutorial] 教学内容预览:', plainText.substring(0, 100) + '...');
+                // 调整文本区域宽度
+                this.adjustRichTextSize(richText);
             } else {
-                console.error('[Tutorial] TextContent节点没有Label组件！');
-                
-                console.log('[Tutorial] TextContent节点组件:', contentText.getComponents(Component));
+                console.error('[Tutorial] TextContent节点没有RichText组件！');
             }
         } else {
-            console.error('[Tutorial] 找不到TextContent节点！路径检查：');
-            console.log('[Tutorial] 弹窗节点:', this.tutorialPanel?.name);
-            console.log('[Tutorial] PopupWindow:', this.tutorialPanel?.getChildByName('PopupWindow')?.name);
-            console.log('[Tutorial] ContentScrollView:', this.tutorialPanel?.getChildByPath('PopupWindow/ContentScrollView')?.name);
+            console.error('[Tutorial] 找不到TextContent节点！');
         }
         
         // 调整滚动视图
         const scrollView = this.tutorialPanel.getChildByPath('PopupWindow/ContentScrollView')?.getComponent(ScrollView);
         if (scrollView) {
-            // 滚动到顶部
             setTimeout(() => {
                 scrollView.scrollToTop();
             }, 100);
         }
     }
     
+    private adjustRichTextSize(richText: RichText) {
+        const uiTransform = richText.node.getComponent(UITransform);
+        if (!uiTransform) return;
+        
+        const scrollView = this.tutorialPanel.getChildByPath('PopupWindow/ContentScrollView')?.getComponent(ScrollView);
+        if (scrollView) {
+            const scrollViewTransform = scrollView.node.getComponent(UITransform);
+            if (scrollViewTransform) {
+                // 计算可用宽度（ScrollView宽度减去边距）
+                const availableWidth = scrollViewTransform.contentSize.width - 40;
+                
+                // 设置富文本的最大宽度
+                richText.maxWidth = availableWidth;
+                uiTransform.setContentSize(availableWidth, uiTransform.contentSize.height);
+                
+                console.log(`[Tutorial] 富文本区域调整为: ${availableWidth}px 宽`);
+                
+            }
+        }
+    }
+
     /**
      * 将HTML内容转换为纯文本
      */

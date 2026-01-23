@@ -326,8 +326,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 700,
-      "height": 500
+      "width": 650,
+      "height": 650
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -368,7 +368,7 @@
     },
     "_type": 0,
     "_fillType": 0,
-    "_sizeMode": 1,
+    "_sizeMode": 0,
     "_fillCenter": {
       "__type__": "cc.Vec2",
       "x": 0,
@@ -422,7 +422,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": 0,
-      "y": 200,
+      "y": 250,
       "z": 0
     },
     "_lrot": {
@@ -493,16 +493,16 @@
     "_dstBlendFactor": 4,
     "_color": {
       "__type__": "cc.Color",
-      "r": 74,
-      "g": 144,
-      "b": 226,
+      "r": 111,
+      "g": 174,
+      "b": 62,
       "a": 255
     },
     "_string": "",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
-    "_actualFontSize": 24,
-    "_fontSize": 24,
+    "_actualFontSize": 36,
+    "_fontSize": 36,
     "_fontFamily": "Arial",
     "_lineHeight": 40,
     "_overflow": 0,
@@ -570,7 +570,7 @@
         "__id__": 22
       }
     ],
-    "_active": true,
+    "_active": false,
     "_components": [
       {
         "__id__": 28
@@ -860,7 +860,7 @@
     },
     "clickEvents": [],
     "_interactable": true,
-    "_transition": 2,
+    "_transition": 0,
     "_normalColor": {
       "__type__": "cc.Color",
       "r": 214,
@@ -1022,7 +1022,7 @@
     },
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": 340,
+      "x": 300,
       "y": 0,
       "z": 0
     },
@@ -1200,7 +1200,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 12,
-      "height": 300
+      "height": 400
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -1479,8 +1479,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 660,
-      "height": 280
+      "width": 600,
+      "height": 400
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -1653,7 +1653,7 @@
     "fileId": "85JW4R5o1LRoFVI6f/2cLl"
   },
   {
-    "__type__": "cc.Label",
+    "__type__": "cc.RichText",
     "_name": "",
     "_objFlags": 0,
     "__editorExtras__": {},
@@ -1664,61 +1664,31 @@
     "__prefab": {
       "__id__": 66
     },
-    "_customMaterial": null,
-    "_srcBlendFactor": 2,
-    "_dstBlendFactor": 4,
-    "_color": {
+    "_lineHeight": 30,
+    "_string": "",
+    "_horizontalAlign": 0,
+    "_verticalAlign": 0,
+    "_fontSize": 28,
+    "_fontColor": {
       "__type__": "cc.Color",
       "r": 51,
       "g": 51,
       "b": 51,
       "a": 255
     },
-    "_string": "",
-    "_horizontalAlign": 0,
-    "_verticalAlign": 0,
-    "_actualFontSize": 24,
-    "_fontSize": 24,
+    "_maxWidth": 0,
     "_fontFamily": "Arial",
-    "_lineHeight": 30,
-    "_overflow": 0,
-    "_enableWrapText": true,
     "_font": null,
     "_isSystemFontUsed": true,
-    "_spacingX": 0,
-    "_isItalic": false,
-    "_isBold": false,
-    "_isUnderline": false,
-    "_underlineHeight": 2,
+    "_userDefinedFont": null,
     "_cacheMode": 0,
-    "_enableOutline": false,
-    "_outlineColor": {
-      "__type__": "cc.Color",
-      "r": 0,
-      "g": 0,
-      "b": 0,
-      "a": 255
-    },
-    "_outlineWidth": 2,
-    "_enableShadow": false,
-    "_shadowColor": {
-      "__type__": "cc.Color",
-      "r": 0,
-      "g": 0,
-      "b": 0,
-      "a": 255
-    },
-    "_shadowOffset": {
-      "__type__": "cc.Vec2",
-      "x": 2,
-      "y": 2
-    },
-    "_shadowBlur": 2,
+    "_imageAtlas": null,
+    "_handleTouchEvent": true,
     "_id": ""
   },
   {
     "__type__": "cc.CompPrefabInfo",
-    "fileId": "eajXea3bNME6IfqNIkwAhA"
+    "fileId": "b1Lh2Cjm9HuIXRVOKrVuWR"
   },
   {
     "__type__": "cc.PrefabInfo",
@@ -1747,7 +1717,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 660,
+      "width": 600,
       "height": 37.8
     },
     "_anchorPoint": {
@@ -1839,8 +1809,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 680,
-      "height": 300
+      "width": 600,
+      "height": 400
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -1939,7 +1909,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": 0,
-      "y": -200,
+      "y": -280,
       "z": 0
     },
     "_lrot": {
@@ -2118,8 +2088,8 @@
     "_color": {
       "__type__": "cc.Color",
       "r": 255,
-      "g": 255,
-      "b": 255,
+      "g": 248,
+      "b": 179,
       "a": 255
     },
     "_string": "我知道了",
@@ -2196,7 +2166,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 150,
-      "height": 50
+      "height": 60
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -2226,9 +2196,9 @@
     "_dstBlendFactor": 4,
     "_color": {
       "__type__": "cc.Color",
-      "r": 74,
-      "g": 144,
-      "b": 226,
+      "r": 111,
+      "g": 174,
+      "b": 62,
       "a": 255
     },
     "_spriteFrame": {
@@ -2268,7 +2238,7 @@
     },
     "clickEvents": [],
     "_interactable": true,
-    "_transition": 2,
+    "_transition": 0,
     "_normalColor": {
       "__type__": "cc.Color",
       "r": 214,
@@ -2430,8 +2400,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 700,
-      "height": 500
+      "width": 650,
+      "height": 650
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
