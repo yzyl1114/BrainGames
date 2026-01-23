@@ -1814,9 +1814,9 @@
     "_dstBlendFactor": 4,
     "_color": {
       "__type__": "cc.Color",
-      "r": 74,
-      "g": 144,
-      "b": 226,
+      "r": 255,
+      "g": 255,
+      "b": 255,
       "a": 255
     },
     "_spriteFrame": {
@@ -2143,8 +2143,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 180,
-      "height": 50
+      "width": 150,
+      "height": 60
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -2174,9 +2174,9 @@
     "_dstBlendFactor": 4,
     "_color": {
       "__type__": "cc.Color",
-      "r": 123,
-      "g": 104,
-      "b": 238,
+      "r": 111,
+      "g": 174,
+      "b": 62,
       "a": 255
     },
     "_spriteFrame": {
@@ -2216,7 +2216,7 @@
     },
     "clickEvents": [],
     "_interactable": true,
-    "_transition": 1,
+    "_transition": 0,
     "_normalColor": {
       "__type__": "cc.Color",
       "r": 123,
@@ -2727,9 +2727,9 @@
     "_dstBlendFactor": 4,
     "_color": {
       "__type__": "cc.Color",
-      "r": 255,
-      "g": 255,
-      "b": 255,
+      "r": 111,
+      "g": 174,
+      "b": 62,
       "a": 255
     },
     "_spriteFrame": {
@@ -2880,7 +2880,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": 0,
-      "y": 100,
+      "y": 70,
       "z": 0
     },
     "_lrot": {
@@ -2951,9 +2951,9 @@
     "_dstBlendFactor": 4,
     "_color": {
       "__type__": "cc.Color",
-      "r": 0,
-      "g": 0,
-      "b": 0,
+      "r": 255,
+      "g": 255,
+      "b": 255,
       "a": 255
     },
     "_string": "结算结果",
@@ -3269,9 +3269,9 @@
     "_dstBlendFactor": 4,
     "_color": {
       "__type__": "cc.Color",
-      "r": 102,
-      "g": 102,
-      "b": 102,
+      "r": 255,
+      "g": 255,
+      "b": 255,
       "a": 255
     },
     "_string": "",
@@ -3358,7 +3358,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": 0,
-      "y": -120,
+      "y": -150,
       "z": 0
     },
     "_lrot": {
@@ -3536,16 +3536,16 @@
     "_dstBlendFactor": 4,
     "_color": {
       "__type__": "cc.Color",
-      "r": 255,
-      "g": 255,
-      "b": 255,
+      "r": 111,
+      "g": 174,
+      "b": 62,
       "a": 255
     },
     "_string": "下一关",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_actualFontSize": 20,
-    "_fontSize": 20,
+    "_fontSize": 24,
     "_fontFamily": "Arial",
     "_lineHeight": 40,
     "_overflow": 1,
@@ -3614,8 +3614,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 140,
-      "height": 50
+      "width": 150,
+      "height": 60
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -3645,9 +3645,9 @@
     "_dstBlendFactor": 4,
     "_color": {
       "__type__": "cc.Color",
-      "r": 74,
-      "g": 144,
-      "b": 226,
+      "r": 255,
+      "g": 248,
+      "b": 179,
       "a": 255
     },
     "_spriteFrame": {
@@ -3687,7 +3687,7 @@
     },
     "clickEvents": [],
     "_interactable": true,
-    "_transition": 1,
+    "_transition": 0,
     "_normalColor": {
       "__type__": "cc.Color",
       "r": 74,
@@ -3770,8 +3770,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 140,
-      "height": 50
+      "width": 150,
+      "height": 60
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -3822,7 +3822,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": 0,
-      "y": -120,
+      "y": -150,
       "z": 0
     },
     "_lrot": {
@@ -4000,16 +4000,16 @@
     "_dstBlendFactor": 4,
     "_color": {
       "__type__": "cc.Color",
-      "r": 255,
-      "g": 255,
-      "b": 255,
+      "r": 111,
+      "g": 174,
+      "b": 62,
       "a": 255
     },
     "_string": "再试一次",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_actualFontSize": 20,
-    "_fontSize": 20,
+    "_fontSize": 24,
     "_fontFamily": "Arial",
     "_lineHeight": 40,
     "_overflow": 1,
@@ -4078,8 +4078,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 140,
-      "height": 50
+      "width": 150,
+      "height": 60
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -4109,9 +4109,9 @@
     "_dstBlendFactor": 4,
     "_color": {
       "__type__": "cc.Color",
-      "r": 74,
-      "g": 144,
-      "b": 226,
+      "r": 255,
+      "g": 248,
+      "b": 179,
       "a": 255
     },
     "_spriteFrame": {
@@ -4151,7 +4151,7 @@
     },
     "clickEvents": [],
     "_interactable": true,
-    "_transition": 1,
+    "_transition": 0,
     "_normalColor": {
       "__type__": "cc.Color",
       "r": 74,
@@ -4234,8 +4234,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 140,
-      "height": 50
+      "width": 150,
+      "height": 60
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -4276,7 +4276,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 450,
-      "height": 470
+      "height": 450
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
