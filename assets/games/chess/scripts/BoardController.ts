@@ -117,11 +117,6 @@ export class BoardController extends Component {
 
     // ==================== 核心初始化方法 ====================
     protected onLoad() {
-        console.log("BoardController: onLoad start");
-        
-        console.log(`levelSelectionNode 状态: ${this.levelSelectionNode ? '已连接' : '未连接'}`);
-        console.log(`levelSelectionNode active: ${this.levelSelectionNode?.active}`);
-        console.log(`homePageNode 状态: ${this.homePageNode ? '已连接' : '未连接'}`);
 
         // 1. 初始化UI（必须在其他逻辑之前）
         this.initUI();
@@ -162,13 +157,10 @@ export class BoardController extends Component {
         
         // 使用新的页面切换方法
         if (this.homePageNode) {
-            console.log("首页节点已连接，切换到首页");
             this.switchToHomePage(); // 使用新方法
         } else if (this.levelSelectionNode) {
-            console.log("没有首页节点，切换到关卡选择页");
             this.switchToLevelSelection();
         } else {
-            console.log("没有首页和关卡选择页，直接进入游戏");
             this.loadLevel(this.currentLevelIndex);
         }
 
@@ -198,14 +190,12 @@ export class BoardController extends Component {
                 backgroundNode.setSiblingIndex(0); // Background在GameUI内部也是第一个
             }
             
-            console.log('[UI] GameUI inserted as first child of Canvas');            
         } else {
             // 备选方案：挂载到当前节点
             this.uiRoot.parent = this.node;
             console.warn('[UI] Canvas not found, parented UI to BoardController node.');
         }
         this.uiRoot.setPosition(0, 0, 0);
-        console.log('[UI] GameUI Prefab instantiated.');
 
         // 2. 安全获取组件的辅助函数
         const getComponent = <T extends Component>(path: string, type: new () => T): T | null => {
@@ -264,25 +254,12 @@ export class BoardController extends Component {
         
         // 7. 动态绑定BackButton点击事件
         if (this.backButton) {
-            console.log('[UI] BackButton found, binding click event');
 
             // 获取所有相关节点的信息
             const backTransform = this.backButton.node.getComponent(UITransform);
             const uiRootNode = find('Canvas/GameUI/UIRoot');
             const uiRootTransform = uiRootNode?.getComponent(UITransform);
             
-            console.log('[UI] 详细层级信息:');
-            console.log('  Canvas尺寸:', find('Canvas')?.getComponent(UITransform)?.contentSize);
-            console.log('  GameUI位置:', this.uiRoot?.position);
-            console.log('  UIRoot位置:', uiRootNode?.position);
-            console.log('  UIRoot尺寸:', uiRootTransform?.contentSize);
-            console.log('  UIRoot锚点:', uiRootTransform?.anchorPoint);
-            console.log('  BackButton位置:', this.backButton.node.position);
-            console.log('  BackButton世界位置:', this.backButton.node.worldPosition);
-            console.log('  BackButton尺寸:', backTransform?.contentSize);
-            console.log('  BackButton锚点:', backTransform?.anchorPoint);
-            console.log('  BackButtonactive:', this.backButton.node.active);
-
             this.backButton.node.off(Button.EventType.CLICK); // 先移除旧的事件
             this.backButton.node.on(Button.EventType.CLICK, this.onBackToLevelSelect, this);
         } else {
@@ -312,12 +289,10 @@ export class BoardController extends Component {
             this.settlementPanel.active = false; // 初始隐藏结算弹窗
         }
 
-        console.log('[UI] UI initialization complete.');
     }
 
     // ==================== 游戏关卡与状态管理 ====================
     public loadLevel(levelIndex: number) {
-        console.log(`Loading level ${levelIndex}`);
         
         // 保存当前关卡索引
         this.currentLevelIndex = levelIndex;
@@ -361,7 +336,6 @@ export class BoardController extends Component {
         
         // 检查是否需要重新生成背景，只有当没有背景或背景为空时才重新生成
         if (this.boardTileNodes.length === 0) {
-            console.log(`首次生成关卡 ${levelIndex} 的背景`);
             this.clearBoardBackground();
             this.generateBoardBackground(levelIndex);
         } else {
@@ -429,17 +403,14 @@ export class BoardController extends Component {
         // 显示教学入口按钮
         if (this.tutorialButton) {
             this.tutorialButton.node.active = true; // 始终显示
-            console.log('[UI] 教学入口按钮已激活');
         } else {
             console.warn('[UI] 教学入口按钮未找到');
         }
 
-        console.log(`Level ${levelIndex} loaded: ${level.name}, pegs count: ${this.countPegs()}, max undo: ${this.maxUndoCount}, step limit: ${this.stepLimit}`);
     }
 
     // 添加返回关卡选择的方法
     private onBackToLevelSelect() {
-        console.log("返回关卡选择页面");
         
         // 关闭教学弹窗（如果正在显示）
         if (this.tutorialManager && this.tutorialManager.isTutorialShowing()) {
@@ -455,7 +426,6 @@ export class BoardController extends Component {
 
     // 添加从结算弹窗返回关卡选择的方法
     private onSettlementBackToLevelSelect() {
-        console.log("从结算弹窗返回关卡选择");
         this.restoreGameUIAfterSettlement();
         this.hideSettlementPanel();
         this.onBackToLevelSelect(); // 调用相同的返回方法
@@ -485,7 +455,6 @@ export class BoardController extends Component {
             // 保存单个关卡的进度
             localStorage.setItem(`diamond_chess_level_${levelIndex}`, JSON.stringify(progress));
             
-            console.log(`Level ${levelIndex} progress saved: ${score}, ${stepCount} steps`);
         } catch (e) {
             console.error("Failed to save level progress:", e);
         }
@@ -494,11 +463,9 @@ export class BoardController extends Component {
     // ==================== 计步器与提示系统 ====================
     // 创建悔棋数字徽章
     private createUndoBadge() {
-        console.log('[UI] 创建悔棋数字徽章...');
         
         // 【修复】检查是否已存在
         if (this.undoBadgeNode && this.undoBadgeNode.isValid) {
-            console.log('[UI] 悔棋数字徽章已存在，跳过创建');
             return;
         }
         
@@ -512,7 +479,6 @@ export class BoardController extends Component {
         // 【修复】检查悔棋按钮上是否已存在徽章
         const existingBadge = undoButton.getChildByName('UndoBadge');
         if (existingBadge && existingBadge.isValid) {
-            console.log('[UI] 悔棋按钮上已存在徽章节点，复用');
             this.undoBadgeNode = existingBadge;
             
             // 尝试获取标签组件
@@ -542,7 +508,6 @@ export class BoardController extends Component {
         if (this.badgeCircleSprite) {
             bgSprite.spriteFrame = this.badgeCircleSprite;
             bgSprite.color = Color.RED; // 将白色变为红色
-            console.log('[UI] 使用自定义圆形图片作为徽章背景');
         } else {
             bgSprite.color = Color.RED;
             console.warn('[UI] 圆形背景图片未设置，使用纯色');
@@ -585,7 +550,6 @@ export class BoardController extends Component {
         // 6. 初始更新徽章
         this.updateUndoBadge();
         
-        console.log('[UI] 悔棋数字徽章创建完成');
     }
 
     // 更新悔棋数字徽章
@@ -595,7 +559,6 @@ export class BoardController extends Component {
         const remainingUndo = this.maxUndoCount - this.undoCount;
         this.undoBadgeLabel.string = remainingUndo.toString();
         
-        console.log(`[UI] 悔棋徽章更新: ${remainingUndo}`);
     }
 
     // ==================== 计步器与提示系统 ====================
@@ -607,8 +570,6 @@ export class BoardController extends Component {
         
         const remainingUndo = this.maxUndoCount - this.undoCount;
         
-        //原来的label字符串
-        //this.stepCounterLabel.string = `剩余${this.remainingSteps}步`;
 
         // 根据剩余步数设置数字颜色和字号
         let numberColor = this.remainingSteps >= 3 ? "#333333" : "#FF5555"; // 白色或红色
@@ -630,11 +591,9 @@ export class BoardController extends Component {
     
     private showTips(message: string, duration: number = 2.0) {
         if (!this.tipsLabel || !this.tipsLabel.isValid) {
-            console.log("Tips:", message);
             return;
         }
         
-        console.log(`[Tips] 显示提示: "${message}"`);
         
         // 获取背景节点
         let tipsBackground: Node | null = null;
@@ -642,7 +601,6 @@ export class BoardController extends Component {
         tipsBackground = this.tipsLabel.node.getChildByName('TipsBackground') || null;
         
         if (tipsBackground) {
-            console.log(`[Tips] 找到背景框，active: ${tipsBackground.active}`);
             
             // 根据文字长度调整背景大小
             const textLength = message.length;
@@ -706,11 +664,9 @@ export class BoardController extends Component {
             opacity.opacity = 255; // 直接设置为完全不透明
         }
         
-        console.log(`[Tips] 显示完成，等待${duration}秒后隐藏`);
         
         // 定时隐藏
         this.scheduleOnce(() => {
-            console.log(`[Tips] 隐藏提示`);
             
             this.tipsLabel.node.active = false;
             if (tipsBackground) {
@@ -772,7 +728,6 @@ export class BoardController extends Component {
         // 可选：添加棋盘边框
         this.generateBoardBorder();
         
-        console.log(`Board background generated for level ${levelIndex}`);
     }
 
     private createBoardTile(row: number, col: number, tileState: number) {
@@ -860,10 +815,6 @@ export class BoardController extends Component {
 
     // ==================== 调试方法 ====================
     private debugBoardHierarchy() {
-        console.log('=== 棋盘节点层级调试 ===');
-        console.log(`BoardRoot 子节点数量: ${this.boardRoot.children.length}`);
-        console.log(`棋盘背景节点数量: ${this.boardTileNodes.length}`);
-        console.log(`棋子节点数量: ${this.pegNodes.size}`);
         
         // 分类统计
         let tileCount = 0;
@@ -885,11 +836,6 @@ export class BoardController extends Component {
             }
         });
         
-        console.log(`分类统计:`);
-        console.log(`  - 棋盘格子: ${tileCount}`);
-        console.log(`  - 边框: ${borderCount}`);
-        console.log(`  - 棋子: ${pegCount}`);
-        console.log(`  - 其他: ${otherCount}`);
         
         // 检查背景节点引用是否有效
         let validTileRefs = 0;
@@ -900,7 +846,6 @@ export class BoardController extends Component {
                 console.warn(`背景节点引用 [${index}] 无效`);
             }
         });
-        console.log(`有效的背景节点引用: ${validTileRefs}/${this.boardTileNodes.length}`);
     }
 
     // ==================== 悔棋与历史记录系统 ====================
@@ -929,7 +874,6 @@ export class BoardController extends Component {
             const lastState = this.moveHistory[this.moveHistory.length - 1];
             // 如果当前状态和上一个状态相同（步数和棋子数都相同），不保存
             if (lastState.stepCount === usedSteps && lastState.pegsInfo.length === pegsInfo.length) {
-                console.log(`[SaveState] 跳过保存：状态未改变（已用步数: ${usedSteps}, 棋子数: ${pegsInfo.length})`);
                 return;
             }
         }
@@ -945,33 +889,27 @@ export class BoardController extends Component {
             this.moveHistory.shift();
         }
         
-        console.log(`[SaveState] 状态已保存。历史记录: ${this.moveHistory.length}, 已用步数: ${usedSteps}, 剩余步数: ${this.remainingSteps}, 棋子数: ${pegsInfo.length}`);
     }
     
     public undoMove() {
-        console.log(`[Undo] 开始悔棋，当前历史记录长度: ${this.moveHistory.length}`);
 
         // 检查是否有历史记录
         if (this.moveHistory.length <= 1) {
             this.showTips("已是初始状态");
-            console.log(`[Undo] 无法悔棋：历史记录只有${this.moveHistory.length}个状态`);
             return;
         }
         
         // 检查悔棋次数是否用完
         if (this.undoCount >= this.maxUndoCount) {
             this.showTips(`悔棋次数已用完`);
-            console.log(`[Undo] 无法悔棋：已使用${this.undoCount}/${this.maxUndoCount}次悔棋`);
             return;
         }
         
         // 获取当前状态信息（用于调试）
         const currentUsedSteps = this.stepLimit - this.remainingSteps;
-        console.log(`[Undo] 当前状态：剩余步数=${this.remainingSteps}, 已用步数=${currentUsedSteps}, 棋子数=${this.countPegs()}`);
         
         // 弹出当前状态
         const currentState = this.moveHistory.pop();
-        console.log(`[Undo] 弹出当前状态，弹出状态的步数：${currentState?.stepCount}, 棋子数：${currentState?.pegsInfo.length}`);
         
         // 获取上一步状态（现在这是最新的状态）
         if (this.moveHistory.length === 0) {
@@ -982,11 +920,9 @@ export class BoardController extends Component {
         }
         
         const lastState = this.moveHistory[this.moveHistory.length - 1];
-        console.log(`[Undo] 获取上一步状态，上一步的步数：${lastState.stepCount}, 棋子数：${lastState.pegsInfo.length}`);
         
         // 计算步数变化
         const stepDifference = (currentState?.stepCount || 0) - lastState.stepCount;
-        console.log(`[Undo] 步数差值：${stepDifference}（应该为1）`);
         
         // 恢复棋盘状态
         for (let i = 0; i < BOARD_SIZE; i++) {
@@ -998,13 +934,11 @@ export class BoardController extends Component {
 
         // 正确恢复剩余步数
         this.remainingSteps = this.stepLimit - lastState.stepCount;
-        console.log(`[Undo] 恢复后：剩余步数=${this.remainingSteps}, 已用步数=${lastState.stepCount}`);
         
         // 只销毁棋子，不销毁背景
         this.destroyAllPegsOnly();
         
         // 重新生成棋子
-        console.log(`[Undo] 重新生成${lastState.pegsInfo.length}个棋子`);
         for (const pegInfo of lastState.pegsInfo) {
             this.spawnPeg(pegInfo.row, pegInfo.col);
         }
@@ -1019,10 +953,7 @@ export class BoardController extends Component {
         this.updateStepCounter();
         
         // 使用提示显示成功信息
-        this.showTips(`悔棋成功`);
-
-        console.log(`[Undo] 悔棋成功。当前：剩余步数=${this.remainingSteps}, 棋子数=${this.countPegs()}, 已用悔棋=${this.undoCount}/${this.maxUndoCount}, 历史记录=${this.moveHistory.length}`);
-        
+        this.showTips(`悔棋成功`);        
     
         // 调试：输出当前所有历史记录
         console.log(`[Undo] 历史记录详情：`);
@@ -1035,7 +966,6 @@ export class BoardController extends Component {
         this.moveHistory = [];
         this.stepCount = 0;
         this.undoCount = 0;
-        console.log("Move history cleared");
     }
 
     // ==================== 结算弹窗系统 ====================
@@ -1395,10 +1325,6 @@ export class BoardController extends Component {
     
     // 结算弹窗按钮事件 - 下一关
     public onSettlementNext() {
-        console.log("====================");
-        console.log("点击【下一关】按钮");
-        console.log(`当前关卡索引: ${this.currentLevelIndex}`);
-        console.log(`总关卡数量: ${LEVELS_DATA.length}`);
         
         // 恢复UI
         this.restoreGameUIAfterSettlement();
