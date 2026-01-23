@@ -3335,7 +3335,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "VictoryBtnContainer",
+    "_name": "VictoryButtonContainer",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": {

@@ -206,9 +206,28 @@ export class LevelSelection extends Component {
     private saveLevelProgress() {
         const progress = {
             maxUnlockedLevel: this.currentMaxUnlockedLevel,
-            levelDataList: this.levelDataList
+            levelDataList: this.levelDataList,
+            lastSaveTime: Date.now()
         };
+        
         localStorage.setItem('diamond_chess_level_progress', JSON.stringify(progress));
+        
+        // 同时保存每个关卡的独立记录（兼容BoardController的保存方式）
+        for (let i = 0; i < this.levelDataList.length; i++) {
+            const levelData = this.levelDataList[i];
+            if (levelData.isCompleted) {
+                const levelProgress = {
+                    levelIndex: i,
+                    score: levelData.bestScore,
+                    stepCount: levelData.stepCount,
+                    completed: true,
+                    timestamp: Date.now()
+                };
+                localStorage.setItem(`diamond_chess_level_${i}`, JSON.stringify(levelProgress));
+            }
+        }
+        
+        console.log(`进度已保存。最大解锁关卡: ${this.currentMaxUnlockedLevel + 1}`);
     }
     
     // 更新关卡进度（在游戏完成后调用）

@@ -119,6 +119,10 @@ export class BoardController extends Component {
     protected onLoad() {
         console.log("BoardController: onLoad start");
         
+        console.log(`levelSelectionNode 状态: ${this.levelSelectionNode ? '已连接' : '未连接'}`);
+        console.log(`levelSelectionNode active: ${this.levelSelectionNode?.active}`);
+        console.log(`homePageNode 状态: ${this.homePageNode ? '已连接' : '未连接'}`);
+
         // 1. 初始化UI（必须在其他逻辑之前）
         this.initUI();
         this.debugUIHierarchy();
@@ -1391,10 +1395,31 @@ export class BoardController extends Component {
     
     // 结算弹窗按钮事件 - 下一关
     public onSettlementNext() {
-        console.log("Settlement: Next level");
-        this.restoreGameUIAfterSettlement(); // 恢复UI
+        console.log("====================");
+        console.log("点击【下一关】按钮");
+        console.log(`当前关卡索引: ${this.currentLevelIndex}`);
+        console.log(`总关卡数量: ${LEVELS_DATA.length}`);
+        
+        // 恢复UI
+        this.restoreGameUIAfterSettlement();
+        
+        // 隐藏结算弹窗
         this.hideSettlementPanel();
-        this.nextLevel();
+        
+        // 计算下一关索引
+        const nextLevelIndex = this.currentLevelIndex + 1;
+        console.log(`准备加载关卡: ${nextLevelIndex}`);
+        
+        // 检查是否是最后一关
+        if (nextLevelIndex >= LEVELS_DATA.length) {
+            console.log("已经是最后一关，显示完成面板");
+            this.showGameCompletePanel();
+            return;
+        }
+        
+        // 直接加载下一关
+        console.log(`调用 loadLevel(${nextLevelIndex})`);
+        this.loadLevel(nextLevelIndex);
     }
 
 
@@ -1549,8 +1574,19 @@ export class BoardController extends Component {
     }
     
     public nextLevel() {
-        console.log("Loading next level");
-        this.currentLevelIndex++;
+        console.log("====================");
+        console.log("nextLevel() 被调用");
+        console.log(`原关卡索引: ${this.currentLevelIndex}`);
+        
+        const nextIndex = this.currentLevelIndex + 1;
+        console.log(`新关卡索引: ${nextIndex}`);
+        
+        if (nextIndex >= LEVELS_DATA.length) {
+            console.log("已是最后一关，不加载");
+            return;
+        }
+        
+        this.currentLevelIndex = nextIndex;
         this.loadLevel(this.currentLevelIndex);
     }
 
@@ -1891,15 +1927,21 @@ export class BoardController extends Component {
         if (remainingPegs === 1) {
             console.log(`[GameState] ✅ 检测到胜利条件：只剩1颗棋子`);
             const isCenter = this.boardState[CENTER_POS.row][CENTER_POS.col] === TILE_STATE.PEG;
-            //const result = evaluateResult(remainingPegs, isCenter);
             const result = evaluateResult(this.stepLimit - this.remainingSteps, this.stepLimit);
             
-            console.log(`[GameState] 胜利详情：中心=${isCenter}, 评价=${result}, 剩余步数=${this.remainingSteps}`);
+            console.log(`[GameState] 胜利详情：中心=${isCenter}, 评价=${result}, 剩余步数=${this.remainingSteps}, 关卡索引=${this.currentLevelIndex}`);
+    
+            // 更新关卡进度 - 添加详细日志
+            console.log(`[GameState] 开始更新关卡进度...`);
+            console.log(`  - levelIndex: ${this.currentLevelIndex}`);
+            console.log(`  - score: ${result}`);
+            console.log(`  - stepCount: ${this.stepLimit - this.remainingSteps}`);
+            console.log(`  - levelSelectionNode: ${this.levelSelectionNode ? '已设置' : '未设置'}`);
         
-            // 更新关卡进度
             this.updateLevelProgress(this.currentLevelIndex, result, this.stepLimit - this.remainingSteps, isCenter);
     
             // 显示胜利结算弹窗
+            console.log(`[GameState] 显示结算弹窗...`);
             this.showSettlementPanel(true, remainingPegs, result, this.stepLimit - this.remainingSteps, isCenter);
             return;
         }
