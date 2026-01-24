@@ -2268,6 +2268,36 @@
       "__uuid__": "ad762e2f-9ebf-4f9f-9878-726a4b17af3a@f9941",
       "__expectedType__": "cc.SpriteFrame"
     },
+    "pegSprites": [
+      {
+        "__uuid__": "68da78d8-8026-4723-80f1-c5100f976563@f9941",
+        "__expectedType__": "cc.SpriteFrame"
+      },
+      {
+        "__uuid__": "51eb9818-7ab2-434a-8a25-c395dc63af1d@f9941",
+        "__expectedType__": "cc.SpriteFrame"
+      },
+      {
+        "__uuid__": "75dba082-3b0f-42f6-83dc-fd3504b417a4@f9941",
+        "__expectedType__": "cc.SpriteFrame"
+      },
+      {
+        "__uuid__": "58cf4269-dd39-4ef1-95d4-cc145b0ad8ad@f9941",
+        "__expectedType__": "cc.SpriteFrame"
+      },
+      {
+        "__uuid__": "f37dba60-af02-4056-945f-59b91a9c6aee@f9941",
+        "__expectedType__": "cc.SpriteFrame"
+      },
+      {
+        "__uuid__": "9d3aad26-dcea-451e-8cd4-2fbbf939ef34@f9941",
+        "__expectedType__": "cc.SpriteFrame"
+      },
+      {
+        "__uuid__": "6ec33703-3e44-4e46-94e1-fee6e7033c3d@f9941",
+        "__expectedType__": "cc.SpriteFrame"
+      }
+    ],
     "_id": "d12wtTpwVPBJgKytR8jEPP"
   },
   {

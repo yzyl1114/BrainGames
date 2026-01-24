@@ -72,6 +72,13 @@ export class BoardController extends Component {
     @property(SpriteFrame)
     private tutorialIconSprite: SpriteFrame = null;
 
+    // 【新增】棋子图片数组
+    @property([SpriteFrame])
+    private pegSprites: SpriteFrame[] = [];
+    
+    // 【新增】当前关卡使用的棋子图片
+    private currentPegSprite: SpriteFrame = null;
+
     // ===== 步数限制相关 =====
     private stepLimit: number = 0; // 当前关卡的步数限制
     private remainingSteps: number = 0; // 剩余步数（倒数）
@@ -296,6 +303,9 @@ export class BoardController extends Component {
         
         // 保存当前关卡索引
         this.currentLevelIndex = levelIndex;
+
+        // 【新增】在关卡开始时随机选择棋子图片
+        this.currentPegSprite = this.selectRandomPegSprite();
         
         // 确保游戏UI和棋盘显示
         if (this.uiRoot) {
@@ -991,6 +1001,40 @@ export class BoardController extends Component {
         this.moveHistory = [];
         this.stepCount = 0;
         this.undoCount = 0;
+    }
+    
+    // ==================== 随机选择棋子图片的方法 ====================
+    /**
+     * 随机选择棋子图片
+     */
+    private selectRandomPegSprite(): SpriteFrame {
+        if (this.pegSprites.length === 0) {
+            console.warn("No peg sprites available, using default");
+            return null;
+        }
+        
+        // 随机选择一个索引
+        const randomIndex = Math.floor(Math.random() * this.pegSprites.length);
+        const selectedSprite = this.pegSprites[randomIndex];
+        
+        console.log(`随机选择了棋子图片: 索引 ${randomIndex}, 名称: ${selectedSprite ? selectedSprite.name : 'null'}`);
+        
+        return selectedSprite;
+    }
+
+    /**
+     * 【新增】设置所有棋子的图片
+     */
+    private setAllPegsSprite(spriteFrame: SpriteFrame) {
+        this.pegNodes.forEach((pegNode, key) => {
+            const pegComp = pegNode.getComponent(Peg);
+            if (pegComp && pegComp.pegGraphic) {
+                const sprite = pegComp.pegGraphic.getComponent(Sprite);
+                if (sprite) {
+                    sprite.spriteFrame = spriteFrame;
+                }
+            }
+        });
     }
 
     // ==================== 结算弹窗系统 ====================
@@ -2005,7 +2049,8 @@ export class BoardController extends Component {
             return;
         }
         
-        pegComp.init(r, c, this);
+        // 【修改】传递当前选择的棋子图片给Peg组件
+        pegComp.init(r, c, this, this.currentPegSprite);
         
         pegNode.setPosition(this.getPegLocalPosition(r, c));
         

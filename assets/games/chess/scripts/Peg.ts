@@ -1,6 +1,6 @@
 // assets/games/chess/scripts/Peg.ts
 
-import { _decorator, Component, Node, Sprite, Color, UITransform, EventTouch } from 'cc';
+import { _decorator, Component, Node, Sprite, Color, UITransform, EventTouch, SpriteFrame } from 'cc';
 import { BoardController } from './BoardController';
 
 const { ccclass, property } = _decorator;
@@ -20,12 +20,21 @@ export class Peg extends Component {
 
     // 棋子激活状态的视觉反馈
     private isActive: boolean = false;
+
+    // 【新增】棋子Sprite组件引用
+    private pegSprite: Sprite = null;
     
     onLoad() {
         if (!this.pegGraphic) {
             console.error("Peg component requires pegGraphic node reference.");
         }
         
+        // 获取棋子Sprite组件
+        this.pegSprite = this.pegGraphic.getComponent(Sprite);
+        if (!this.pegSprite) {
+            console.error("PegGraphic node has no Sprite component!");
+        }
+
         // 【关键修复1】确保有UITransform组件来接收输入
         if (!this.getComponent(UITransform)) {
             console.error("Peg Node is missing UITransform for input detection!");
@@ -42,11 +51,18 @@ export class Peg extends Component {
     
     /**
      * 初始化棋子逻辑坐标和控制器引用
+    * @param spriteFrame 可选的SpriteFrame，如果不提供则使用默认
      */
-    public init(row: number, col: number, controller: BoardController) {
+    public init(row: number, col: number, controller: BoardController, spriteFrame?: SpriteFrame) {
         this.row = row;
         this.col = col;
         this.boardController = controller;
+
+        // 【新增】如果提供了SpriteFrame，设置棋子图片
+        if (spriteFrame && this.pegSprite) {
+            this.pegSprite.spriteFrame = spriteFrame;
+        }
+
         console.log(`Peg: Initialized at (${row}, ${col})`);
     }
 
