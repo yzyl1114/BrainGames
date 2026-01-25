@@ -724,7 +724,6 @@ export class LevelSelection extends Component {
         const spacingY = 40; // 增加行间距
         const paddingTop = 60; // 顶部留白
         const paddingBottom = 40;
-        const paddingHorizontal = 50;
         
         // 获取容器和ScrollView尺寸
         const containerTransform = this.levelContainer.getComponent(UITransform);
@@ -749,11 +748,8 @@ export class LevelSelection extends Component {
         // 计算起始X：居中显示
         const startX = -totalRowWidth / 2 + cardWidth / 2;
         
-        // 【关键修复】正确的Y坐标计算
-        // 由于容器锚点在中心(0.5, 0.5)，且我们希望第一行在ScrollView顶部可见
-        // 需要从ScrollView的顶部开始计算
         const scrollViewTop = scrollViewTransform.height / 2; // 锚点中心到顶部的距离
-        const startY = scrollViewTop - paddingTop - (cardHeight / 2);
+        const startY = containerTransform.height / 2 - paddingTop - (cardHeight / 2);
         
         console.log('手动布局参数:', {
             每行总宽度: totalRowWidth,
