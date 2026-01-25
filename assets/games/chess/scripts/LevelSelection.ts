@@ -1103,25 +1103,26 @@ export class LevelSelection extends Component {
             // Sprite组件
             const starSprite = starNode.addComponent(Sprite);
             
-            // 三星系统的点亮逻辑（使用originalTotalStars作为原始5星数量）
-            if (activeStarCount >= 5) {
-                // 原5星：全部点亮
-                starSprite.spriteFrame = i < 3 ? this.starActive : this.starInactive;
-            } else if (activeStarCount === 4) {
-                // 原4星：前2.5颗亮（这里显示前2颗亮）
-                starSprite.spriteFrame = i < 2 ? this.starActive : this.starInactive;
-            } else if (activeStarCount === 3) {
-                // 原3星：前2颗亮
-                starSprite.spriteFrame = i < 2 ? this.starActive : this.starInactive;
-            } else if (activeStarCount === 2) {
-                // 原2星：前1颗亮
-                starSprite.spriteFrame = i < 1 ? this.starActive : this.starInactive;
-            } else if (activeStarCount === 1) {
-                // 原1星：前1颗亮
-                starSprite.spriteFrame = i < 1 ? this.starActive : this.starInactive;
+            // 【修改】activeStarCount 是从 stepCount 来的，现在是剩余棋子数
+            // 我们需要根据剩余棋子数计算应该点亮几颗星
+            const remainingPegs = activeStarCount;
+            let starsToLight = 0;
+            
+            if (remainingPegs === 1) {
+                starsToLight = 3;      // 剩余1子：点亮3颗星
+            } else if (remainingPegs >= 2 && remainingPegs <= 3) {
+                starsToLight = 2;      // 剩余2-3子：点亮2颗星
+            } else if (remainingPegs >= 4 && remainingPegs <= 5) {
+                starsToLight = 1;      // 剩余4-5子：点亮1颗星
             } else {
-                // 0星：都不亮
-                starSprite.spriteFrame = this.starInactive;
+                starsToLight = 0;      // 剩余5子以上：点亮0颗星
+            }
+            
+            // 根据计算的点亮数量设置星星
+            if (i < starsToLight) {
+                starSprite.spriteFrame = this.starActive; // 点亮星星
+            } else {
+                starSprite.spriteFrame = this.starInactive; // 未点亮星星
             }
             
             starSprite.sizeMode = Sprite.SizeMode.CUSTOM;
@@ -1132,7 +1133,7 @@ export class LevelSelection extends Component {
             const targetScale = 0.25; // 从0.25开始测试
             starNode.setScale(targetScale, targetScale, 1);
             
-            console.log(`星星${i}: 位置X=${starNode.position.x.toFixed(1)}, 缩放=${targetScale}`);
+            console.log(`星星${i}: 位置X=${starNode.position.x.toFixed(1)}, 缩放=${targetScale}, 剩余棋子=${remainingPegs}, 点亮=${i < starsToLight}`);
         }
     }
 

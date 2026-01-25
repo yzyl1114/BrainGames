@@ -1309,14 +1309,23 @@ export const LEVELS_DATA = [
 
 ];
 
-// 评价系统
-export function evaluateResult(usedSteps: number, stepLimit: number): string {
-    const remainingSteps = stepLimit - usedSteps;
+// 剩余步数评价系统（弃用）
+//export function evaluateResult(usedSteps: number, stepLimit: number): string {
+//    const remainingSteps = stepLimit - usedSteps;
     
-    // 直接根据剩余步数判断
-    if (remainingSteps >= stepLimit * 0.7) return "★★★★★";
-    if (remainingSteps >= stepLimit * 0.5) return "★★★★☆";
-    if (remainingSteps >= stepLimit * 0.3) return "★★★☆☆";
-    if (remainingSteps >= stepLimit * 0.1) return "★★☆☆☆";
-    return "★☆☆☆☆";
+//    if (remainingSteps >= stepLimit * 0.7) return "★★★★★";
+//    if (remainingSteps >= stepLimit * 0.5) return "★★★★☆";
+//    if (remainingSteps >= stepLimit * 0.3) return "★★★☆☆";
+//    if (remainingSteps >= stepLimit * 0.1) return "★★☆☆☆";
+//    return "★☆☆☆☆";
+//}
+
+// 剩余棋子评价函数
+export function evaluateResult(remainingPegs: number): string {
+    // 【修改】参数改为剩余棋子数，返回5星评价
+    
+    if (remainingPegs === 1) return "★★★★★";     // 5星
+    if (remainingPegs >= 2 && remainingPegs <= 3) return "★★★☆☆";  // 3星
+    if (remainingPegs >= 4 && remainingPegs <= 5) return "★☆☆☆☆";  // 1星
+    return "☆☆☆☆☆";  // 0星
 }

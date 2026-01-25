@@ -1058,6 +1058,8 @@ export class BoardController extends Component {
     }
     
     private showSettlementPanel(isVictory: boolean, remainingPegs: number, resultText: string, stepCount: number, isCenterPeg: boolean = false) {
+        const remainingPegsForStars = isVictory ? remainingPegs : (remainingPegs > 0 ? remainingPegs : 0);
+
         if (!this.settlementPanel || !this.settlementTitle || !this.settlementResult || !this.settlementStats) {
             console.warn("Settlement panel components not fully assigned, falling back to tips.");
             this.showTips(isVictory ? 
@@ -1097,7 +1099,7 @@ export class BoardController extends Component {
             this.settlementTitle.string = "恭喜过关";
             
             // 显示星星评价系统
-            this.showVictoryStars(stepCount);
+            this.showVictoryStars(remainingPegsForStars);
             
             // 设置评价和统计文字
             this.settlementResult.string = `评价: ${resultText}`;
@@ -1139,7 +1141,7 @@ export class BoardController extends Component {
             this.settlementTitle.string = "游戏结束";
             
             // 显示失败状态的星星评价
-            this.showVictoryStars(0); // 传0表示0颗星
+            this.showVictoryStars(remainingPegsForStars); 
             
             // 设置评价和统计文字
             this.settlementResult.string = `评价: ${resultText}`;
@@ -1169,8 +1171,8 @@ export class BoardController extends Component {
         console.log("结算弹窗显示完成");
     }
 
-    // ==================== 新增：显示通关星星评价（3颗星系统）====================
-    private showVictoryStars(stepCount: number) {
+    // ==================== 显示通关星星评价（3颗星系统）====================
+    private showVictoryStars(remainingPegs: number) {
         // 先清除现有的星星
         this.clearVictoryStars();
         
@@ -1178,32 +1180,27 @@ export class BoardController extends Component {
         let starCount5 = 0;
         let activeStarCount3 = 0;
         
-        if (stepCount > 0) {
-            // 正常情况：计算星级
-            const usedSteps = stepCount; // 已用步数
-            const resultText = evaluateResult(usedSteps, this.stepLimit);
+        if (remainingPegs > 0) {
+            // 【修改】这里 stepCount 实际上是剩余棋子数
+            const resultText = evaluateResult(remainingPegs);
             starCount5 = (resultText.match(/★/g) || []).length; // 原始5星数量
             
             // 将5星转换为3星系统（与关卡列表页一致）
-            if (starCount5 >= 5) {
-                activeStarCount3 = 3; // 5星 -> 3颗亮
-            } else if (starCount5 === 4) {
-                activeStarCount3 = 2; // 4星 -> 2颗亮
-            } else if (starCount5 === 3) {
-                activeStarCount3 = 2; // 3星 -> 2颗亮
-            } else if (starCount5 === 2) {
-                activeStarCount3 = 1; // 2星 -> 1颗亮
-            } else if (starCount5 === 1) {
-                activeStarCount3 = 1; // 1星 -> 1颗亮
+            if (remainingPegs === 1) {
+                activeStarCount3 = 3; // 剩余1子：3颗亮星
+            } else if (remainingPegs >= 2 && remainingPegs <= 3) {
+                activeStarCount3 = 2; // 剩余2-3子：2颗亮星
+            } else if (remainingPegs >= 4 && remainingPegs <= 5) {
+                activeStarCount3 = 1; // 剩余4-5子：1颗亮星
             } else {
-                activeStarCount3 = 0; // 0星 -> 0颗亮
+                activeStarCount3 = 0; // 剩余5子以上：0颗亮星
             }
         } else {
             // 失败状态：显示0颗亮星（全部灰色）
             activeStarCount3 = 0;
         }
         
-        console.log(`星星评价: 步数=${stepCount}, 原始5星数量: ${starCount5}, 转换后3星数量: ${activeStarCount3}`);
+        console.log(`星星评价: 剩余棋子=${remainingPegs}, 原始5星数量: ${starCount5}, 转换后3星数量: ${activeStarCount3}`);
         
         // 获取星星容器（需要在预制体中创建）
         const starContainer = this.settlementPanel.getChildByPath('PopupWindow/StarContainer');
@@ -1916,44 +1913,36 @@ export class BoardController extends Component {
             }
         }
         
-        console.log(`[GameState] 剩余棋子: ${remainingPegs}, 位置: ${JSON.stringify(pegPositions)}, 剩余步数: ${this.remainingSteps}`);
+        // 计算实际步数
+        const actualSteps = this.stepLimit - this.remainingSteps;
+        
+        console.log(`[GameState] 剩余棋子: ${remainingPegs}, 位置: ${JSON.stringify(pegPositions)}, 剩余步数: ${this.remainingSteps}, 实际步数: ${actualSteps}`);
         
         // 情况1: 胜利 (只剩1颗) 
         if (remainingPegs === 1) {
             console.log(`[GameState] ✅ 检测到胜利条件：只剩1颗棋子`);
             const isCenter = this.boardState[CENTER_POS.row][CENTER_POS.col] === TILE_STATE.PEG;
-            const result = evaluateResult(this.stepLimit - this.remainingSteps, this.stepLimit);
-            
-            console.log(`[GameState] 胜利详情：中心=${isCenter}, 评价=${result}, 剩余步数=${this.remainingSteps}, 关卡索引=${this.currentLevelIndex}`);
-    
-            // 更新关卡进度 - 添加详细日志
-            console.log(`[GameState] 开始更新关卡进度...`);
-            console.log(`  - levelIndex: ${this.currentLevelIndex}`);
-            console.log(`  - score: ${result}`);
-            console.log(`  - stepCount: ${this.stepLimit - this.remainingSteps}`);
-            console.log(`  - levelSelectionNode: ${this.levelSelectionNode ? '已设置' : '未设置'}`);
-        
-            this.updateLevelProgress(this.currentLevelIndex, result, this.stepLimit - this.remainingSteps, isCenter);
-    
-            // 显示胜利结算弹窗
-            console.log(`[GameState] 显示结算弹窗...`);
-            this.showSettlementPanel(true, remainingPegs, result, this.stepLimit - this.remainingSteps, isCenter);
+            const result = evaluateResult(remainingPegs);
+
+            this.updateLevelProgress(this.currentLevelIndex, result, actualSteps, isCenter);
+
+            // 传入实际步数，不是剩余棋子数
+            this.showSettlementPanel(true, remainingPegs, result, actualSteps, isCenter);
             return;
         }
 
         // 情况2: 步数用尽（游戏失败）
         if (this.remainingSteps <= 0) {
             console.log(`[GameState] ❌ 检测到步数用尽`);
-            const result = "步数用尽";
-            // 显示失败结算弹窗
-            this.showSettlementPanel(false, remainingPegs, result, this.stepLimit - this.remainingSteps);
+            const result = evaluateResult(remainingPegs);
+            // 传入实际步数，不是剩余棋子数
+            this.showSettlementPanel(false, remainingPegs, result, actualSteps);
             return;
         }
 
         // 情况3: 检查是否还有合法移动 (只有当棋子数>1时才检查)
         if (remainingPegs > 1) {
             const hasMove = this.hasValidMove();
-            console.log(`[GameState] 剩余${remainingPegs}颗棋子，检查是否有合法移动: ${hasMove}`);
             
             if (!hasMove) {
                 console.log(`[GameState] ❌ 检测到失败条件：无合法移动`);
@@ -1961,15 +1950,10 @@ export class BoardController extends Component {
                 if (this.boardState[CENTER_POS.row][CENTER_POS.col] === TILE_STATE.PEG) {
                     foundCenterPeg = true;
                 }
-                //const result = evaluateResult(remainingPegs, foundCenterPeg);
-                const result = "无路可走";
-                // 显示失败结算弹窗
-                this.showSettlementPanel(false, remainingPegs, result, this.stepLimit - this.remainingSteps);
-            } else {
-                console.log(`[GameState] 游戏继续，仍有合法移动`);
-            }
-        } else if (remainingPegs === 0) {
-            console.warn(`[GameState] 异常：棋盘上无棋子！`);
+                const result = evaluateResult(remainingPegs);
+                // 传入实际步数，不是剩余棋子数
+                this.showSettlementPanel(false, remainingPegs, result, actualSteps);
+            }  
         }
     }
     
