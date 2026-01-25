@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Prefab, instantiate, Label, Button, Sprite, Color, ScrollView, UITransform, Layout, SpriteFrame, find, Size, Vec3 } from 'cc';
+import { _decorator, Component, Node, Prefab, instantiate, Label, Button, Sprite, Color, ScrollView, UITransform, Layout, SpriteFrame, find, Size, Vec3,tween } from 'cc';
 import { LEVELS_DATA, evaluateResult } from './GameConfig';
 import { HomePageController } from './HomePageController';
 
@@ -23,6 +23,14 @@ export class LevelSelection extends Component {
     
     @property(ScrollView)
     public scrollView: ScrollView = null; // 滚动视图
+
+    @property(Node)
+    loadingMask: Node = null!;
+
+    @property(Node)
+    loadingAnimation: Node = null!;
+
+    private isLoading: boolean = false;
     
     @property(Button)
     public backButton: Button = null; // 返回游戏按钮（如果需要）
@@ -62,6 +70,9 @@ export class LevelSelection extends Component {
         this.loadLevelProgress();
         this.initUI();
         this.initTitleBar(); // 初始化标题栏
+
+        // 【新增】初始化加载遮罩
+        this.initLoadingMask();
         
         // 如果 titleBar 是 null，检查编辑器中是否连接了
         if (!this.titleBar) {
@@ -168,6 +179,58 @@ export class LevelSelection extends Component {
         }
         
         console.log('=== initTitleBar 完成 ===');
+    }
+
+    private initLoadingMask(): void {
+        if (this.loadingMask) {
+            this.loadingMask.active = false;
+            
+            // 设置加载动画旋转
+            if (this.loadingAnimation) {
+                // 使用Tween或schedule实现旋转动画
+                this.setupLoadingAnimation();
+            }
+        }
+    }
+
+    // 设置旋转动画
+    private setupLoadingAnimation(): void {
+        // 方法1：使用Tween（推荐）
+        tween(this.loadingAnimation)
+            .repeatForever(
+                tween()
+                    .by(0.5, { angle: 180 })
+                    .by(0.5, { angle: 180 })
+            )
+            .start();
+        
+        // 方法2：使用schedule
+        // this.schedule(() => {
+        //     this.loadingAnimation.angle += 10;
+        // }, 0.05);
+    }
+
+    // 显示加载遮罩
+    private showLoadingMask(text: string = '加载中...'): void {
+        if (this.loadingMask) {
+            this.isLoading = true;
+
+            // 【重要】确保遮罩在最上层显示
+            this.loadingMask.setSiblingIndex(99999);
+        
+            this.loadingMask.active = true;         
+            
+            // 可以在这里添加加载文字
+            console.log(text);
+        }
+    }
+
+    // 隐藏加载遮罩
+    private hideLoadingMask(): void {
+        if (this.loadingMask) {
+            this.isLoading = false;
+            this.loadingMask.active = false;
+        }
     }
 
     // 加载关卡进度（从本地存储）
@@ -658,8 +721,12 @@ export class LevelSelection extends Component {
     private generateLevelCards() {
         console.log('=== 开始生成关卡卡片 ===');
         
+        // 【新增】显示加载遮罩
+        this.showLoadingMask('正在生成关卡卡片...');
+
         if (!this.levelCardPrefab || !this.levelContainer) {
             console.error("缺少必要的组件");
+            this.hideLoadingMask();// 【新增】出错时也要隐藏遮罩
             return;
         }
         
@@ -705,6 +772,9 @@ export class LevelSelection extends Component {
         setTimeout(() => {
             this.manualGridLayout();
             // this.testSimpleLayout(); // 注释掉测试布局
+            setTimeout(() => {
+                this.hideLoadingMask();
+                }, 200);
         }, 100);
     }
 
@@ -1276,6 +1346,9 @@ export class LevelSelection extends Component {
         this.loadLevelProgress();
         this.refreshLevelCards();
         
+        // 【新增】显示加载遮罩
+        this.showLoadingMask('加载关卡列表...');
+
         // 确保标题栏显示
         if (this.titleBar) {
             this.titleBar.active = true;
@@ -1293,6 +1366,16 @@ export class LevelSelection extends Component {
         if (homePage) {
             homePage.active = false;
         }
+
+        // 【修改】延迟一点时间刷新卡片，确保遮罩先显示出来
+        setTimeout(() => {
+            this.refreshLevelCards();
+            
+            // 确保遮罩在刷新完成后隐藏
+            setTimeout(() => {
+                this.hideLoadingMask();
+            }, 400);
+        }, 50);       
     }
 
     // 新增：返回首页方法
