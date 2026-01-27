@@ -6,6 +6,7 @@ import { Peg } from './Peg';
 import { BOARD_SIZE, TILE_STATE, LEVELS_DATA, evaluateResult, CENTER_POS } from './GameConfig'; 
 import { TutorialManager } from './TutorialManager';
 import { AudioManager } from './AudioManager';
+import { I18nManager } from './I18nManager';
 
 const { ccclass, property } = _decorator;
 
@@ -122,15 +123,65 @@ export class BoardController extends Component {
     private undoCount: number = 0; // 悔棋次数计数器
     private maxUndoCount: number = 5; // 最大悔棋次数（根据关卡动态调整）
 
+    // 中英文适配
+    private i18n: I18nManager = null;
+
     // ==================== 核心初始化方法 ====================
     protected onLoad() {
-
-        // 1. 初始化UI（必须在其他逻辑之前）
+        console.log('BoardController: onLoad开始');
+        
+        // 【重要修复】1. 先初始化国际化管理器
+        this.i18n = I18nManager.getInstance();
+        
+        // 【新增】如果没有找到，尝试创建
+        if (!this.i18n) {
+            console.log('I18nManager未找到，尝试在Canvas下查找或创建...');
+            const canvas = find('Canvas');
+            if (canvas) {
+                const existingI18n = canvas.getChildByName('I18nManager');
+                if (existingI18n) {
+                    this.i18n = existingI18n.getComponent(I18nManager);
+                    console.log('在Canvas下找到I18nManager');
+                } else {
+                    // 创建I18nManager节点
+                    console.log('创建新的I18nManager节点');
+                    const i18nNode = new Node('I18nManager');
+                    i18nNode.parent = canvas;
+                    this.i18n = i18nNode.addComponent(I18nManager);
+                }
+            }
+        }
+        
+        if (!this.i18n) {
+            console.error('无法初始化I18nManager');
+            // 创建临时管理器作为备用
+            this.i18n = new I18nManager();
+        }
+        
+        // 【新增】确保I18nManager已加载
+        this.scheduleOnce(() => {
+            if (this.i18n && !this.i18n.isLoadedState()) {
+                console.log('I18nManager尚未加载，重新触发加载');
+                this.i18n.loadLanguageData();
+            }
+        }, 0.1);
+        
+        // 【新增】设置语言监听
+        if (this.i18n && this.i18n.node) {
+            this.i18n.node.on('language-changed', this.onLanguageChanged, this);
+        }
+        
+        // 2. 初始化UI（必须在其他逻辑之前）
         this.initUI();
         this.debugUIHierarchy();
         this.initTutorialSystem();
         
-        // 2. 确保BoardRoot在UI上层
+        // 【修正】3. 延迟更新UI文本，确保UI组件已创建
+        this.scheduleOnce(() => {
+            this.updateGameUIText();
+        }, 0.1);
+
+        // 4. 确保BoardRoot在UI上层
         if (this.boardRoot && this.uiRoot) {
             // 将BoardRoot移动到Canvas的最后一个子节点（最上层）
             const canvas = find('Canvas');
@@ -140,7 +191,7 @@ export class BoardController extends Component {
             }
         }
 
-        // 3. 检查核心资源
+        // 5. 检查核心资源
         if (!this.PegPrefab) {
             console.error("BoardController: PegPrefab is not assigned in the editor!");
             return;
@@ -154,7 +205,7 @@ export class BoardController extends Component {
             return; // 添加return，避免后续错误
         }
 
-        // 4. 默认隐藏游戏相关UI
+        // 6. 默认隐藏游戏相关UI
         if (this.uiRoot) {
             this.uiRoot.active = false;  // 隐藏GameUI
         }
@@ -171,8 +222,20 @@ export class BoardController extends Component {
             this.loadLevel(this.currentLevelIndex);
         }
 
-        // 5. 默认显示首页
-        console.log("游戏初始化完成，等待用户操作");
+        // 7. 添加调试信息
+        this.scheduleOnce(() => {
+            console.log("游戏初始化完成，等待用户操作");
+            console.log("当前语言:", this.i18n?.getCurrentLanguage());
+            
+            // 测试国际化
+            if (this.i18n) {
+                console.log('国际化测试:');
+                console.log('- gameTitle:', this.i18n.t('gameTitle'));
+                console.log('- retry:', this.i18n.t('retry'));
+                console.log('- undo:', this.i18n.t('undo'));
+                console.log('- level:', this.i18n.t('level', 1));
+            }
+        }, 0.2);
     }
 
     // ==================== UI 初始化与动态绑定 ====================
@@ -239,8 +302,10 @@ export class BoardController extends Component {
             this.settlementTitle = getComponent('UIRoot/SettlementPanel/PopupWindow/TitleLabel', Label);
             this.settlementResult = getComponent('UIRoot/SettlementPanel/PopupWindow/ResultLabel', Label);
             this.settlementStats = getComponent('UIRoot/SettlementPanel/PopupWindow/StatsLabel', Label);
-            this.settlementRetryBtn = getComponent('UIRoot/SettlementPanel/PopupWindow/BtnContainer/SettlementRetryBtn', Button);
-            this.settlementNextBtn = getComponent('UIRoot/SettlementPanel/PopupWindow/BtnContainer/SettlementNextBtn', Button);
+            //this.settlementRetryBtn = getComponent('UIRoot/SettlementPanel/PopupWindow/BtnContainer/SettlementRetryBtn', Button);
+            //this.settlementNextBtn = getComponent('UIRoot/SettlementPanel/PopupWindow/BtnContainer/SettlementNextBtn', Button);
+            this.settlementRetryBtn = null;
+            this.settlementNextBtn = null;
         } else {
             console.warn('[UI] SettlementPanel not found in UI prefab.');
         }
@@ -261,8 +326,6 @@ export class BoardController extends Component {
         
         // 7. 动态绑定BackButton点击事件
         if (this.backButton) {
-
-            // 获取所有相关节点的信息
             const backTransform = this.backButton.node.getComponent(UITransform);
             const uiRootNode = find('Canvas/GameUI/UIRoot');
             const uiRootTransform = uiRootNode?.getComponent(UITransform);
@@ -295,7 +358,6 @@ export class BoardController extends Component {
         if (this.settlementPanel) {
             this.settlementPanel.active = false; // 初始隐藏结算弹窗
         }
-
     }
 
     // ==================== 游戏关卡与状态管理 ====================
@@ -382,8 +444,9 @@ export class BoardController extends Component {
         this.remainingSteps = this.stepLimit; // 初始化剩余步数
 
         // 更新游戏标题
-        if (this.gameTitleLabel) {
-            this.gameTitleLabel.string = `关卡 ${levelIndex + 1}`;
+        if (this.gameTitleLabel && this.i18n) {
+            // 【修正】使用国际化文本
+            this.gameTitleLabel.string = this.i18n.t('level', levelIndex + 1);
         }
         
         // 更新计步器显示（使用剩余步数）
@@ -417,6 +480,8 @@ export class BoardController extends Component {
             console.warn('[UI] 教学入口按钮未找到');
         }
 
+        // 更新UI文本
+        this.updateGameUIText();
     }
 
     // 添加返回关卡选择的方法
@@ -602,7 +667,6 @@ export class BoardController extends Component {
             console.warn("Step counter label not assigned");
             return;
         }
-        
         const remainingUndo = this.maxUndoCount - this.undoCount;
         
 
@@ -612,10 +676,18 @@ export class BoardController extends Component {
         let textSize =28; // 文字字号
         
         // 构建富文本字符串
-        const richTextString = 
-            `<color=#333333><size=${textSize}>剩余</size></color>` +
-            `<color=${numberColor}><size=${numberSize}>${this.remainingSteps}</size></color>` +
-            `<color=#333333><size=${textSize}>步</size></color>`;
+        let richTextString;
+        if (this.i18n) {
+            richTextString = 
+                `<color=#333333><size=${textSize}>${this.i18n.t('remaining')}</size></color>` +
+                `<color=${numberColor}><size=${numberSize}>${this.remainingSteps}</size></color>` +
+                `<color=#333333><size=${textSize}>${this.i18n.t('step')}</size></color>`;
+        } else {
+            richTextString = 
+                `<color=#333333><size=${textSize}>剩余</size></color>` +
+                `<color=${numberColor}><size=${numberSize}>${this.remainingSteps}</size></color>` +
+                `<color=#333333><size=${textSize}>步</size></color>`;
+        }
         
         // 设置富文本内容
         this.stepCounterLabel.string = richTextString;
@@ -624,7 +696,12 @@ export class BoardController extends Component {
         this.updateUndoBadge();
     }
     
-    private showTips(message: string, duration: number = 2.0) {
+    private showTips(messageKey: string, duration: number = 2.0) {
+        let message = messageKey;
+        if (this.i18n) {
+            message = this.i18n.t(messageKey);
+        }
+        
         if (!this.tipsLabel || !this.tipsLabel.isValid) {
             return;
         }
@@ -930,13 +1007,13 @@ export class BoardController extends Component {
 
         // 检查是否有历史记录
         if (this.moveHistory.length <= 1) {
-            this.showTips("已是初始状态");
+            this.showTips("initialState"); // 修改为国际化键
             return;
         }
         
         // 检查悔棋次数是否用完
         if (this.undoCount >= this.maxUndoCount) {
-            this.showTips(`悔棋次数已用完`);
+            this.showTips("undoLimitExceeded"); // 修改为国际化键
             return;
         }
         
@@ -988,7 +1065,7 @@ export class BoardController extends Component {
         this.updateStepCounter();
         
         // 使用提示显示成功信息
-        this.showTips(`悔棋成功`);        
+        this.showTips("success"); // 修改为国际化键        
     
         // 调试：输出当前所有历史记录
         console.log(`[Undo] 历史记录详情：`);
@@ -1041,8 +1118,8 @@ export class BoardController extends Component {
     private showGameCompletePanel() {
         if (this.settlementPanel && this.settlementTitle && this.settlementResult) {
             this.settlementPanel.active = true;
-            this.settlementTitle.string = "恭喜通关！";
-            this.settlementResult.string = "您已成功完成所有关卡！\n真是一位钻石棋大师！";
+            this.settlementTitle.string = this.i18n ? this.i18n.t('completeAll') : "恭喜通关！";
+            this.settlementResult.string = this.i18n ? this.i18n.t('masterTitle') : "您已成功完成所有关卡！\n真是一位钻石棋大师！";
             this.settlementStats.string = "";
             
             // 禁用下一关按钮（已经是最后一关）
@@ -1051,7 +1128,7 @@ export class BoardController extends Component {
                 // 添加文本提示
                 const nextBtnLabel = this.settlementNextBtn.node.getComponentInChildren(Label);
                 if (nextBtnLabel) {
-                    nextBtnLabel.string = "已是最后一关";
+                    nextBtnLabel.string = this.i18n ? this.i18n.t('lastLevel') : "已是最后一关";
                 }
             }
         }
@@ -1096,14 +1173,29 @@ export class BoardController extends Component {
         // ==================== 设置弹窗内容 ====================
         if (isVictory) {
             // 通关状态
-            this.settlementTitle.string = "恭喜过关";
+            if (this.settlementTitle && this.i18n) {
+                this.settlementTitle.string = this.i18n.t('levelComplete');
+            } else {
+                this.settlementTitle.string = "恭喜过关";
+            }
             
             // 显示星星评价系统
             this.showVictoryStars(remainingPegsForStars);
             
-            // 设置评价和统计文字
-            this.settlementResult.string = `评价: ${resultText}`;
-            this.settlementStats.string = `移动${stepCount}步  剩余${remainingPegs}子`;
+            // 【修正】设置评价和统计文字
+            if (this.settlementResult && this.i18n) {
+                this.settlementResult.string = `${this.i18n.t('starRating')}: ${resultText}`;
+            } else {
+                this.settlementResult.string = `评价: ${resultText}`;
+            }
+            
+            if (this.settlementStats && this.i18n) {
+                const moveText = this.i18n.t('moveCount', stepCount);
+                const remainingText = this.i18n.t('remainingPieces', remainingPegs);
+                this.settlementStats.string = `${moveText}  ${remainingText}`;
+            } else {
+                this.settlementStats.string = `移动${stepCount}步  剩余${remainingPegs}子`;
+            }
             
             // 按钮处理 - 只显示"下一关"按钮，居中显示
             if (victoryButtonContainer) {
@@ -1119,7 +1211,11 @@ export class BoardController extends Component {
                 const nextBtnLabel = singleVictoryButton.node.getComponentInChildren(Label);
                 if (nextBtnLabel) {
                     if (isLastLevel) {
-                        nextBtnLabel.string = "返回关卡选择";
+                        if (this.i18n) {
+                            nextBtnLabel.string = this.i18n.t('lastLevel');
+                        } else {
+                            nextBtnLabel.string = "返回关卡选择";
+                        }
                         singleVictoryButton.interactable = true;
                         // 修改按钮点击事件
                         singleVictoryButton.node.off(Button.EventType.CLICK);
@@ -1127,7 +1223,11 @@ export class BoardController extends Component {
                             this.onSettlementBackToLevelSelect();
                         }, this);                    
                     } else {
-                        nextBtnLabel.string = "下一关";
+                        if (this.i18n) {
+                            nextBtnLabel.string = this.i18n.t('nextLevel');
+                        } else {
+                            nextBtnLabel.string = "下一关";
+                        }
                         singleVictoryButton.interactable = true;
                         // 修改按钮点击事件
                         singleVictoryButton.node.off(Button.EventType.CLICK);
@@ -1138,14 +1238,29 @@ export class BoardController extends Component {
             
         } else {
             // 失败状态
-            this.settlementTitle.string = "游戏结束";
+            if (this.settlementTitle && this.i18n) {
+                this.settlementTitle.string = this.i18n.t('gameOver');
+            } else {
+                this.settlementTitle.string = "游戏结束";
+            }
             
             // 显示失败状态的星星评价
             this.showVictoryStars(remainingPegsForStars); 
             
-            // 设置评价和统计文字
-            this.settlementResult.string = `评价: ${resultText}`;
-            this.settlementStats.string = `移动${stepCount}步  剩余${remainingPegs}子`;
+            // 【修正】设置评价和统计文字
+            if (this.settlementResult && this.i18n) {
+                this.settlementResult.string = `${this.i18n.t('starRating')}: ${resultText}`;
+            } else {
+                this.settlementResult.string = `评价: ${resultText}`;
+            }
+            
+            if (this.settlementStats && this.i18n) {
+                const moveText = this.i18n.t('moveCount', stepCount);
+                const remainingText = this.i18n.t('remainingPieces', remainingPegs);
+                this.settlementStats.string = `${moveText}  ${remainingText}`;
+            } else {
+                this.settlementStats.string = `移动${stepCount}步  剩余${remainingPegs}子`;
+            }
             
             // 按钮处理 - 只显示"再试一次"按钮，居中显示
             if (victoryButtonContainer) {
@@ -1160,7 +1275,11 @@ export class BoardController extends Component {
                 singleFailureButton.interactable = true;
                 const retryBtnLabel = singleFailureButton.node.getComponentInChildren(Label);
                 if (retryBtnLabel) {
-                    retryBtnLabel.string = "再试一次";
+                    if (this.i18n) {
+                        retryBtnLabel.string = this.i18n.t('tryAgain');
+                    } else {
+                        retryBtnLabel.string = "再试一次";
+                    }
                 }
                 // 修改按钮点击事件
                 singleFailureButton.node.off(Button.EventType.CLICK);
@@ -1806,7 +1925,7 @@ export class BoardController extends Component {
         // 【新增】检查剩余步数
         if (this.remainingSteps <= 0) {
             console.log("步数已用尽，无法移动");
-            this.showTips("步数已用尽！");
+            this.showTips("stepLimitExceeded"); // 修改为国际化键
             this.resetPegPosition(peg);
             return;
         }
@@ -2420,5 +2539,103 @@ export class BoardController extends Component {
                 console.log(`  [${index}] ${child.name}: pos=${child.position}, active=${child.active}, size=${transform?.contentSize?.width}x${transform?.contentSize?.height}`);
             });
         }
+    }
+
+    // ==================== 修改后的国际化UI更新方法 ====================
+    private updateGameUIText() {
+        if (!this.i18n) {
+            console.warn('updateGameUIText: i18n not available');
+            return;
+        }
+        
+        // 更新标题（关卡标题）
+        if (this.gameTitleLabel) {
+            // 使用带参数的形式
+            this.gameTitleLabel.string = this.i18n.t('level', this.currentLevelIndex + 1);
+        }
+        
+        // 更新按钮文本 - 直接修改按钮的Label
+        this.updateButtonTextDirectly();
+        
+        // 更新结算弹窗按钮文本
+        if (this.settlementPanel && this.settlementPanel.active) {
+            this.updateSettlementText();
+        }
+        
+        // 更新计步器
+        this.updateStepCounter();
+    }
+
+    // 新增：直接更新按钮文本的方法
+    private updateButtonTextDirectly() {
+        if (!this.i18n) return;
+        
+        // 重玩按钮
+        if (this.retryButton) {
+            const retryLabel = this.retryButton.node.getComponentInChildren(Label);
+            if (retryLabel) {
+                retryLabel.string = this.i18n.t('retry');
+            }
+        }
+        
+        // 悔棋按钮
+        if (this.undoButton) {
+            const undoLabel = this.undoButton.node.getComponentInChildren(Label);
+            if (undoLabel) {
+                undoLabel.string = this.i18n.t('undo');
+            }
+        }
+        
+        // 返回按钮
+        if (this.backButton) {
+            const backLabel = this.backButton.node.getComponentInChildren(Label);
+            if (backLabel) {
+                backLabel.string = this.i18n.t('back');
+            }
+        }
+    }
+
+    // 新增：更新结算弹窗文本
+    private updateSettlementText() {
+        if (!this.i18n || !this.settlementPanel.active) return;
+        
+        // 更新按钮文本
+        if (this.settlementRetryBtn) {
+            const retryLabel = this.settlementRetryBtn.node.getComponentInChildren(Label);
+            if (retryLabel) {
+                retryLabel.string = this.i18n.t('tryAgain');
+            }
+        }
+        
+        if (this.settlementNextBtn) {
+            const nextLabel = this.settlementNextBtn.node.getComponentInChildren(Label);
+            if (nextLabel) {
+                const isLastLevel = this.currentLevelIndex >= LEVELS_DATA.length - 1;
+                nextLabel.string = this.i18n.t(isLastLevel ? 'lastLevel' : 'nextLevel');
+            }
+        }
+    }
+
+    // ==================== 添加监听语言变化 ====================
+    protected start() {
+        // 监听语言变化事件
+        const i18nNode = find('I18nManager');
+        if (i18nNode) {
+            i18nNode.on('language-changed', this.onLanguageChanged, this);
+        }
+    }
+
+    protected onDestroy() {
+        // 移除事件监听
+        const i18nNode = find('I18nManager');
+        if (i18nNode) {
+            i18nNode.off('language-changed', this.onLanguageChanged, this);
+        }
+    }
+
+    private onLanguageChanged() {
+        console.log('BoardController: Language changed, updating UI text...');
+        this.updateGameUIText();
+        this.updateStepCounter(); // 如果需要更新计步器
     }
 }

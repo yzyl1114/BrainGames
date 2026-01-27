@@ -1,6 +1,7 @@
 import { _decorator, Component, Node, Prefab, instantiate, Label, Button, Sprite, Color, ScrollView, UITransform, Layout, SpriteFrame, find, Size, Vec3,tween } from 'cc';
 import { LEVELS_DATA, evaluateResult } from './GameConfig';
 import { HomePageController } from './HomePageController';
+import { I18nManager } from './I18nManager';
 
 const { ccclass, property } = _decorator;
 
@@ -64,12 +65,23 @@ export class LevelSelection extends Component {
     
     private levelDataList: LevelData[] = [];
     private currentMaxUnlockedLevel: number = 0;
+
+    private i18n: I18nManager = null;
     
     protected onLoad() {
-
+        // 【第一步】先初始化国际化管理器
+        this.i18n = I18nManager.getInstance();
+        if (!this.i18n) {
+            console.warn('LevelSelection: I18nManager not found');
+            const i18nNode = new Node('TempI18nManager');
+            this.node.parent?.addChild(i18nNode);
+            this.i18n = i18nNode.addComponent(I18nManager);
+        }
+        
+        // 【第二步】初始化其他内容
         this.loadLevelProgress();
         this.initUI();
-        this.initTitleBar(); // 初始化标题栏
+        this.initTitleBar(); // 现在 initTitleBar 可以使用 this.i18n
 
         // 【新增】初始化加载遮罩
         this.initLoadingMask();
@@ -111,6 +123,17 @@ export class LevelSelection extends Component {
         if (this.homeBackButton) {
             this.homeBackButton.node.on(Button.EventType.CLICK, this.onBackToHome, this);
         }
+
+        // 更新标题
+        if (this.titleLabel && this.i18n) {
+            this.titleLabel.string = this.i18n.t('selectLevel');
+        }
+        
+        // 监听语言变化
+        const i18nNode = find('I18nManager');
+        if (i18nNode) {
+            i18nNode.on('language-changed', this.onLanguageChanged, this);
+        }
     }
     
     //初始化标题栏
@@ -150,10 +173,13 @@ export class LevelSelection extends Component {
         this.titleBar.setPosition(0, titleBarY, 0);
         console.log(`✅ 设置 TitleBar 位置: (0, ${titleBarY})`);
         
-        // 设置标题文字
-        if (this.titleLabel) {
-            this.titleLabel.string = "选择关卡";
-            console.log('✅ 设置标题文字: "选择关卡"');
+        // 【修正】使用国际化设置标题文字
+        if (this.titleLabel && this.i18n) {
+            this.titleLabel.string = this.i18n.t('selectLevel'); // 使用国际化
+            console.log(`✅ 设置标题文字: "${this.titleLabel.string}"`);
+        } else if (this.titleLabel) {
+            this.titleLabel.string = "选择关卡"; // 回退
+            console.log('⚠️ 使用回退标题文字: "选择关卡"');
         } else {
             console.error('❌ TitleLabel 未连接');
             // 尝试在 TitleBar 中查找
@@ -164,8 +190,14 @@ export class LevelSelection extends Component {
             }
         }
         
-        // 绑定返回按钮事件
+        // 【修正】绑定返回按钮事件（使用国际化）
         if (this.homeBackButton) {
+            // 更新返回按钮文本
+            const backLabel = this.homeBackButton.node.getComponentInChildren(Label);
+            if (backLabel && this.i18n) {
+                backLabel.string = this.i18n.t('homeBack');
+            }
+            
             this.homeBackButton.node.on(Button.EventType.CLICK, this.onBackToHome, this);
             console.log('✅ 绑定返回按钮事件');
         } else {
@@ -179,6 +211,31 @@ export class LevelSelection extends Component {
         }
         
         console.log('=== initTitleBar 完成 ===');
+    }
+
+    private onLanguageChanged() {
+        this.updateUIText();
+        this.refreshLevelCards();
+    }
+    
+    private updateUIText() {
+        if (!this.i18n) return;
+        
+        // 更新所有文本
+        if (this.titleLabel) {
+            this.titleLabel.string = this.i18n.t('selectLevel');
+        }
+        
+        // 更新返回按钮文本
+        if (this.homeBackButton) {
+            const backLabel = this.homeBackButton.node.getComponentInChildren(Label);
+            if (backLabel) {
+                backLabel.string = this.i18n.t('homeBack');
+            }
+        }
+        
+        // 更新卡片上的文本
+        this.refreshLevelCards();
     }
 
     private initLoadingMask(): void {
@@ -721,8 +778,9 @@ export class LevelSelection extends Component {
     private generateLevelCards() {
         console.log('=== 开始生成关卡卡片 ===');
         
-        // 【新增】显示加载遮罩
-        this.showLoadingMask('正在生成关卡卡片...');
+        // 【修正】使用国际化文本
+        const loadingText = this.i18n ? this.i18n.t('generatingLevels') : '正在生成关卡卡片...';
+        this.showLoadingMask(loadingText);
 
         if (!this.levelCardPrefab || !this.levelContainer) {
             console.error("缺少必要的组件");
@@ -954,8 +1012,12 @@ export class LevelSelection extends Component {
         
         const levelIndex = levelData.levelIndex;
         
-        // 设置关卡序号
-        if (levelIndexLabel) {
+        // 【修正】设置关卡序号（如果需要国际化）
+        if (levelIndexLabel && this.i18n) {
+            // 如果关卡序号需要格式化为 "关卡 1" 而不是 "1"
+            levelIndexLabel.string = `${levelIndex + 1}`; // 或者使用国际化
+            // levelIndexLabel.string = this.i18n.t('level', levelIndex + 1);
+        } else if (levelIndexLabel) {
             levelIndexLabel.string = `${levelIndex + 1}`;
         }
     
@@ -1347,8 +1409,9 @@ export class LevelSelection extends Component {
         this.loadLevelProgress();
         this.refreshLevelCards();
         
-        // 【新增】显示加载遮罩
-        this.showLoadingMask('加载关卡列表...');
+        // 【修正】使用国际化文本
+        const loadingText = this.i18n ? this.i18n.t('loadingLevels') : '加载关卡列表...';
+        this.showLoadingMask(loadingText);
 
         // 确保标题栏显示
         if (this.titleBar) {
@@ -1366,6 +1429,19 @@ export class LevelSelection extends Component {
         const homePage = find('Canvas/HomePage');
         if (homePage) {
             homePage.active = false;
+        }
+
+        // 【修正】确保刷新后更新标题
+        if (this.titleLabel && this.i18n) {
+            this.titleLabel.string = this.i18n.t('selectLevel');
+        }
+
+        // 【修正】确保返回按钮文本更新
+        if (this.homeBackButton && this.i18n) {
+            const backLabel = this.homeBackButton.node.getComponentInChildren(Label);
+            if (backLabel) {
+                backLabel.string = this.i18n.t('homeBack');
+            }
         }
 
         // 【修改】延迟一点时间刷新卡片，确保遮罩先显示出来

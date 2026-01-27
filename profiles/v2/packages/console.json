@@ -4,9 +4,7 @@
     "filterType": "info",
     "filterTypes": [
       "warn",
-      "error",
-      "info",
-      "log"
+      "error"
     ]
   }
 }

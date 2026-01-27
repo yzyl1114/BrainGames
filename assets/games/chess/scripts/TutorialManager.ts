@@ -1,6 +1,8 @@
 // assets/games/chess/scripts/TutorialManager.ts
 
-import { _decorator, Component, Node, Prefab, instantiate, Button, Label, RichText, ScrollView, UITransform, Color, Sprite } from 'cc';
+import { _decorator, Component, Node, Prefab, instantiate, Button, Label, RichText, ScrollView, UITransform, Color, Sprite, find } from 'cc';
+import { I18nManager } from './I18nManager'; // 【新增】导入国际化管理器
+
 const { ccclass, property } = _decorator;
 
 @ccclass('TutorialManager')
@@ -10,43 +12,20 @@ export class TutorialManager extends Component {
     
     private tutorialPanel: Node = null; // 弹窗实例
     private isShowing: boolean = false;
+    private i18n: I18nManager = null; // 【新增】国际化管理器引用
     
-    // 教学内容配置
-    private tutorialContents = [
-        {
-            title: "规则教学",
-            content: `
-🎯 <b>游戏目标</b>
-通过连续的「跳吃」移动，让棋盘上的棋子越来越少。
-最终目标：只剩1颗棋子，并位于棋盘中心。
-
-🎮 <b>基本操作</b>
-1. 选中棋子：点击想要移动的棋子
-2. 执行移动：拖拽到目标位置后松手
-3. 无效操作：如果移动不合法，棋子会自动归位
-
-✅ <b>核心规则：跳吃</b>
-• 必要条件：只能跳过相邻的棋子
-• 目标位置：必须跳到空位上
-• 跳吃效果：被跳过的棋子自动移除
-• 重要提示：每次移动必须跳过一颗棋子，不能空走
-
-⚡ <b>游戏功能</b>
-• 重玩：重新开始当前关卡
-• 悔棋：撤销上一步操作
-• 教学：随时查看本规则说明
-
-💡 <b>通关策略</b>
-1. 观察先行：先分析棋盘整体布局
-2. 中心优先：尽量让棋子向中心聚集
-3. 连续跳吃：规划能连续多次跳吃的路线
-4. 预留空间：为后续跳吃留出空位
-
-<color=#888888><i>🌟 小贴士：请耐心思考，祝您挑战成功！</i></color>`
-        },
-    ];
-    
+    // 【修改】移除硬编码的教学内容，改为从语言包动态获取
     protected onLoad() {
+        // 获取国际化管理器实例
+        this.i18n = I18nManager.getInstance();
+        if (!this.i18n) {
+            console.warn('[Tutorial] I18nManager not found');
+            // 创建一个临时的
+            const i18nNode = new Node('TempI18nManager');
+            this.node.parent?.addChild(i18nNode);
+            this.i18n = i18nNode.addComponent(I18nManager);
+        }
+        
         // 确保预制体已加载
         if (!this.tutorialPanelPrefab) {
             console.log('[Tutorial] Tutorial panel prefab will be set later.');
@@ -85,7 +64,7 @@ export class TutorialManager extends Component {
         // 修复背景层级
         this.fixBackgroundLayer();
         
-        // 设置弹窗内容
+        // 设置弹窗内容（使用国际化）
         this.setupTutorialContent(levelIndex);
         
         // 绑定按钮事件
@@ -97,28 +76,35 @@ export class TutorialManager extends Component {
     }
     
     /**
-     * 设置教学内容
+     * 设置教学内容（国际化版本）
      */
     private setupTutorialContent(levelIndex: number) {
-        const contentIndex = Math.min(levelIndex, this.tutorialContents.length - 1);
-        const tutorialData = this.tutorialContents[contentIndex];
+        // 【修改】使用国际化管理器获取文本
         
         // 设置标题
         const titleLabel = this.tutorialPanel.getChildByPath('PopupWindow/TitleLabel')?.getComponent(Label);
-        if (titleLabel) {
-            titleLabel.string = tutorialData.title;
+        if (titleLabel && this.i18n) {
+            titleLabel.string = this.i18n.t('tutorialTitle');
+        } else if (titleLabel) {
+            titleLabel.string = "规则教学"; // 回退到中文
         }
         
         // 设置内容 - 直接使用富文本
         const contentText = this.tutorialPanel.getChildByPath('PopupWindow/ContentScrollView/view/content/TextContent');
         if (contentText) {
             const richText = contentText.getComponent(RichText);
-            if (richText) {
-                richText.string = tutorialData.content;
-                console.log('[Tutorial] 富文本教学内容已设置');
+            if (richText && this.i18n) {
+                // 【关键修改】构建富文本内容
+                const tutorialContent = this.buildTutorialContent();
+                richText.string = tutorialContent;
+                console.log('[Tutorial] 国际化教学内容已设置');
                 
                 // 调整文本区域宽度
                 this.adjustRichTextSize(richText);
+            } else if (richText) {
+                // 如果没有国际化管理器，使用原始内容
+                richText.string = this.buildFallbackTutorialContent();
+                console.log('[Tutorial] 使用回退教学内容');
             } else {
                 console.error('[Tutorial] TextContent节点没有RichText组件！');
             }
@@ -133,6 +119,70 @@ export class TutorialManager extends Component {
                 scrollView.scrollToTop();
             }, 100);
         }
+    }
+    
+    /**
+     * 构建国际化教学内容
+     */
+    private buildTutorialContent(): string {
+        if (!this.i18n) {
+            return this.buildFallbackTutorialContent();
+        }
+        
+        const content = [
+            `${this.i18n.t('tutorialGoal')}`,
+            `${this.i18n.t('tutorialGoalDesc')}\n`,
+            
+            `${this.i18n.t('tutorialBasicControls')}`,
+            `${this.i18n.t('tutorialBasicDesc')}\n`,
+            
+            `${this.i18n.t('tutorialCoreRules')}`,
+            `${this.i18n.t('tutorialCoreDesc')}\n`,
+            
+            `${this.i18n.t('tutorialFeatures')}`,
+            `${this.i18n.t('tutorialFeaturesDesc')}\n`,
+            
+            `${this.i18n.t('tutorialStrategy')}`,
+            `${this.i18n.t('tutorialStrategyDesc')}\n`,
+            
+            `${this.i18n.t('tutorialTip')}`
+        ];
+        
+        return content.join('\n');
+    }
+    
+    /**
+     * 构建回退教学内容（当国际化不可用时）
+     */
+    private buildFallbackTutorialContent(): string {
+        return `
+🎯 <b>游戏目标</b>
+通过连续的「跳吃」移动，让棋盘上的棋子越来越少。
+最终目标：只剩1颗棋子，并位于棋盘中心。
+
+🎮 <b>基本操作</b>
+1. 选中棋子：点击想要移动的棋子
+2. 执行移动：拖拽到目标位置后松手
+3. 无效操作：如果移动不合法，棋子会自动归位
+
+✅ <b>核心规则：跳吃</b>
+• 必要条件：只能跳过相邻的棋子
+• 目标位置：必须跳到空位上
+• 跳吃效果：被跳过的棋子自动移除
+• 重要提示：每次移动必须跳过一颗棋子，不能空走
+
+⚡ <b>游戏功能</b>
+• 重玩：重新开始当前关卡
+• 悔棋：撤销上一步操作
+• 教学：随时查看本规则说明
+
+💡 <b>通关策略</b>
+1. 观察先行：先分析棋盘整体布局
+2. 中心优先：尽量让棋子向中心聚集
+3. 连续跳吃：规划能连续多次跳吃的路线
+4. 预留空间：为后续跳吃留出空位
+
+<color=#888888><i>🌟 小贴士：请耐心思考，祝您挑战成功！</i></color>`;
     }
     
     private adjustRichTextSize(richText: RichText) {
@@ -151,65 +201,36 @@ export class TutorialManager extends Component {
                 uiTransform.setContentSize(availableWidth, uiTransform.contentSize.height);
                 
                 console.log(`[Tutorial] 富文本区域调整为: ${availableWidth}px 宽`);
-                
             }
         }
     }
-
+    
     /**
-     * 将HTML内容转换为纯文本
-     */
-    private cleanHtmlToPlainText(html: string): string {
-        if (!html) return '';
-        
-        let text = html;
-        
-        // 1. 替换特定的HTML实体
-        const htmlEntities: {[key: string]: string} = {
-            '&nbsp;': ' ',
-            '&lt;': '<',
-            '&gt;': '>',
-            '&amp;': '&',
-            '&quot;': '"',
-            '&#39;': "'",
-            '&apos;': "'"
-        };
-        
-        Object.keys(htmlEntities).forEach(entity => {
-            text = text.replace(new RegExp(entity, 'g'), htmlEntities[entity]);
-        });
-        
-        // 2. 替换换行标签为实际换行符
-        text = text.replace(/<br\s*\/?>/gi, '\n');
-        text = text.replace(/<\/p>/gi, '\n');
-        text = text.replace(/<\/div>/gi, '\n');
-        
-        // 3. 移除所有HTML标签
-        text = text.replace(/<[^>]*>/g, '');
-        
-        // 4. 清理多余的空白字符
-        text = text.replace(/\n\s*\n/g, '\n\n'); // 多个空行合并为双空行
-        text = text.replace(/[ \t]+/g, ' ');      // 合并多个空格
-        text = text.replace(/^\s+|\s+$/g, '');    // 去除首尾空格
-        text = text.replace(/\n\s+|\s+\n/g, '\n'); // 清理行首行尾空格
-        
-        return text;
-    }
-
-    /**
-     * 绑定按钮事件
+     * 绑定按钮事件（国际化按钮文本）
      */
     private bindButtonEvents() {
         // 关闭按钮
         const closeButton = this.tutorialPanel.getChildByPath('PopupWindow/CloseButton')?.getComponent(Button);
-        if (closeButton) {
+        if (closeButton && this.i18n) {
+            // 更新关闭按钮文本（如果按钮上有Label）
+            const closeLabel = closeButton.node.getComponentInChildren(Label);
+            if (closeLabel) {
+                closeLabel.string = this.i18n.t('close');
+            }
+            
             closeButton.node.off(Button.EventType.CLICK);
             closeButton.node.on(Button.EventType.CLICK, this.hideTutorial, this);
         }
         
         // 确认按钮
         const confirmButton = this.tutorialPanel.getChildByPath('PopupWindow/BtnContainer/ConfirmButton')?.getComponent(Button);
-        if (confirmButton) {
+        if (confirmButton && this.i18n) {
+            // 更新确认按钮文本
+            const confirmLabel = confirmButton.node.getComponentInChildren(Label);
+            if (confirmLabel) {
+                confirmLabel.string = this.i18n.t('tutorialButton'); // 使用 "我知道了" 或 "I Understand"
+            }
+            
             confirmButton.node.off(Button.EventType.CLICK);
             confirmButton.node.on(Button.EventType.CLICK, this.hideTutorial, this);
         }
@@ -240,7 +261,7 @@ export class TutorialManager extends Component {
         this.tutorialPanelPrefab = prefab;
         console.log('[Tutorial] Tutorial prefab set');
     }
-
+    
     /**
      * 根据关卡动态调整教学内容
      */
@@ -253,7 +274,7 @@ export class TutorialManager extends Component {
             this.tutorialPanel.destroy();
         }
     }
-
+    
     /**
      * 修复背景层级
      */
@@ -302,7 +323,7 @@ export class TutorialManager extends Component {
             });
         }
     }
-
+    
     private debugPanelHierarchy() {
         if (!this.tutorialPanel) return;
         
