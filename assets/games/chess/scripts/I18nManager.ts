@@ -122,15 +122,14 @@ export class I18nManager extends Component {
             console.log(`[I18nManager] ✅ 语言数据加载完成: ${this.currentLanguage}`);
             console.log(`[I18nManager] 加载条目数: ${this.localeData.size}`);
             
+            // 【新增】调试：显示关键键值
+            this.debugKeyCheck();
+            
             // 通知更新
             this.scheduleOnce(() => {
                 this.node.emit('language-changed', this.currentLanguage);
                 console.log(`[I18nManager] 发送语言变化事件: ${this.currentLanguage}`);
             }, 0.1);
-            
-            // 【新增】调试：显示前几个键值
-            const keys = Array.from(this.localeData.keys()).slice(0, 5);
-            console.log(`[I18nManager] 前5个键值:`, keys.map(key => `${key}: ${this.localeData.get(key)}`));
         } else {
             console.error(`[I18nManager] 未找到 ${this.currentLanguage} 的语言数据`);
             this.loadFallbackData();
@@ -150,10 +149,12 @@ export class I18nManager extends Component {
                 "undo": "悔棋",
                 "back": "返回",
                 "homeBack": "返回首页",
-                "level": "关卡",
+                "level": "关卡 {0}",
                 "remaining": "剩余",
                 "step": "步",
-                "tutorial": "教学"
+                "tutorial": "教学",
+                "moveCount": "移动{0}步",
+                "remainingPieces": "剩余{0}子"
             },
             "en-US": {
                 "gameTitle": "Diamond Chess",
@@ -162,10 +163,12 @@ export class I18nManager extends Component {
                 "undo": "Undo",
                 "back": "Back",
                 "homeBack": "Back to Home",
-                "level": "Level",
+                "level": "Level {0}",
                 "remaining": "Remaining",
                 "step": "step",
-                "tutorial": "Tutorial"
+                "tutorial": "Tutorial",
+                "moveCount": "{0} moves",
+                "remainingPieces": "{0} pieces left"
             }
         };
         
@@ -193,35 +196,68 @@ export class I18nManager extends Component {
         if (!this.isLoaded) {
             console.warn(`[I18nManager] 语言数据未加载，键: ${key}`);
             
-            // 即使未加载也返回键名，避免界面显示undefined
-            if (args.length > 0) {
-                return this.replaceParams(key, args);
-            }
-            return key;
+            // 【修改】即使未加载也提供基本翻译
+            return this.getHardcodedTranslation(key, args);
         }
         
         let text = this.localeData.get(key);
+        
+        // 【新增】如果键未找到，尝试常见变体
         if (!text) {
             console.warn(`[I18nManager] 键未找到: ${key}`);
             
-            // 如果键包含数字，可能是动态键（如level_1），尝试去掉数字
-            if (key.includes('_')) {
-                const baseKey = key.split('_')[0];
-                text = this.localeData.get(baseKey);
+            // 尝试查找相似键（不区分大小写）
+            const lowerKey = key.toLowerCase();
+            for (const [k, v] of this.localeData) {
+                if (k.toLowerCase() === lowerKey) {
+                    text = v;
+                    console.log(`[I18nManager] 找到相似键: ${k} -> ${key}`);
+                    break;
+                }
             }
             
+            // 如果键包含数字，可能是动态键（如level_1），尝试去掉数字
+            if (!text && key.includes('_')) {
+                const baseKey = key.split('_')[0];
+                text = this.localeData.get(baseKey);
+                if (text) {
+                    console.log(`[I18nManager] 使用基础键: ${baseKey} -> ${key}`);
+                }
+            }
+            
+            // 如果还是找不到，使用硬编码翻译
             if (!text) {
-                // 如果还是找不到，返回键本身
-                text = key;
+                console.warn(`[I18nManager] 无法找到键: ${key}，使用硬编码翻译`);
+                return this.getHardcodedTranslation(key, args);
             }
         }
         
-        // 修复参数替换的正则表达式问题
+        // 【增强】参数替换逻辑
         if (args.length > 0) {
-            return this.replaceParams(text, args);
+            try {
+                return this.replaceParams(text, args);
+            } catch (e) {
+                console.error(`[I18nManager] 参数替换失败，键: ${key}, 文本: ${text}, 参数: ${args}`, e);
+                
+                // 尝试安全的替换
+                return this.safeReplaceParams(text, args);
+            }
         }
         
         return text;
+    }
+    
+    // 【新增】安全参数替换方法
+    private safeReplaceParams(text: string, args: any[]): string {
+        let result = text;
+        for (let i = 0; i < args.length; i++) {
+            const placeholder = `{${i}}`;
+            const argStr = args[i] !== undefined && args[i] !== null ? args[i].toString() : '';
+            
+            // 简单替换，避免正则问题
+            result = result.split(placeholder).join(argStr);
+        }
+        return result;
     }
     
     private replaceParams(text: string, args: any[]): string {
@@ -232,6 +268,97 @@ export class I18nManager extends Component {
             result = result.split(placeholder).join(args[i].toString());
         }
         return result;
+    }
+    
+    // 【新增】获取硬编码翻译
+    private getHardcodedTranslation(key: string, args: any[]): string {
+        // 常见键的硬编码英文翻译
+        const hardcodedTranslations: { [key: string]: string } = {
+            // 游戏页标题相关
+            'level': 'Level {0}',
+            'Level': 'Level {0}',
+            'GameTitleLabel': 'Level {0}',
+            
+            // 结算弹窗相关
+            'moveCount': '{0} moves',
+            'remainingPieces': '{0} pieces left',
+            'moveSteps': '{0} moves',
+            'remainingPegs': '{0} pieces left',
+            
+            // 按钮文本
+            'retry': 'Retry',
+            'undo': 'Undo',
+            'back': 'Back',
+            'homeBack': 'Back to Home',
+            'tryAgain': 'Try Again',
+            'nextLevel': 'Next Level',
+            
+            // 提示消息
+            'initialState': 'Already at initial state',
+            'undoLimitExceeded': 'Undo limit reached',
+            'stepLimitExceeded': 'Out of moves',
+            
+            // 标题和标签
+            'gameTitle': 'Diamond Chess',
+            'selectLevel': 'Select Level',
+            'levelComplete': 'Level Complete',
+            'gameOver': 'Game Over',
+            'completeAll': 'Congratulations!',
+            'lastLevel': 'This is the last level',
+            'starRating': 'Rating',
+            'tutorial': 'Tutorial',
+            'step': 'step',
+            'remaining': 'Remaining',
+            
+            // 首页相关
+            'StartGameButton': 'Start Game',
+            'GameDescTitle': 'Game Introduction',
+            'GameDescLabel': 'Peg Solitaire originated in France and is a popular puzzle game worldwide.',
+            
+            // 教学相关
+            'tutorialTitle': 'Game Rules',
+            'tutorialButton': 'I Understand',
+            'close': 'Close',
+            'confirm': 'Confirm'
+        };
+        
+        const translation = hardcodedTranslations[key] || key;
+        
+        // 如果有参数，进行替换
+        if (args.length > 0) {
+            return this.safeReplaceParams(translation, args);
+        }
+        
+        return translation;
+    }
+    
+    // 【新增】调试方法，检查所有键
+    public debugKeys(): void {
+        console.log('[I18nManager] 当前加载的键:');
+        const keys = Array.from(this.localeData.keys());
+        console.log(`总数: ${keys.length}`);
+        
+        // 按字母排序显示
+        const sortedKeys = keys.sort();
+        sortedKeys.forEach((key, index) => {
+            const value = this.localeData.get(key);
+            console.log(`${index + 1}. ${key}: "${value?.substring(0, 50)}${value && value.length > 50 ? '...' : ''}"`);
+        });
+    }
+    
+    // 【新增】调试：检查关键键值
+    private debugKeyCheck(): void {
+        const importantKeys = ['level', 'moveCount', 'remainingPieces', 'retry', 'undo', 'back'];
+        console.log('[I18nManager] 重要键检查:');
+        importantKeys.forEach(key => {
+            const exists = this.localeData.has(key);
+            const value = this.localeData.get(key);
+            console.log(`  ${key}: ${exists ? '✅ 存在' : '❌ 缺失'} ${value ? `- 值: "${value}"` : ''}`);
+        });
+        
+        // 显示前几个键值
+        const keys = Array.from(this.localeData.keys()).slice(0, 5);
+        console.log(`[I18nManager] 前5个键值:`, keys.map(key => `${key}: ${this.localeData.get(key)}`));
     }
     
     // 其他方法

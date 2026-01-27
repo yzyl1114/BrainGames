@@ -444,9 +444,15 @@ export class BoardController extends Component {
         this.remainingSteps = this.stepLimit; // 初始化剩余步数
 
         // 更新游戏标题
-        if (this.gameTitleLabel && this.i18n) {
-            // 【修正】使用国际化文本
-            this.gameTitleLabel.string = this.i18n.t('level', levelIndex + 1);
+        if (this.gameTitleLabel) {
+            if (this.i18n) {
+                // 使用国际化：Level 1, Level 2...
+                this.gameTitleLabel.string = this.i18n.t('level', this.currentLevelIndex + 1);
+            } else {
+                // 回退：关卡 1, 关卡 2...
+                this.gameTitleLabel.string = `关卡 ${this.currentLevelIndex + 1}`;
+            }
+            console.log(`[BoardController] 设置游戏标题: ${this.gameTitleLabel.string}`);
         }
         
         // 更新计步器显示（使用剩余步数）
@@ -2552,6 +2558,7 @@ export class BoardController extends Component {
         if (this.gameTitleLabel) {
             // 使用带参数的形式
             this.gameTitleLabel.string = this.i18n.t('level', this.currentLevelIndex + 1);
+            console.log(`[BoardController] updateGameUIText: 标题 = ${this.gameTitleLabel.string}`);
         }
         
         // 更新按钮文本 - 直接修改按钮的Label
