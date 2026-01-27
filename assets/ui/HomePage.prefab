@@ -1072,8 +1072,8 @@
     "_string": "独粒钻石起源于法国，是一种风靡世界的益智游戏。与中国发明的\"华容道\"、匈牙利发明的\"魔方\"并称为\"益智游戏界的三大不可思议\"。\n\n它类似于跳棋，但不能走步只能跳。走棋时棋子跳过相邻的棋子到空位上，并把跳过的棋子吃掉。棋子可以沿棋盘路线横跳、纵跳，但不能斜跳。",
     "_horizontalAlign": 0,
     "_verticalAlign": 0,
-    "_actualFontSize": 30,
-    "_fontSize": 30,
+    "_actualFontSize": 36,
+    "_fontSize": 36,
     "_fontFamily": "Arial",
     "_lineHeight": 40,
     "_overflow": 1,
@@ -1273,8 +1273,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 100,
-      "height": 40
+      "width": 400,
+      "height": 70
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -1312,8 +1312,8 @@
     "_string": "",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
-    "_actualFontSize": 20,
-    "_fontSize": 20,
+    "_actualFontSize": 24,
+    "_fontSize": 24,
     "_fontFamily": "Arial",
     "_lineHeight": 40,
     "_overflow": 1,
@@ -1762,17 +1762,11 @@
     "startGameButton": {
       "__id__": 59
     },
-    "chessGameCard": {
-      "__id__": 8
-    },
     "gameNameLabel": {
       "__id__": 33
     },
     "gameDescLabel": {
       "__id__": 41
-    },
-    "startButtonLabel": {
-      "__id__": 50
     },
     "_id": ""
   },
