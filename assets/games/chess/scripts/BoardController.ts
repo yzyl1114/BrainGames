@@ -7,6 +7,7 @@ import { BOARD_SIZE, TILE_STATE, LEVELS_DATA, evaluateResult, CENTER_POS } from 
 import { TutorialManager } from './TutorialManager';
 import { AudioManager } from './AudioManager';
 import { I18nManager } from './I18nManager';
+import { CrazyGamesSaveManager } from './CrazyGamesSaveManager'; // 添加这行
 
 const { ccclass, property } = _decorator;
 
@@ -83,6 +84,9 @@ export class BoardController extends Component {
     // ===== 步数限制相关 =====
     private stepLimit: number = 0; // 当前关卡的步数限制
     private remainingSteps: number = 0; // 剩余步数（倒数）
+
+    // ===== 关卡进度相关 =====
+    private saveManager: CrazyGamesSaveManager | null = null; // 改为可空类型
 
     // ===== 所有UI组件将在代码中动态获取，不再需要编辑器拖拽绑定 =====
     private uiRoot: Node = null; // UI总根节点 (对应预制体中的 UIRoot)
@@ -222,7 +226,18 @@ export class BoardController extends Component {
             this.loadLevel(this.currentLevelIndex);
         }
 
-        // 7. 添加调试信息
+        // 7. 初始化保存管理器
+        this.saveManager = CrazyGamesSaveManager.getInstance();
+        if (this.saveManager) {
+            console.log('✅ CrazyGamesSaveManager 初始化成功');
+        } else {
+            console.warn('⚠️ CrazyGamesSaveManager 初始化失败，使用本地存储');
+        }
+
+        // 监听保存事件
+        director.on('game-paused', this.autoSaveBeforePause, this);
+
+        // 8. 添加调试信息
         this.scheduleOnce(() => {
             console.log("游戏初始化完成，等待用户操作");
             console.log("当前语言:", this.i18n?.getCurrentLanguage());
@@ -1120,6 +1135,35 @@ export class BoardController extends Component {
         });
     }
 
+    // ==================== 自动保存 ====================
+    private autoSaveBeforePause() {
+        console.log('游戏即将暂停，自动保存');
+        this.quickSaveCurrentState();
+    }
+
+    private async quickSaveCurrentState() {
+        if (!this.saveManager) {
+            console.log('⚠️ saveManager 未初始化，跳过快速保存');
+            return;
+        }
+        
+        try {
+            const quickSave = {
+                levelIndex: this.currentLevelIndex,
+                boardState: this.boardState,
+                remainingSteps: this.remainingSteps,
+                stepCount: this.stepCount,
+                undoCount: this.undoCount,
+                saveTime: Date.now()
+            };
+            
+            await this.saveManager.saveGameData('quick_save', quickSave);
+            console.log('✅ 快速保存完成');
+        } catch (error) {
+            console.error('❌ 快速保存失败:', error);
+        }
+    }
+
     // ==================== 结算弹窗系统 ====================
     private showGameCompletePanel() {
         if (this.settlementPanel && this.settlementTitle && this.settlementResult) {
@@ -1294,7 +1338,16 @@ export class BoardController extends Component {
         }
         
         console.log("结算弹窗显示完成");
-    }
+
+        // 通知保存管理器
+        if (isVictory && this.saveManager) {
+            try {
+                this.saveManager.notifyGameCompleted(this.currentLevelIndex, resultText);
+            } catch (error) {
+                console.warn('通知保存管理器失败:', error);
+            }
+        }
+}
 
     // ==================== 显示通关星星评价（3颗星系统）====================
     private showVictoryStars(remainingPegs: number) {
@@ -2638,6 +2691,9 @@ export class BoardController extends Component {
         if (i18nNode) {
             i18nNode.off('language-changed', this.onLanguageChanged, this);
         }
+        
+        // 【新增】移除 game-paused 事件监听
+        director.off('game-paused', this.autoSaveBeforePause, this);
     }
 
     private onLanguageChanged() {

@@ -2,6 +2,7 @@ import { _decorator, Component, Node, Prefab, instantiate, Label, Button, Sprite
 import { LEVELS_DATA, evaluateResult } from './GameConfig';
 import { HomePageController } from './HomePageController';
 import { I18nManager } from './I18nManager';
+import { CrazyGamesSaveManager } from './CrazyGamesSaveManager';
 
 const { ccclass, property } = _decorator;
 
@@ -67,6 +68,8 @@ export class LevelSelection extends Component {
     private currentMaxUnlockedLevel: number = 0;
 
     private i18n: I18nManager = null;
+
+    private saveManager: CrazyGamesSaveManager | null = null;
     
     protected onLoad() {
         // 【第一步】先初始化国际化管理器
@@ -78,6 +81,9 @@ export class LevelSelection extends Component {
             this.i18n = i18nNode.addComponent(I18nManager);
         }
         
+        // 【新增】需要在这里初始化 saveManager
+        this.saveManager = CrazyGamesSaveManager.getInstance();
+
         // 【第二步】初始化其他内容
         this.loadLevelProgress();
         this.initUI();
@@ -291,37 +297,37 @@ export class LevelSelection extends Component {
     }
 
     // 加载关卡进度（从本地存储）
-    private loadLevelProgress() {
-        console.log('【loadLevelProgress】从本地存储加载关卡进度');
+    private async loadLevelProgress() {
+        console.log('【loadLevelProgress】加载关卡进度 - 使用平台API优先');
         
-        // 从本地存储读取进度，如果没有则初始化
-        const savedProgress = localStorage.getItem('diamond_chess_level_progress');
-        
-        if (savedProgress) {
-            try {
-                const progress = JSON.parse(savedProgress);
-                this.currentMaxUnlockedLevel = progress.maxUnlockedLevel || 0;
-                this.levelDataList = progress.levelDataList || [];
+        try {
+            // 尝试从平台API加载
+            const saveManager = CrazyGamesSaveManager.getInstance();
+            
+            if (saveManager) {
+                const platformProgress = await saveManager.loadLevelProgress();
                 
-                console.log(`✅ 从本地存储加载进度成功`);
-                console.log(`   最大解锁关卡: ${this.currentMaxUnlockedLevel + 1}`);
-                console.log(`   关卡数据列表长度: ${this.levelDataList.length}`);
-                console.log(`   已解锁关卡数: ${this.levelDataList.filter(level => level.isUnlocked).length}`);
-                
-                // 修复数据一致性（但不会重置数据）
-                this.fixLevelDataConsistency();
-                
-            } catch (e) {
-                console.error('❌ 解析本地存储数据失败:', e);
-                console.log('重新初始化默认数据...');
-                this.initDefaultLevelData();
-                // 这里不调用 saveLevelProgress()，避免覆盖可能存在的正确数据
+                if (platformProgress) {
+                    // 成功从平台加载
+                    this.currentMaxUnlockedLevel = platformProgress.maxUnlockedLevel || 0;
+                    this.levelDataList = platformProgress.levelDataList || [];
+                    
+                    console.log(`✅ 从平台API加载进度成功`);
+                    console.log(`   最大解锁关卡: ${this.currentMaxUnlockedLevel + 1}`);
+                    
+                    // 修复数据一致性
+                    this.fixLevelDataConsistency();
+                    return;
+                }
             }
-        } else {
-            console.log('⚠️ 本地存储中没有找到进度，初始化默认数据');
-            this.initDefaultLevelData();
-            // 只有完全没有数据时才保存
-            this.saveLevelProgress();
+            
+            // 平台无数据，回退到localStorage
+            console.log('⚠️ 平台API无数据，回退到localStorage');
+            this.loadFromLocalStorage();
+            
+        } catch (error) {
+            console.error('❌ 平台API加载失败，回退到localStorage:', error);
+            this.loadFromLocalStorage();
         }
     }
  
@@ -361,8 +367,14 @@ export class LevelSelection extends Component {
     private adjustLevelDataCount(expectedLevelCount: number) {
         console.log(`调整关卡数据: 从 ${this.levelDataList.length} 到 ${expectedLevelCount}`);
         
+        // 【修复】先保存旧的 maxUnlockedLevel
+        const oldMaxUnlockedLevel = this.currentMaxUnlockedLevel;
+        
         const oldDataList = [...this.levelDataList]; // 备份旧数据
         this.levelDataList = [];
+        
+        // 【修复】重置为旧的 maxUnlockedLevel，而不是 0
+        this.currentMaxUnlockedLevel = oldMaxUnlockedLevel;
         
         for (let i = 0; i < expectedLevelCount; i++) {
             // 尝试从旧数据中获取
@@ -379,8 +391,8 @@ export class LevelSelection extends Component {
                 });
                 console.log(`保留关卡 ${i + 1} 的进度: 解锁=${oldData.isUnlocked}, 完成=${oldData.isCompleted}`);
             } else {
-                // 新关卡：默认解锁规则（第一关解锁，其他锁定）
-                const isUnlocked = i === 0 || (i <= this.currentMaxUnlockedLevel);
+                // 新关卡：使用正确的 maxUnlockedLevel
+                const isUnlocked = i === 0 || (i <= oldMaxUnlockedLevel);
                 this.levelDataList.push({
                     levelIndex: i,
                     isUnlocked: isUnlocked,
@@ -388,7 +400,7 @@ export class LevelSelection extends Component {
                     stepCount: 0,
                     isCompleted: false
                 });
-                console.log(`创建新关卡 ${i + 1}: 解锁=${isUnlocked}`);
+                console.log(`创建新关卡 ${i + 1}: 解锁=${isUnlocked} (oldMaxUnlockedLevel=${oldMaxUnlockedLevel})`);
             }
         }
         
@@ -418,45 +430,130 @@ export class LevelSelection extends Component {
     }
     
     // 保存关卡进度到本地存储
-    private saveLevelProgress() {
-        console.log('【saveLevelProgress】保存关卡进度到本地存储');
+    private async saveLevelProgress() {
+        console.log('【saveLevelProgress】保存关卡进度 - 优先使用平台API');
         
+        // 准备进度数据
         const progress = {
             maxUnlockedLevel: this.currentMaxUnlockedLevel,
             levelDataList: this.levelDataList,
-            lastSaveTime: Date.now()
+            lastSaveTime: Date.now(),
+            version: '1.0.0'
         };
         
-        localStorage.setItem('diamond_chess_level_progress', JSON.stringify(progress));
-        
-        // 调试输出
-        console.log(`保存的数据:`, {
-            maxUnlockedLevel: this.currentMaxUnlockedLevel,
-            levelDataListLength: this.levelDataList.length,
-            unlockedLevels: this.levelDataList.filter(level => level.isUnlocked).length
-        });
-        
-        // 同时保存每个关卡的独立记录（兼容BoardController的保存方式）
-        for (let i = 0; i < this.levelDataList.length; i++) {
-            const levelData = this.levelDataList[i];
-            if (levelData.isCompleted) {
-                const levelProgress = {
-                    levelIndex: i,
-                    score: levelData.bestScore,
-                    stepCount: levelData.stepCount,
-                    completed: true,
-                    timestamp: Date.now()
-                };
-                localStorage.setItem(`diamond_chess_level_${i}`, JSON.stringify(levelProgress));
+        try {
+            // 1. 优先使用平台API
+            const saveManager = CrazyGamesSaveManager.getInstance();
+            let platformSuccess = false;
+            
+            if (saveManager) {
+                try {
+                    platformSuccess = await saveManager.saveLevelProgress(progress);
+                    if (platformSuccess) {
+                        console.log('✅ 进度已保存到平台API');
+                    }
+                } catch (error) {
+                    console.warn('⚠️ 平台API保存异常:', error);
+                }
             }
+            
+            // 2. 无论平台是否成功，都保存到本地存储作为备份
+            this.saveToLocalStorage();
+            
+            // 3. 同时保存每个关卡的独立记录
+            this.saveIndividualLevels();
+            
+            console.log(`✅ 进度保存完成。最大解锁关卡: ${this.currentMaxUnlockedLevel + 1}`);
+            
+        } catch (error) {
+            console.error('❌ 保存进度失败:', error);
+            // 紧急保存
+            this.emergencySave();
         }
+    }
+
+    // 紧急保存方法
+    private emergencySave() {
+        try {
+            // 极简保存：只保存关键数据
+            const emergencyData = {
+                maxUnlockedLevel: this.currentMaxUnlockedLevel,
+                timestamp: Date.now(),
+                emergency: true
+            };
+            
+            // 保存到多个位置
+            localStorage.setItem('diamond_chess_emergency', JSON.stringify(emergencyData));
+            console.log('✅ 紧急保存完成');
+        } catch (error) {
+            console.error('❌ 紧急保存也失败了:', error);
+        }
+    }
+
+    // 新增辅助方法1：从localStorage加载
+    private loadFromLocalStorage() {
+        console.log('【loadFromLocalStorage】从本地存储加载关卡进度');
         
-        console.log(`进度已保存。最大解锁关卡: ${this.currentMaxUnlockedLevel + 1}`);
-        console.log(`总关卡数: ${this.levelDataList.length}, 已解锁关卡数: ${this.levelDataList.filter(level => level.isUnlocked).length}`);
+        const savedProgress = localStorage.getItem('diamond_chess_level_progress');
+        
+        if (savedProgress) {
+            try {
+                const progress = JSON.parse(savedProgress);
+                this.currentMaxUnlockedLevel = progress.maxUnlockedLevel || 0;
+                this.levelDataList = progress.levelDataList || [];
+                
+                console.log(`✅ 从本地存储加载进度成功`);
+                this.fixLevelDataConsistency();
+                
+            } catch (e) {
+                console.error('❌ 解析本地存储数据失败:', e);
+                this.initDefaultLevelData();
+            }
+        } else {
+            console.log('⚠️ 本地存储中也没有找到进度，初始化默认数据');
+            this.initDefaultLevelData();
+        }
+    }
+
+    // 新增辅助方法2：保存到localStorage
+    private saveToLocalStorage() {
+        try {
+            const progress = {
+                maxUnlockedLevel: this.currentMaxUnlockedLevel,
+                levelDataList: this.levelDataList,
+                lastSaveTime: Date.now()
+            };
+            
+            localStorage.setItem('diamond_chess_level_progress', JSON.stringify(progress));
+            console.log('✅ 数据已保存到本地存储');
+        } catch (error) {
+            console.error('❌ 本地存储保存失败:', error);
+        }
+    }
+
+    // 新增辅助方法3：保存独立关卡记录
+    private saveIndividualLevels() {
+        try {
+            for (let i = 0; i < this.levelDataList.length; i++) {
+                const levelData = this.levelDataList[i];
+                if (levelData.isCompleted) {
+                    const levelProgress = {
+                        levelIndex: i,
+                        score: levelData.bestScore,
+                        stepCount: levelData.stepCount,
+                        completed: true,
+                        timestamp: Date.now()
+                    };
+                    localStorage.setItem(`diamond_chess_level_${i}`, JSON.stringify(levelProgress));
+                }
+            }
+        } catch (error) {
+            console.warn('⚠️ 保存独立关卡记录时出错:', error);
+        }
     }
 
     // 更新关卡进度（在游戏完成后调用）
-    public updateLevelProgress(levelIndex: number, score: string, stepCount: number) {
+    public async updateLevelProgress(levelIndex: number, score: string, stepCount: number) {
         console.log('===================');
         console.log('【LevelSelection.updateLevelProgress】');
         console.log(`接收到的参数: levelIndex=${levelIndex}, score=${score}, stepCount=${stepCount}`);
@@ -488,7 +585,7 @@ export class LevelSelection extends Component {
         console.log(`当前最大解锁关卡: ${this.currentMaxUnlockedLevel + 1}`);
         
         // 保存关卡进度
-        this.saveLevelProgress();
+        await this.saveLevelProgress();
         
         // 【关键】立即刷新UI
         console.log('立即刷新关卡卡片UI...');
