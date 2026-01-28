@@ -1194,7 +1194,7 @@ export class BoardController extends Component {
                 `游戏结束! 剩余 ${remainingPegs} 颗. 评价: ${resultText}. 步数: ${stepCount}`);
             return;
         }
-        console.log("显示结算弹窗...");
+        console.log("显示结算弹窗... isVictory:", isVictory);
         
         // 隐藏不需要的UI元素
         this.hideGameUIForSettlement();
@@ -1214,7 +1214,6 @@ export class BoardController extends Component {
         }
         
         // ==================== 新增：获取UI组件引用 ====================
-        // 获取按钮容器和单按钮节点（需要在编辑器预制体中修改结构）
         const victoryButtonContainer = this.settlementPanel.getChildByPath('PopupWindow/VictoryButtonContainer');
         const failureButtonContainer = this.settlementPanel.getChildByPath('PopupWindow/FailureButtonContainer');
         const singleVictoryButton = this.settlementPanel.getChildByPath('PopupWindow/VictoryButtonContainer/SettlementSingleNextBtn')?.getComponent(Button);
@@ -1222,12 +1221,13 @@ export class BoardController extends Component {
         
         // ==================== 设置弹窗内容 ====================
         if (isVictory) {
-            // 通关状态
+            // 【重要修复】通关状态
             if (this.settlementTitle && this.i18n) {
-                this.settlementTitle.string = this.i18n.t('levelComplete');
-            } else {
-                this.settlementTitle.string = "恭喜过关";
+                this.settlementTitle.string = this.i18n.t('levelComplete'); // 应该是 "关卡完成"
+            } else if (this.settlementTitle) {
+                this.settlementTitle.string = "恭喜过关"; // 回退
             }
+            console.log("✅ 设置通关标题");
             
             // 显示星星评价系统
             this.showVictoryStars(remainingPegsForStars);
@@ -1287,12 +1287,13 @@ export class BoardController extends Component {
             }
             
         } else {
-            // 失败状态
+            // 【重要修复】失败状态
             if (this.settlementTitle && this.i18n) {
                 this.settlementTitle.string = this.i18n.t('gameOver');
-            } else {
+            } else if (this.settlementTitle) {
                 this.settlementTitle.string = "游戏结束";
             }
+            console.log("❌ 设置失败标题");
             
             // 显示失败状态的星星评价
             this.showVictoryStars(remainingPegsForStars); 

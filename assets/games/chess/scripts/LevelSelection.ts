@@ -1240,14 +1240,39 @@ export class LevelSelection extends Component {
             scoreSprite.spriteFrame = null;
         }
         
-        // 【修改】将5颗星改为3颗星
-        const displaySize = 14; // 可以稍微大一点，因为只有3颗
-        const starSpacing = 4;  // 间距也可以大一点
+        // 【修复】将5颗星改为3颗星
+        const displaySize = 14;
+        const starSpacing = 4;
         const totalStars = 3;   // 固定为3颗星
         const totalWidth = (displaySize * totalStars) + (starSpacing * (totalStars - 1));
         const startX = -totalWidth / 2 + displaySize / 2;
         
-        console.log(`[Stars] 创建 ${totalStars} 颗星星，显示尺寸: ${displaySize}x${displaySize}`);
+        console.log(`[Stars] 创建 ${totalStars} 颗星星，显示尺寸: ${displaySize}x${displaySize}, activeStarCount: ${activeStarCount}`);
+        
+        // 【重要修复】正确计算应该点亮的星星数量
+        // activeStarCount 实际上是从评价文字中提取的星星数量，比如 "★★★★☆" 是 4
+        // 但我们现在需要转换为3星系统
+        let starsToLight = 0;
+        
+        // 如果 activeStarCount 是 0，表示关卡未完成或未解锁
+        if (activeStarCount > 0) {
+            // 根据原始5星评价转换为3星评价
+            // 5星 → 3星
+            if (activeStarCount === 5) {
+                starsToLight = 3;      // ★★★★★ → ★★★
+            } else if (activeStarCount === 4) {
+                starsToLight = 2;      // ★★★★☆ → ★★☆
+            } else if (activeStarCount >= 2 && activeStarCount <= 3) {
+                starsToLight = 1;      // ★★★☆☆ 或 ★★☆☆☆ → ★☆☆
+            } else if (activeStarCount === 1) {
+                starsToLight = 0;      // ★☆☆☆☆ → ☆☆☆
+            }
+        } else {
+            // 未完成或失败
+            starsToLight = 0;
+        }
+        
+        console.log(`[Stars] 5星评价: ${activeStarCount}星 → 3星评价: ${starsToLight}星`);
         
         for (let i = 0; i < totalStars; i++) {
             const starNode = new Node(`Star_${i}`);
@@ -1262,21 +1287,6 @@ export class LevelSelection extends Component {
             // Sprite组件
             const starSprite = starNode.addComponent(Sprite);
             
-            // 【修改】activeStarCount 是从 stepCount 来的，现在是剩余棋子数
-            // 我们需要根据剩余棋子数计算应该点亮几颗星
-            const remainingPegs = activeStarCount;
-            let starsToLight = 0;
-            
-            if (remainingPegs === 1) {
-                starsToLight = 3;      // 剩余1子：点亮3颗星
-            } else if (remainingPegs >= 2 && remainingPegs <= 3) {
-                starsToLight = 2;      // 剩余2-3子：点亮2颗星
-            } else if (remainingPegs >= 4 && remainingPegs <= 5) {
-                starsToLight = 1;      // 剩余4-5子：点亮1颗星
-            } else {
-                starsToLight = 0;      // 剩余5子以上：点亮0颗星
-            }
-            
             // 根据计算的点亮数量设置星星
             if (i < starsToLight) {
                 starSprite.spriteFrame = this.starActive; // 点亮星星
@@ -1289,10 +1299,10 @@ export class LevelSelection extends Component {
             starSprite.trim = false;
             
             // 调整缩放
-            const targetScale = 0.25; // 从0.25开始测试
+            const targetScale = 0.25;
             starNode.setScale(targetScale, targetScale, 1);
             
-            console.log(`星星${i}: 位置X=${starNode.position.x.toFixed(1)}, 缩放=${targetScale}, 剩余棋子=${remainingPegs}, 点亮=${i < starsToLight}`);
+            console.log(`星星${i}: 位置X=${starNode.position.x.toFixed(1)}, 缩放=${targetScale}, 点亮=${i < starsToLight}`);
         }
     }
 

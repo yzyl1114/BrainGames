@@ -49,15 +49,30 @@ export class CrazyGamesSDK extends Component {
     private initSDK() {
         if (this.isInitialized) return;
         
+        // 【新增】开发环境下自动启用调试
+        if (this.isDevelopment()) {
+            if (typeof window !== 'undefined') {
+                window.localStorage.setItem('debug_crazygames', 'true');
+                console.log('[CrazyGamesSDK] 开发环境，自动启用调试模式');
+            }
+        }
+        
         // 检查是否在Crazy Games平台
         if (this.isCrazyGamesPlatform()) {
-            console.log('[CrazyGamesSDK] 检测到Crazy Games平台');
+            console.log('[CrazyGamesSDK] 检测到Crazy Games平台或调试模式');
             this.loadSDKScript();
         } else {
             console.log('[CrazyGamesSDK] 不在Crazy Games平台，跳过SDK初始化');
         }
     }
     
+    private isDevelopment(): boolean {
+        return typeof window !== 'undefined' && 
+            (window.location.hostname === 'localhost' || 
+                window.location.hostname === '127.0.0.1' ||
+                window.location.hostname.includes('192.168.'));
+    }
+
     private isCrazyGamesPlatform(): boolean {
         // 检测方式1：检查URL
         if (typeof window !== 'undefined') {
