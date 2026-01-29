@@ -595,17 +595,28 @@ export class LevelSelection extends Component {
             }
             
         } else {
-            // 失败时：不更新已完成状态和最佳成绩
-            // 但可以记录失败的数据用于分析（可选）
-            console.log(`❌ 未通关，不更新最佳成绩。当前最佳: ${currentBestScore}, 本次: ${score}`);
+            // 失败时：不更新已完成状态，但记录本次成绩
+            console.log(`❌ 未通关，记录本次成绩。当前最佳: ${currentBestScore}, 本次: ${score}`);
             
-            // 【可选】如果从未完成过，可以记录失败次数或本次成绩
-            if (!levelData.isCompleted) {
-                // 这是首次尝试，即使失败也记录一下（可选）
-                levelData.bestScore = score; // 这行可选，如果你希望显示最新成绩
+            // 即使失败，也记录本次成绩
+            const newStarCount = (score.match(/★/g) || []).length;
+            const currentStarCount = (currentBestScore.match(/★/g) || []).length;
+            
+            // 【重要修改】如果这次成绩更好，就更新（即使未通关）
+            if (newStarCount > currentStarCount) {
+                levelData.bestScore = score;
                 levelData.stepCount = stepCount;
-                console.log(`📝 首次尝试失败，记录成绩: ${score}`);
+                console.log(`✅ 失败但获得更好成绩: ${score} (${newStarCount}星) > 之前的 ${currentBestScore} (${currentStarCount}星)`);
+            } else if (newStarCount === currentStarCount && stepCount < levelData.stepCount) {
+                // 星星数相同但步数更少，更新步数
+                levelData.stepCount = stepCount;
+                console.log(`✅ 失败但步数更少: ${stepCount}步 < 之前的 ${levelData.stepCount}步`);
+            } else {
+                console.log(`⏭️ 保持原成绩: ${currentBestScore} (${currentStarCount}星)`);
             }
+            
+            // 【重要】失败时不解锁下一关，不标记为已完成
+            console.log(`⚠️ 未通关，不标记为已完成，不解锁下一关`);
         }
         
         console.log(`当前最大解锁关卡索引: ${this.currentMaxUnlockedLevel}`);
@@ -1150,10 +1161,11 @@ export class LevelSelection extends Component {
             const totalStars = 3;
             let activeStarCount = 0;
             
-            if (levelData.isCompleted) {
-                // 已完成的关卡：根据评价显示点亮星星数量
-                // 从评价文字中提取星星数量（例如："★★★★☆" 有4颗亮星）
+            // 【重要修改】即使关卡未完成，只要bestScore有内容就显示星星
+            if (levelData.bestScore && levelData.bestScore.length > 0) {
+                // 从评价文字中提取星星数量（例如："★★★☆☆" 有3颗亮星）
                 activeStarCount = (levelData.bestScore.match(/★/g) || []).length;
+                console.log(`卡片 ${levelData.levelIndex + 1}: bestScore="${levelData.bestScore}", 提取星星数=${activeStarCount}, 完成状态=${levelData.isCompleted}`);
             } else {
                 // 未完成/未解锁的关卡：0颗点亮星星
                 activeStarCount = 0;

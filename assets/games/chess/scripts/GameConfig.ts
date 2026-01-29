@@ -1322,10 +1322,18 @@ export const LEVELS_DATA = [
 
 // 剩余棋子评价函数
 export function evaluateResult(remainingPegs: number): string {
-    // 【修改】参数改为剩余棋子数，返回5星评价
-    
-    if (remainingPegs === 1) return "★★★★★";     // 5星
-    if (remainingPegs >= 2 && remainingPegs <= 3) return "★★★☆☆";  // 3星
-    if (remainingPegs >= 4 && remainingPegs <= 5) return "★☆☆☆☆";  // 1星
-    return "☆☆☆☆☆";  // 0星
+    // 【重要修复】正确的5星评价逻辑
+    if (remainingPegs === 1) {
+        return "★★★★★";     // 5星：完美
+    } else if (remainingPegs >= 2 && remainingPegs <= 3) {
+        return "★★★★☆";     // 4星：优秀
+    } else if (remainingPegs >= 4 && remainingPegs <= 5) {
+        return "★★★☆☆";     // 3星：良好
+    } else if (remainingPegs >= 6 && remainingPegs <= 7) {
+        return "★★☆☆☆";     // 2星：一般
+    } else if (remainingPegs >= 8 && remainingPegs <= 10) {
+        return "★☆☆☆☆";     // 1星：及格
+    } else {
+        return "☆☆☆☆☆";     // 0星：不及格
+    }
 }
