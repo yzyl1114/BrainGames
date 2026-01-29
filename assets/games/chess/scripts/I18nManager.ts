@@ -10,6 +10,7 @@ export enum Language {
 @ccclass('I18nManager')
 export class I18nManager extends Component {
     private static _instance: I18nManager = null;
+    private static _instancePromise: Promise<I18nManager> | null = null;
     
     @property
     languagePackPath: string = 'scripts/Language';
@@ -17,13 +18,12 @@ export class I18nManager extends Component {
     private currentLanguage: Language = Language.EN_US;
     private localeData: Map<string, string> = new Map();
     private isLoaded: boolean = false;
+    private initializationPromise: Promise<void> | null = null;
     
-    // 简化的单例获取
     public static getInstance(): I18nManager {
         return I18nManager._instance;
     }
     
-    // 静态翻译方法
     public static t(key: string, ...args: any[]): string {
         const instance = I18nManager._instance;
         if (!instance) {
@@ -33,10 +33,35 @@ export class I18nManager extends Component {
         return instance.t(key, ...args);
     }
     
+    public static async waitForInstance(): Promise<I18nManager> {
+        if (I18nManager._instance) {
+            return I18nManager._instance;
+        }
+        
+        if (!I18nManager._instancePromise) {
+            I18nManager._instancePromise = new Promise((resolve) => {
+                let checkCount = 0;
+                const checkInterval = setInterval(() => {
+                    checkCount++;
+                    if (I18nManager._instance) {
+                        clearInterval(checkInterval);
+                        resolve(I18nManager._instance);
+                    }
+                    if (checkCount >= 50) {
+                        clearInterval(checkInterval);
+                        console.warn('[I18nManager] 等待实例超时');
+                        resolve(null);
+                    }
+                }, 100);
+            });
+        }
+        
+        return I18nManager._instancePromise;
+    }
+
     protected onLoad() {
         console.log('[I18nManager] onLoad - Initializing');
         
-        // 简单的单例设置
         if (I18nManager._instance && I18nManager._instance !== this) {
             console.log('[I18nManager] Duplicate instance, destroying this one');
             this.node.destroy();
@@ -46,63 +71,132 @@ export class I18nManager extends Component {
         I18nManager._instance = this;
         console.log('[I18nManager] ✅ Instance set');
         
-        // 【重要修改】强制设置为英文（针对Crazy Games）
         this.currentLanguage = Language.EN_US;
         console.log('[I18nManager] 强制设置为英文（Crazy Games版本）');
         
-        // 【新增】如果需要测试中文，取消下面这行的注释
-        // this.currentLanguage = Language.ZH_CN;
-        
-        // 立即加载语言数据
-        this.loadLanguageData();
-        
-        // 【新增】确保节点名称为I18nManager，方便其他组件查找
         this.node.name = 'I18nManager';
         
-        // 【新增】调试信息
-        console.log(`[I18nManager] 初始化完成，语言: ${this.currentLanguage}`);
-        console.log(`[I18nManager] 语言包路径: ${this.languagePackPath}`);
+        this.initialize();
     }
     
-    private detectLanguage() {
-        this.currentLanguage = Language.EN_US;
-        
-        console.log('[I18nManager] 强制设置为英文（Crazy Games版本）');
-        
-        // 如果需要测试中文，可以取消注释下面这行
-        // this.currentLanguage = Language.ZH_CN;
-    }
-    
-    public loadLanguageData() {
-        console.log(`[I18nManager] 开始加载语言数据: ${this.currentLanguage}`);
-        
-        if (!this.languagePackPath) {
-            console.error('[I18nManager] 语言包路径未设置');
-            return;
-        }
-        
-        // 加载外部JSON文件
-        resources.load(this.languagePackPath, JsonAsset, (err, asset) => {
-            if (err) {
-                console.error(`[I18nManager] 加载语言包失败: ${err.message}`);
-                console.log(`[I18nManager] 路径: ${this.languagePackPath}`);
-                
-                // 【新增】加载失败时使用内置的默认数据作为备份
-                this.loadFallbackData();
-                return;
+    private async initialize(): Promise<void> {
+        try {
+            if (!this.languagePackPath || this.languagePackPath.trim() === '') {
+                console.warn('[I18nManager] languagePackPath 为空，使用默认值');
+                this.languagePackPath = 'resources/scripts/Language';
             }
             
-            if (asset?.json) {
-                console.log(`[I18nManager] ✅ 外部语言文件加载成功`);
-                this.processExternalData(asset.json);
-            } else {
-                console.error('[I18nManager] 加载的语言包数据为空');
-                this.loadFallbackData();
-            }
+            console.log(`[I18nManager] 开始初始化，路径: ${this.languagePackPath}`);
+            
+            await this.loadLanguageDataAsync();
+            this.isLoaded = true;
+            console.log('[I18nManager] ✅ 初始化完成');
+            
+            this.node.emit('language-changed', this.currentLanguage);
+            console.log(`[I18nManager] 📢 立即发送语言变化事件: ${this.currentLanguage}`);
+            
+        } catch (error) {
+            console.error('[I18nManager] 初始化失败:', error);
+            this.loadFallbackData();
+        }
+    }
+    
+    private async loadLanguageDataAsync(): Promise<void> {
+        return new Promise((resolve, reject) => {
+            console.log(`[I18nManager] 加载语言数据: ${this.currentLanguage}`);
+            
+            const pathToLoad = this.languagePackPath || 'resources/scripts/Language';
+            console.log(`[I18nManager] 尝试路径: ${pathToLoad}`);
+            
+            resources.load(pathToLoad, JsonAsset, (err, asset) => {
+                if (err) {
+                    console.warn(`[I18nManager] 路径 ${pathToLoad} 加载失败: ${err.message}`);
+                    
+                    this.tryAlternativePaths().then(() => {
+                        resolve();
+                    }).catch(() => {
+                        console.log('[I18nManager] 所有路径失败，使用后备数据');
+                        this.loadFallbackData();
+                        resolve();
+                    });
+                    return;
+                }
+                
+                if (asset?.json) {
+                    console.log(`[I18nManager] ✅ 加载成功: ${pathToLoad}`);
+                    this.processExternalData(asset.json);
+                    resolve();
+                } else {
+                    console.error('[I18nManager] 加载的语言包数据为空');
+                    this.loadFallbackData();
+                    resolve();
+                }
+            });
         });
     }
     
-    // 【新增】处理外部语言文件数据
+    private async tryAlternativePaths(): Promise<void> {
+        const possiblePaths = [
+            'scripts/Language',
+            'Language', 
+            'resources/scripts/Language',
+            'games/chess/scripts/Language'
+        ];
+        
+        console.log('[I18nManager] 尝试备选路径:', possiblePaths);
+        
+        for (const path of possiblePaths) {
+            try {
+                await this.loadFromPath(path);
+                console.log(`[I18nManager] ✅ 从路径加载成功: ${path}`);
+                return;
+            } catch (err) {
+                console.warn(`[I18nManager] 路径 ${path} 加载失败`);
+            }
+        }
+        
+        throw new Error('所有路径尝试失败');
+    }
+    
+    private loadFromPath(path: string): Promise<void> {
+        return new Promise((resolve, reject) => {
+            console.log(`[I18nManager] 加载路径: ${path}`);
+            resources.load(path, JsonAsset, (err, asset) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+                
+                if (asset?.json) {
+                    this.languagePackPath = path;
+                    this.processExternalData(asset.json);
+                    resolve();
+                } else {
+                    reject(new Error('数据为空'));
+                }
+            });
+        });
+    }
+    
+    public loadLanguageData(): void {
+        console.log('[I18nManager] loadLanguageData called');
+        if (!this.isLoaded) {
+            this.initialize();
+        }
+    }
+    
+    public async waitForLoad(): Promise<void> {
+        if (this.isLoaded) {
+            return;
+        }
+        
+        if (this.initializationPromise) {
+            await this.initializationPromise;
+        } else {
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+    }
+    
     private processExternalData(externalData: any) {
         if (!externalData) {
             console.error('[I18nManager] 外部数据为空');
@@ -122,10 +216,6 @@ export class I18nManager extends Component {
             console.log(`[I18nManager] ✅ 语言数据加载完成: ${this.currentLanguage}`);
             console.log(`[I18nManager] 加载条目数: ${this.localeData.size}`);
             
-            // 【新增】调试：显示关键键值
-            this.debugKeyCheck();
-            
-            // 通知更新
             this.scheduleOnce(() => {
                 this.node.emit('language-changed', this.currentLanguage);
                 console.log(`[I18nManager] 发送语言变化事件: ${this.currentLanguage}`);
@@ -136,11 +226,9 @@ export class I18nManager extends Component {
         }
     }
     
-    // 【新增】加载后备数据（当外部文件加载失败时使用）
     private loadFallbackData() {
         console.log(`[I18nManager] 使用后备数据: ${this.currentLanguage}`);
         
-        // 简化版的基础数据，确保关键功能正常
         const fallbackData = {
             "zh-CN": {
                 "gameTitle": "独粒钻石棋",
@@ -184,7 +272,6 @@ export class I18nManager extends Component {
             console.log(`[I18nManager] ✅ 后备数据加载完成: ${this.currentLanguage}`);
             console.log(`[I18nManager] 后备数据条目数: ${this.localeData.size}`);
             
-            // 通知更新
             this.scheduleOnce(() => {
                 this.node.emit('language-changed', this.currentLanguage);
                 console.log(`[I18nManager] 发送后备语言变化事件`);
@@ -195,18 +282,14 @@ export class I18nManager extends Component {
     public t(key: string, ...args: any[]): string {
         if (!this.isLoaded) {
             console.warn(`[I18nManager] 语言数据未加载，键: ${key}`);
-            
-            // 【修改】即使未加载也提供基本翻译
             return this.getHardcodedTranslation(key, args);
         }
         
         let text = this.localeData.get(key);
         
-        // 【新增】如果键未找到，尝试常见变体
         if (!text) {
             console.warn(`[I18nManager] 键未找到: ${key}`);
             
-            // 尝试查找相似键（不区分大小写）
             const lowerKey = key.toLowerCase();
             for (const [k, v] of this.localeData) {
                 if (k.toLowerCase() === lowerKey) {
@@ -216,7 +299,6 @@ export class I18nManager extends Component {
                 }
             }
             
-            // 如果键包含数字，可能是动态键（如level_1），尝试去掉数字
             if (!text && key.includes('_')) {
                 const baseKey = key.split('_')[0];
                 text = this.localeData.get(baseKey);
@@ -225,21 +307,17 @@ export class I18nManager extends Component {
                 }
             }
             
-            // 如果还是找不到，使用硬编码翻译
             if (!text) {
                 console.warn(`[I18nManager] 无法找到键: ${key}，使用硬编码翻译`);
                 return this.getHardcodedTranslation(key, args);
             }
         }
         
-        // 【增强】参数替换逻辑
         if (args.length > 0) {
             try {
                 return this.replaceParams(text, args);
             } catch (e) {
                 console.error(`[I18nManager] 参数替换失败，键: ${key}, 文本: ${text}, 参数: ${args}`, e);
-                
-                // 尝试安全的替换
                 return this.safeReplaceParams(text, args);
             }
         }
@@ -247,14 +325,11 @@ export class I18nManager extends Component {
         return text;
     }
     
-    // 【新增】安全参数替换方法
     private safeReplaceParams(text: string, args: any[]): string {
         let result = text;
         for (let i = 0; i < args.length; i++) {
             const placeholder = `{${i}}`;
             const argStr = args[i] !== undefined && args[i] !== null ? args[i].toString() : '';
-            
-            // 简单替换，避免正则问题
             result = result.split(placeholder).join(argStr);
         }
         return result;
@@ -264,41 +339,29 @@ export class I18nManager extends Component {
         let result = text;
         for (let i = 0; i < args.length; i++) {
             const placeholder = `{${i}}`;
-            // 安全替换，避免正则问题
             result = result.split(placeholder).join(args[i].toString());
         }
         return result;
     }
     
-    // 【新增】获取硬编码翻译
     private getHardcodedTranslation(key: string, args: any[]): string {
-        // 常见键的硬编码英文翻译
         const hardcodedTranslations: { [key: string]: string } = {
-            // 游戏页标题相关
             'level': 'Level {0}',
             'Level': 'Level {0}',
             'GameTitleLabel': 'Level {0}',
-            
-            // 结算弹窗相关
             'moveCount': '{0} moves',
             'remainingPieces': '{0} pieces left',
             'moveSteps': '{0} moves',
             'remainingPegs': '{0} pieces left',
-            
-            // 按钮文本
             'retry': 'Retry',
             'undo': 'Undo',
             'back': 'Back',
             'homeBack': 'Back to Home',
             'tryAgain': 'Try Again',
             'nextLevel': 'Next Level',
-            
-            // 提示消息
             'initialState': 'Already at initial state',
             'undoLimitExceeded': 'Undo limit reached',
             'stepLimitExceeded': 'Out of moves',
-            
-            // 标题和标签
             'gameTitle': 'Diamond Chess',
             'selectLevel': 'Select Level',
             'levelComplete': 'Level Complete',
@@ -309,13 +372,9 @@ export class I18nManager extends Component {
             'tutorial': 'Tutorial',
             'step': 'step',
             'remaining': 'Remaining',
-            
-            // 首页相关
             'StartGameButton': 'Start Game',
             'GameDescTitle': 'Game Introduction',
             'GameDescLabel': 'Peg Solitaire originated in France and is a popular puzzle game worldwide.',
-            
-            // 教学相关
             'tutorialTitle': 'Game Rules',
             'tutorialButton': 'I Understand',
             'close': 'Close',
@@ -324,7 +383,6 @@ export class I18nManager extends Component {
         
         const translation = hardcodedTranslations[key] || key;
         
-        // 如果有参数，进行替换
         if (args.length > 0) {
             return this.safeReplaceParams(translation, args);
         }
@@ -332,33 +390,6 @@ export class I18nManager extends Component {
         return translation;
     }
     
-    // 【新增】调试方法，检查所有键
-    public debugKeys(): void {
-        console.log('[I18nManager] 当前加载的键:');
-        const keys = Array.from(this.localeData.keys());
-        console.log(`总数: ${keys.length}`);
-        
-        // 按字母排序显示
-        const sortedKeys = keys.sort();
-        sortedKeys.forEach((key, index) => {
-            const value = this.localeData.get(key);
-            console.log(`${index + 1}. ${key}: "${value?.substring(0, 50)}${value && value.length > 50 ? '...' : ''}"`);
-        });
-    }
-    
-    // 【新增】调试：检查关键键值
-    private debugKeyCheck(): void {
-        const importantKeys = ['level', 'moveCount', 'remainingPieces', 'retry', 'undo', 'back'];
-        importantKeys.forEach(key => {
-            const exists = this.localeData.has(key);
-            const value = this.localeData.get(key);
-        });
-        
-        // 显示前几个键值
-        const keys = Array.from(this.localeData.keys()).slice(0, 5);
-    }
-    
-    // 其他方法
     public getCurrentLanguage(): Language {
         return this.currentLanguage;
     }
@@ -371,26 +402,43 @@ export class I18nManager extends Component {
         if (this.currentLanguage !== lang) {
             this.currentLanguage = lang;
             console.log(`[I18nManager] 切换语言到: ${lang}`);
-            this.loadLanguageData();
+            this.initialize();
         }
     }
     
-    // 【新增】重新加载语言数据的方法
     public reloadLanguageData() {
         console.log(`[I18nManager] 重新加载语言数据`);
         this.isLoaded = false;
         this.localeData.clear();
-        this.loadLanguageData();
+        this.initialize();
     }
     
-    // 【新增】获取所有可用键
     public getAllKeys(): string[] {
         return Array.from(this.localeData.keys());
     }
     
-    // 【新增】检查键是否存在
     public hasKey(key: string): boolean {
         return this.localeData.has(key);
+    }
+    
+    public debugKeys(): void {
+        console.log('[I18nManager] 当前加载的键:');
+        const keys = Array.from(this.localeData.keys());
+        console.log(`总数: ${keys.length}`);
+        
+        const sortedKeys = keys.sort();
+        sortedKeys.forEach((key, index) => {
+            const value = this.localeData.get(key);
+            console.log(`${index + 1}. ${key}: "${value?.substring(0, 50)}${value && value.length > 50 ? '...' : ''}"`);
+        });
+    }
+    
+    private debugKeyCheck(): void {
+        const importantKeys = ['level', 'moveCount', 'remainingPieces', 'retry', 'undo', 'back'];
+        importantKeys.forEach(key => {
+            const exists = this.localeData.has(key);
+            const value = this.localeData.get(key);
+        });
     }
     
     protected onDestroy() {

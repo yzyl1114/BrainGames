@@ -2915,7 +2915,7 @@
     },
     "_enabled": true,
     "__prefab": null,
-    "languagePackPath": "scripts/Language",
+    "languagePackPath": "resources/scripts/Language",
     "_id": "a67hnue5hCEbbbvUkYzUVv"
   },
   {
