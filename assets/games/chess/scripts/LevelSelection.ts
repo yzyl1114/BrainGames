@@ -41,10 +41,10 @@ export class LevelSelection extends Component {
     public titleBar: Node = null; // 标题栏容器
 
     @property(Button)
-    public homeBackButton: Button = null; // 新增：返回首页按钮
+    public homeBackButton: Button = null; // 返回首页按钮
     
     @property(Node)
-    public homePageNode: Node = null; // 新增：首页节点引用
+    public homePageNode: Node = null; // 首页节点引用
     
     @property(Label)
     public titleLabel: Label = null; // 标题
@@ -72,7 +72,7 @@ export class LevelSelection extends Component {
     private saveManager: CrazyGamesSaveManager | null = null;
     
     protected onLoad() {
-        // 【第一步】先初始化国际化管理器
+        // 初始化国际化管理器
         this.i18n = I18nManager.getInstance();
         if (!this.i18n) {
             console.warn('LevelSelection: I18nManager not found');
@@ -81,24 +81,23 @@ export class LevelSelection extends Component {
             this.i18n = i18nNode.addComponent(I18nManager);
         }
         
-        // 【新增】需要在这里初始化 saveManager
+        // 需要在这里初始化 saveManager
         this.saveManager = CrazyGamesSaveManager.getInstance();
 
-        // 【第二步】初始化其他内容
+        // 初始化其他内容
         this.loadLevelProgress();
         this.initUI();
         this.initTitleBar(); // 现在 initTitleBar 可以使用 this.i18n
 
-        // 【新增】初始化加载遮罩
+        // 初始化加载遮罩
         this.initLoadingMask();
         
         // 如果 titleBar 是 null，检查编辑器中是否连接了
         if (!this.titleBar) {
-            console.error('⚠️ TitleBar 未在编辑器中连接到脚本！');
+            console.error('TitleBar 未在编辑器中连接到脚本！');
             // 尝试通过路径查找
             const foundTitleBar = this.node.getChildByName('TitleBar');
             if (foundTitleBar) {
-                console.log('通过路径找到 TitleBar:', foundTitleBar.name);
                 this.titleBar = foundTitleBar;
             }
         }
@@ -137,14 +136,11 @@ export class LevelSelection extends Component {
     
     //初始化标题栏
     private initTitleBar() {
-        console.log('=== initTitleBar 开始 ===');
-        
         if (!this.titleBar) {
             console.error('❌ TitleBar节点未分配');
             // 尝试查找
             const foundTitleBar = this.node.getChildByName('TitleBar');
             if (foundTitleBar) {
-                console.log('✅ 通过路径找到 TitleBar:', foundTitleBar.name);
                 this.titleBar = foundTitleBar;
             } else {
                 console.error('❌ 未找到 TitleBar 节点');
@@ -162,26 +158,22 @@ export class LevelSelection extends Component {
         const titleBarY = canvasHeight / 2 - 60; // 距离顶部 60 像素
         
         this.titleBar.setPosition(0, titleBarY, 0);
-        console.log(`✅ 设置 TitleBar 位置: (0, ${titleBarY})`);
         
-        // 【修正】使用国际化设置标题文字
+        // 使用国际化设置标题文字
         if (this.titleLabel && this.i18n) {
             this.titleLabel.string = this.i18n.t('selectLevel'); // 使用国际化
-            console.log(`✅ 设置标题文字: "${this.titleLabel.string}"`);
         } else if (this.titleLabel) {
             this.titleLabel.string = "选择关卡"; // 回退
-            console.log('⚠️ 使用回退标题文字: "选择关卡"');
         } else {
-            console.error('❌ TitleLabel 未连接');
+            console.error('TitleLabel 未连接');
             // 尝试在 TitleBar 中查找
             const foundTitleLabel = this.titleBar.getChildByName('TitleLabel');
             if (foundTitleLabel) {
                 this.titleLabel = foundTitleLabel.getComponent(Label);
-                console.log('✅ 找到 TitleLabel 组件');
             }
         }
         
-        // 【修正】绑定返回按钮事件（使用国际化）
+        // 绑定返回按钮事件（使用国际化）
         if (this.homeBackButton) {
             // 更新返回按钮文本
             const backLabel = this.homeBackButton.node.getComponentInChildren(Label);
@@ -190,18 +182,15 @@ export class LevelSelection extends Component {
             }
             
             this.homeBackButton.node.on(Button.EventType.CLICK, this.onBackToHome, this);
-            console.log('✅ 绑定返回按钮事件');
+
         } else {
-            console.error('❌ HomeBackButton 未连接');
+            console.error('HomeBackButton 未连接');
             // 尝试在 TitleBar 中查找
             const foundBackButton = this.titleBar.getChildByName('HomeBackButton');
             if (foundBackButton) {
                 this.homeBackButton = foundBackButton.getComponent(Button);
-                console.log('✅ 找到 HomeBackButton 组件');
             }
         }
-        
-        console.log('=== initTitleBar 完成 ===');
     }
 
     private onLanguageChanged() {
@@ -263,7 +252,7 @@ export class LevelSelection extends Component {
         if (this.loadingMask) {
             this.isLoading = true;
 
-            // 【重要】确保遮罩在最上层显示
+            // 确保遮罩在最上层显示
             this.loadingMask.setSiblingIndex(99999);
         
             this.loadingMask.active = true;         
@@ -283,7 +272,6 @@ export class LevelSelection extends Component {
 
     // 加载关卡进度（从本地存储）
     private async loadLevelProgress() {
-        console.log('【loadLevelProgress】加载关卡进度 - 使用平台API优先');
         
         try {
             // 尝试从平台API加载
@@ -297,9 +285,6 @@ export class LevelSelection extends Component {
                     this.currentMaxUnlockedLevel = platformProgress.maxUnlockedLevel || 0;
                     this.levelDataList = platformProgress.levelDataList || [];
                     
-                    console.log(`✅ 从平台API加载进度成功`);
-                    console.log(`   最大解锁关卡: ${this.currentMaxUnlockedLevel + 1}`);
-                    
                     // 修复数据一致性
                     this.fixLevelDataConsistency();
                     return;
@@ -307,7 +292,6 @@ export class LevelSelection extends Component {
             }
             
             // 平台无数据，回退到localStorage
-            console.log('⚠️ 平台API无数据，回退到localStorage');
             this.loadFromLocalStorage();
             
         } catch (error) {
@@ -318,14 +302,12 @@ export class LevelSelection extends Component {
  
     // 修复数据一致性的方法
     private fixLevelDataConsistency() {
-        console.log('【fixLevelDataConsistency】修复数据一致性');
         
         // 确保关卡数量正确
         const expectedLevelCount = LEVELS_DATA.length;
         
-        // 【重要修改】不要直接重置数据，而是扩展或截断
+        // 不要直接重置数据，而是扩展或截断
         if (this.levelDataList.length !== expectedLevelCount) {
-            console.log(`关卡数量变化: 存储的=${this.levelDataList.length}, 预期的=${expectedLevelCount}`);
             this.adjustLevelDataCount(expectedLevelCount);
         }
         
@@ -335,7 +317,6 @@ export class LevelSelection extends Component {
             
             // 如果关卡已完成但未标记为解锁，修复它
             if (levelData.isCompleted && !levelData.isUnlocked) {
-                console.log(`修复关卡 ${i + 1}: 已完成但未解锁`);
                 levelData.isUnlocked = true;
             }
             
@@ -344,21 +325,18 @@ export class LevelSelection extends Component {
                 this.currentMaxUnlockedLevel = Math.max(this.currentMaxUnlockedLevel, i);
             }
         }
-        
-        console.log(`修复后最大解锁关卡: ${this.currentMaxUnlockedLevel + 1}`);
     }
 
-    // 【新增】调整关卡数据数量（保留已有进度）
+    // 调整关卡数据数量（保留已有进度）
     private adjustLevelDataCount(expectedLevelCount: number) {
-        console.log(`调整关卡数据: 从 ${this.levelDataList.length} 到 ${expectedLevelCount}`);
         
-        // 【修复】先保存旧的 maxUnlockedLevel
+        // 先保存旧的 maxUnlockedLevel
         const oldMaxUnlockedLevel = this.currentMaxUnlockedLevel;
         
         const oldDataList = [...this.levelDataList]; // 备份旧数据
         this.levelDataList = [];
         
-        // 【修复】重置为旧的 maxUnlockedLevel，而不是 0
+        // 重置为旧的 maxUnlockedLevel，而不是 0
         this.currentMaxUnlockedLevel = oldMaxUnlockedLevel;
         
         for (let i = 0; i < expectedLevelCount; i++) {
@@ -374,7 +352,6 @@ export class LevelSelection extends Component {
                     stepCount: oldData.stepCount,
                     isCompleted: oldData.isCompleted
                 });
-                console.log(`保留关卡 ${i + 1} 的进度: 解锁=${oldData.isUnlocked}, 完成=${oldData.isCompleted}`);
             } else {
                 // 新关卡：使用正确的 maxUnlockedLevel
                 const isUnlocked = i === 0 || (i <= oldMaxUnlockedLevel);
@@ -385,7 +362,6 @@ export class LevelSelection extends Component {
                     stepCount: 0,
                     isCompleted: false
                 });
-                console.log(`创建新关卡 ${i + 1}: 解锁=${isUnlocked} (oldMaxUnlockedLevel=${oldMaxUnlockedLevel})`);
             }
         }
         
@@ -400,7 +376,6 @@ export class LevelSelection extends Component {
 
     // 初始化关卡数据
     private initDefaultLevelData() {
-        console.log('初始化默认关卡数据');
         this.levelDataList = [];
         for (let i = 0; i < LEVELS_DATA.length; i++) {
             this.levelDataList.push({
@@ -416,7 +391,6 @@ export class LevelSelection extends Component {
     
     // 保存关卡进度到本地存储
     private async saveLevelProgress() {
-        console.log('【saveLevelProgress】保存关卡进度 - 优先使用平台API');
         
         // 准备进度数据
         const progress = {
@@ -435,10 +409,10 @@ export class LevelSelection extends Component {
                 try {
                     platformSuccess = await saveManager.saveLevelProgress(progress);
                     if (platformSuccess) {
-                        console.log('✅ 进度已保存到平台API');
+                        console.log('进度已保存到平台API');
                     }
                 } catch (error) {
-                    console.warn('⚠️ 平台API保存异常:', error);
+                    console.warn('平台API保存异常:', error);
                 }
             }
             
@@ -448,10 +422,7 @@ export class LevelSelection extends Component {
             // 3. 同时保存每个关卡的独立记录
             this.saveIndividualLevels();
             
-            console.log(`✅ 进度保存完成。最大解锁关卡: ${this.currentMaxUnlockedLevel + 1}`);
-            
         } catch (error) {
-            console.error('❌ 保存进度失败:', error);
             // 紧急保存
             this.emergencySave();
         }
@@ -469,15 +440,13 @@ export class LevelSelection extends Component {
             
             // 保存到多个位置
             localStorage.setItem('diamond_chess_emergency', JSON.stringify(emergencyData));
-            console.log('✅ 紧急保存完成');
         } catch (error) {
-            console.error('❌ 紧急保存也失败了:', error);
+            console.error('紧急保存也失败了:', error);
         }
     }
 
-    // 新增辅助方法1：从localStorage加载
+    //辅助方法1：从localStorage加载
     private loadFromLocalStorage() {
-        console.log('【loadFromLocalStorage】从本地存储加载关卡进度');
         
         const savedProgress = localStorage.getItem('diamond_chess_level_progress');
         
@@ -487,20 +456,18 @@ export class LevelSelection extends Component {
                 this.currentMaxUnlockedLevel = progress.maxUnlockedLevel || 0;
                 this.levelDataList = progress.levelDataList || [];
                 
-                console.log(`✅ 从本地存储加载进度成功`);
                 this.fixLevelDataConsistency();
                 
             } catch (e) {
-                console.error('❌ 解析本地存储数据失败:', e);
+                console.error('解析本地存储数据失败:', e);
                 this.initDefaultLevelData();
             }
         } else {
-            console.log('⚠️ 本地存储中也没有找到进度，初始化默认数据');
             this.initDefaultLevelData();
         }
     }
 
-    // 新增辅助方法2：保存到localStorage
+    // 辅助方法2：保存到localStorage
     private saveToLocalStorage() {
         try {
             const progress = {
@@ -510,13 +477,12 @@ export class LevelSelection extends Component {
             };
             
             localStorage.setItem('diamond_chess_level_progress', JSON.stringify(progress));
-            console.log('✅ 数据已保存到本地存储');
         } catch (error) {
-            console.error('❌ 本地存储保存失败:', error);
+            console.error('本地存储保存失败:', error);
         }
     }
 
-    // 新增辅助方法3：保存独立关卡记录
+    // 辅助方法3：保存独立关卡记录
     private saveIndividualLevels() {
         try {
             for (let i = 0; i < this.levelDataList.length; i++) {
@@ -533,24 +499,12 @@ export class LevelSelection extends Component {
                 }
             }
         } catch (error) {
-            console.warn('⚠️ 保存独立关卡记录时出错:', error);
+            console.warn('保存独立关卡记录时出错:', error);
         }
     }
 
     // 更新关卡进度（在游戏完成后调用）
     public async updateLevelProgress(levelIndex: number, score: string, stepCount: number, isVictory: boolean = false) {
-        console.log('===================');
-        console.log('【LevelSelection.updateLevelProgress】');
-        console.log(`接收到的参数: levelIndex=${levelIndex}, score="${score}", stepCount=${stepCount}, isVictory=${isVictory}`);
-        console.log(`score字符串长度: ${score.length}, 包含★数量: ${(score.match(/★/g) || []).length}`);
-        console.log(`当前levelDataList长度: ${this.levelDataList.length}`);
-        
-        // 打印传入的score内容
-        console.log(`score内容:`, {
-            原始值: score,
-            字符: score.split('').map(c => `${c}(${c.charCodeAt(0)})`),
-            是否包含星星: score.includes('★')
-        });
         
         if (levelIndex >= this.levelDataList.length) {
             console.error(`错误: levelIndex(${levelIndex}) >= levelDataList长度(${this.levelDataList.length})`);
@@ -560,7 +514,7 @@ export class LevelSelection extends Component {
         const levelData = this.levelDataList[levelIndex];
         const currentBestScore = levelData.bestScore || "";
         
-        // 【修复】只保存更好的成绩
+        // 只保存更好的成绩
         if (isVictory) {
             // 胜利时：只有首次通关或获得更好评价时才更新
             levelData.isCompleted = true;
@@ -573,21 +527,17 @@ export class LevelSelection extends Component {
                 // 获得更多星星，更新成绩
                 levelData.bestScore = score;
                 levelData.stepCount = stepCount;
-                console.log(`✅ 更新为更好成绩: ${score} (${newStarCount}星) > 之前的 ${currentBestScore} (${currentStarCount}星)`);
             } else if (newStarCount === currentStarCount && stepCount < levelData.stepCount) {
                 // 星星数相同但步数更少，更新步数
                 levelData.stepCount = stepCount;
-                console.log(`✅ 更新为更少步数: ${stepCount}步 < 之前的 ${levelData.stepCount}步`);
             } else {
-                console.log(`⏭️ 保持原成绩: ${currentBestScore} (${currentStarCount}星)`);
+                console.log(`保持原成绩: ${currentBestScore} (${currentStarCount}星)`);
             }
             
-            // 【修复】只有胜利时才解锁下一关
+            // 只有胜利时才解锁下一关
             const nextLevelIndex = levelIndex + 1;
-            console.log(`下一关索引: ${nextLevelIndex}`);
             
             if (nextLevelIndex < this.levelDataList.length) {
-                console.log(`解锁关卡 ${nextLevelIndex + 1}`);
                 this.levelDataList[nextLevelIndex].isUnlocked = true;
                 this.currentMaxUnlockedLevel = Math.max(this.currentMaxUnlockedLevel, nextLevelIndex);
             } else {
@@ -595,52 +545,37 @@ export class LevelSelection extends Component {
             }
             
         } else {
-            // 失败时：不更新已完成状态，但记录本次成绩
-            console.log(`❌ 未通关，记录本次成绩。当前最佳: ${currentBestScore}, 本次: ${score}`);
-            
             // 即使失败，也记录本次成绩
             const newStarCount = (score.match(/★/g) || []).length;
             const currentStarCount = (currentBestScore.match(/★/g) || []).length;
             
-            // 【重要修改】如果这次成绩更好，就更新（即使未通关）
+            // 如果这次成绩更好，就更新（即使未通关）
             if (newStarCount > currentStarCount) {
                 levelData.bestScore = score;
                 levelData.stepCount = stepCount;
-                console.log(`✅ 失败但获得更好成绩: ${score} (${newStarCount}星) > 之前的 ${currentBestScore} (${currentStarCount}星)`);
             } else if (newStarCount === currentStarCount && stepCount < levelData.stepCount) {
                 // 星星数相同但步数更少，更新步数
                 levelData.stepCount = stepCount;
-                console.log(`✅ 失败但步数更少: ${stepCount}步 < 之前的 ${levelData.stepCount}步`);
             } else {
-                console.log(`⏭️ 保持原成绩: ${currentBestScore} (${currentStarCount}星)`);
+                console.log(`保持原成绩: ${currentBestScore} (${currentStarCount}星)`);
             }
             
-            // 【重要】失败时不解锁下一关，不标记为已完成
-            console.log(`⚠️ 未通关，不标记为已完成，不解锁下一关`);
         }
-        
-        console.log(`当前最大解锁关卡索引: ${this.currentMaxUnlockedLevel}`);
-        console.log(`当前最大解锁关卡: ${this.currentMaxUnlockedLevel + 1}`);
-        
+                
         // 保存关卡进度
         await this.saveLevelProgress();
         
-        // 【关键】立即刷新UI
-        console.log('立即刷新关卡卡片UI...');
+        // 立即刷新UI
         this.refreshLevelCards();
-        
-        console.log('===================');
     }
     
     private initUI() {
-        console.log('初始化关卡选择UI - 使用编辑器布局');
         
         // 确保ScrollView的content正确连接
         if (this.scrollView && this.levelContainer) {
             // 只有在未连接时才设置
             if (this.scrollView.content !== this.levelContainer) {
                 this.scrollView.content = this.levelContainer;
-                console.log('已设置ScrollView content');
             }
         }
         
@@ -650,12 +585,10 @@ export class LevelSelection extends Component {
             for (let i = layoutComponents.length - 1; i >= 0; i--) {
                 layoutComponents[i].destroy();
             }
-            console.log('已清理Layout组件，使用编辑器布局');
         }
     }
 
     private setupLevelContainerLayout() {
-        console.log('开始设置LevelContainer布局');
         
         if (!this.levelContainer) return;
         
@@ -665,7 +598,7 @@ export class LevelSelection extends Component {
         // 添加Layout组件
         const layout = this.levelContainer.addComponent(Layout);
         
-        // 【关键设置】配置网格布局
+        // 配置网格布局
         layout.type = Layout.Type.GRID;
         layout.resizeMode = Layout.ResizeMode.CONTAINER;
         
@@ -679,14 +612,7 @@ export class LevelSelection extends Component {
         const totalCardWidth = cardWidth * cardsPerRow;
         const availableSpace = effectiveWidth - totalCardWidth;
         const spacingX = Math.max(10, availableSpace / (cardsPerRow + 1));
-        
-        console.log('布局计算:', {
-            有效宽度: effectiveWidth,
-            总卡片宽度: totalCardWidth,
-            可用空间: availableSpace,
-            计算出的间距: spacingX
-        });
-        
+                
         // 设置内边距和间距
         layout.paddingLeft = Math.floor(spacingX);
         layout.paddingRight = Math.floor(spacingX);
@@ -698,14 +624,14 @@ export class LevelSelection extends Component {
         // 必须设置正确的cellSize
         layout.cellSize = new Size(cardWidth, cardHeight);
         
-        // 【关键】确保起始轴是水平
+        // 确保起始轴是水平
         layout.startAxis = Layout.AxisDirection.HORIZONTAL;
         
-        // 【关键】设置约束
+        // 设置约束
         layout.constraint = Layout.Constraint.FIXED_ROW;
         layout.constraintNum = cardsPerRow;
         
-        // 【关键】设置方向
+        // 设置方向
         layout.verticalDirection = Layout.VerticalDirection.TOP_TO_BOTTOM;
         layout.horizontalDirection = Layout.HorizontalDirection.LEFT_TO_RIGHT;
         
@@ -716,59 +642,11 @@ export class LevelSelection extends Component {
         
         // 检查布局状态
         setTimeout(() => {
-            console.log('布局设置后检查...');
             this.debugLayoutState();
         }, 50);
     }
 
-    private debugLayoutState() {
-        if (!this.levelContainer) return;
-        
-        const layout = this.levelContainer.getComponent(Layout);
-        if (!layout) {
-            console.error('没有Layout组件');
-            return;
-        }
-        
-        console.log('布局组件状态:', {
-            type: Layout.Type[layout.type],
-            startAxis: layout.startAxis,
-            constraint: Layout.Constraint[layout.constraint],
-            constraintNum: layout.constraintNum,
-            cellSize: `宽${layout.cellSize.width}×高${layout.cellSize.height}`,
-            spacingX: layout.spacingX,
-            spacingY: layout.spacingY,
-            padding: `左${layout.paddingLeft}/右${layout.paddingRight}/上${layout.paddingTop}/下${layout.paddingBottom}`
-        });
-        
-        // 检查子节点
-        const children = this.levelContainer.children;
-        console.log(`LevelContainer有 ${children.length} 个子节点`);
-        
-        if (children.length > 0) {
-            // 检查前几个节点的位置
-            for (let i = 0; i < Math.min(3, children.length); i++) {
-                const child = children[i];
-            }
-            
-            // 检查是否是纵向排列
-            if (children.length >= 2) {
-                const x1 = children[0].position.x;
-                const x2 = children[1].position.x;
-                console.log(`前两个节点的X坐标: ${x1}, ${x2}, 差值: ${Math.abs(x1 - x2)}`);
-                
-                if (Math.abs(x1 - x2) < 1) {
-                    console.warn('⚠️ 前两个节点X坐标几乎相同，可能是纵向排列');
-                    
-                    // 尝试紧急修复
-                    this.emergencyFixLayout();
-                }
-            }
-        }
-    }
-
     private emergencyFixLayout() {
-        console.log('执行紧急布局修复...');
         
         if (!this.levelContainer) return;
         
@@ -786,13 +664,7 @@ export class LevelSelection extends Component {
         const totalRowWidth = (cardWidth * cardsPerRow) + (spacingX * (cardsPerRow - 1));
         const startX = -(totalRowWidth / 2) + paddingLeft + (cardWidth / 2);
         const startY = -paddingTop;
-        
-        console.log('紧急修复参数:', {
-            总行宽度: totalRowWidth,
-            起始X: startX,
-            起始Y: startY
-        });
-        
+                
         for (let i = 0; i < children.length; i++) {
             const card = children[i];
             const row = Math.floor(i / cardsPerRow);
@@ -808,106 +680,22 @@ export class LevelSelection extends Component {
             }
         }
         
-        console.log('紧急修复完成');
-    }
-
-    private testSimpleLayout() {
-        console.log('=== 测试简单布局 ===');
-        
-        if (!this.levelContainer) return;
-        
-        const children = this.levelContainer.children;
-        if (children.length === 0) return;
-        
-        // 1. 先详细检查第一个卡片的尺寸和缩放
-        console.log('=== 卡片详细检查 ===');
-        if (children.length > 0) {
-            const firstCard = children[0];
-            const transform = firstCard.getComponent(UITransform);
-            console.log('第一个卡片信息:', {
-                位置: firstCard.position,
-                世界位置: firstCard.worldPosition,
-                局部尺寸: transform?.contentSize,
-                世界尺寸: transform ? `${transform.width * firstCard.scale.x}×${transform.height * firstCard.scale.y}` : '无',
-                缩放: firstCard.scale,
-                旋转: firstCard.rotation,
-                锚点: transform ? `(${transform.anchorX}, ${transform.anchorY})` : '无'
-            });
-            
-            // 检查所有子节点
-            firstCard.children.forEach((child, index) => {
-                const childTransform = child.getComponent(UITransform);
-            });
-        }
-        
-        // 2. 使用更大的间距测试
-        console.log('=== 使用大间距测试 ===');
-        const positions = [
-            { x: -300, y: 0 },  // 第1个 - 间距200
-            { x: -100, y: 0 },  // 第2个  
-            { x: 100, y: 0 },   // 第3个
-            { x: 300, y: 0 },   // 第4个
-            { x: 500, y: 0 }    // 第5个
-        ];
-        
-        for (let i = 0; i < children.length; i++) {
-            const card = children[i];
-            if (i < positions.length) {
-                card.setPosition(positions[i].x, positions[i].y, 0);
-                
-                // 强制重置缩放
-                card.setScale(1, 1, 1);
-                
-                // 强制设置卡片尺寸
-                const transform = card.getComponent(UITransform);
-                if (transform) {
-                    transform.setContentSize(80, 80);
-                    transform.setAnchorPoint(0.5, 0.5);
-                }
-                
-                console.log(`测试大间距卡片 ${i}: 位置(${positions[i].x}, ${positions[i].y})`);
-            }
-        }
-        
-        console.log('大间距测试完成');
-        
-        // 3. 检查卡片实际渲染范围
-        setTimeout(() => {
-            console.log('=== 渲染后检查 ===');
-            for (let i = 0; i < Math.min(3, children.length); i++) {
-                const card = children[i];
-                const worldPos = card.worldPosition;
-                console.log(`卡片 ${i}: 世界位置(${worldPos.x.toFixed(1)}, ${worldPos.y.toFixed(1)})`);
-                
-                // 计算卡片四个角的坐标
-                const transform = card.getComponent(UITransform);
-                if (transform) {
-                    const halfWidth = transform.width * card.scale.x / 2;
-                    const halfHeight = transform.height * card.scale.y / 2;
-                    console.log(`  渲染范围: X[${worldPos.x - halfWidth} ~ ${worldPos.x + halfWidth}], Y[${worldPos.y - halfHeight} ~ ${worldPos.y + halfHeight}]`);
-                }
-            }
-        }, 100);
     }
 
     private generateLevelCards() {
-        console.log('=== 开始生成关卡卡片 ===');
         
-        // 【修正】使用国际化文本
+        // 使用国际化文本
         const loadingText = this.i18n ? this.i18n.t('generatingLevels') : '正在生成关卡卡片...';
         this.showLoadingMask(loadingText);
 
         if (!this.levelCardPrefab || !this.levelContainer) {
             console.error("缺少必要的组件");
-            this.hideLoadingMask();// 【新增】出错时也要隐藏遮罩
+            this.hideLoadingMask();// 出错时也要隐藏遮罩
             return;
         }
         
         // 清空现有卡片
         this.levelContainer.destroyAllChildren();
-        console.log('已清空所有卡片');
-        
-        console.log('=== 开始生成关卡卡片（共' + LEVELS_DATA.length + '个）===');
         
         // 生成所有卡片
         for (let i = 0; i < LEVELS_DATA.length; i++) {
@@ -949,8 +737,6 @@ export class LevelSelection extends Component {
     }
 
     private manualGridLayout() {
-        console.log('执行手动网格布局...');
-        
         if (!this.levelContainer || !this.scrollView) return;
         
         const children = this.levelContainer.children;
@@ -970,18 +756,11 @@ export class LevelSelection extends Component {
         const scrollViewTransform = this.scrollView.node.getComponent(UITransform);
         if (!containerTransform || !scrollViewTransform) return;
         
-        // 【关键】获取ScrollView的可见区域高度（view的高度）
+        // 获取ScrollView的可见区域高度（view的高度）
         const viewNode = this.scrollView.node.getChildByName('view');
         const viewTransform = viewNode ? viewNode.getComponent(UITransform) : null;
         const viewHeight = viewTransform ? viewTransform.height : 900;
-        
-        console.log('尺寸信息:', {
-            ScrollView高度: scrollViewTransform.height,
-            View高度: viewHeight,
-            LevelContainer高度: containerTransform.height,
-            LevelContainer锚点: `(${containerTransform.anchorX}, ${containerTransform.anchorY})`
-        });
-        
+                
         // 计算每行的总宽度
         const totalRowWidth = (cardWidth * cardsPerRow) + (spacingX * (cardsPerRow - 1));
         
@@ -990,16 +769,7 @@ export class LevelSelection extends Component {
         
         const scrollViewTop = scrollViewTransform.height / 2; // 锚点中心到顶部的距离
         const startY = containerTransform.height / 2 - paddingTop - (cardHeight / 2);
-        
-        console.log('手动布局参数:', {
-            每行总宽度: totalRowWidth,
-            起始X: startX.toFixed(1),
-            起始Y: startY.toFixed(1),
-            ScrollView顶部Y: scrollViewTop,
-            卡片尺寸: `${cardWidth}×${cardHeight}`,
-            行间距: spacingY
-        });
-        
+                
         // 布局所有卡片
         for (let i = 0; i < children.length; i++) {
             const card = children[i];
@@ -1028,7 +798,6 @@ export class LevelSelection extends Component {
         // 确保容器高度足够
         if (containerTransform.height < neededHeight) {
             containerTransform.height = neededHeight;
-            console.log(`更新容器高度: ${containerTransform.height}`);
         }
         
         // 更新ScrollView的content
@@ -1042,15 +811,9 @@ export class LevelSelection extends Component {
         
         // 最终验证
         setTimeout(() => {
-            console.log('=== 最终布局验证 ===');
             
             if (children.length > 0) {
                 const firstCard = children[0];
-                console.log('第一张卡片信息:', {
-                    本地位置: firstCard.position,
-                    世界位置: firstCard.worldPosition,
-                    在ScrollView内: this.isPositionInScrollView(firstCard.worldPosition)
-                });
             }
         }, 100);
     }
@@ -1124,7 +887,7 @@ export class LevelSelection extends Component {
         
         const levelIndex = levelData.levelIndex;
         
-        // 【修正】设置关卡序号（如果需要国际化）
+        // 设置关卡序号（如果需要国际化）
         if (levelIndexLabel && this.i18n) {
             // 如果关卡序号需要格式化为 "关卡 1" 而不是 "1"
             levelIndexLabel.string = `${levelIndex + 1}`; // 或者使用国际化
@@ -1161,11 +924,10 @@ export class LevelSelection extends Component {
             const totalStars = 3;
             let activeStarCount = 0;
             
-            // 【重要修改】即使关卡未完成，只要bestScore有内容就显示星星
+            // 即使关卡未完成，只要bestScore有内容就显示星星
             if (levelData.bestScore && levelData.bestScore.length > 0) {
                 // 从评价文字中提取星星数量（例如："★★★☆☆" 有3颗亮星）
                 activeStarCount = (levelData.bestScore.match(/★/g) || []).length;
-                console.log(`卡片 ${levelData.levelIndex + 1}: bestScore="${levelData.bestScore}", 提取星星数=${activeStarCount}, 完成状态=${levelData.isCompleted}`);
             } else {
                 // 未完成/未解锁的关卡：0颗点亮星星
                 activeStarCount = 0;
@@ -1254,7 +1016,7 @@ export class LevelSelection extends Component {
             scoreSprite.spriteFrame = null;
         }
         
-        // 【修复】将5颗星改为3颗星
+        // 将5颗星改为3颗星
         const displaySize = 14;
         const starSpacing = 4;
         const totalStars = 3;   // 固定为3颗星
@@ -1262,7 +1024,7 @@ export class LevelSelection extends Component {
         const startX = -totalWidth / 2 + displaySize / 2;
         
         
-        // 【重要修复】正确计算应该点亮的星星数量
+        // 正确计算应该点亮的星星数量
         // activeStarCount 实际上是从评价文字中提取的星星数量，比如 "★★★★☆" 是 4
         // 但我们现在需要转换为3星系统
         let starsToLight = 0;
@@ -1327,7 +1089,7 @@ export class LevelSelection extends Component {
             scoreLabel = scoreNode.addComponent(Label);
         }
         
-        // 【修改】改为3颗星的文字显示
+        // 改为3颗星的文字显示
         const threeStarActiveCount = Math.min(3, Math.ceil(activeStarCount * 3 / 5)); // 5星转3星
         
         let starText = "";
@@ -1356,27 +1118,10 @@ export class LevelSelection extends Component {
             console.warn('LevelContainer没有Layout组件');
             return;
         }
-        
-        console.log('=== 更新容器尺寸（开始）===');
-        console.log('更新前Layout信息:', {
-            cellSize: layout.cellSize,
-            constraintNum: layout.constraintNum,
-            spacingX: layout.spacingX,
-            spacingY: layout.spacingY
-        });
-        
+                
         // 再次强制更新布局
         layout.updateLayout();
-        console.log('Layout已强制更新');
-        
-        // 重新获取布局后的信息
-        console.log('更新后Layout信息:', {
-            cellSize: layout.cellSize,
-            constraintNum: layout.constraintNum,
-            spacingX: layout.spacingX,
-            spacingY: layout.spacingY
-        });        
-        
+                
         // 计算容器高度
         const totalCards = LEVELS_DATA.length;
         const cardsPerRow = layout.constraintNum || 5;
@@ -1392,21 +1137,7 @@ export class LevelSelection extends Component {
         if (uiTransform) {
             const oldHeight = uiTransform.height;
             uiTransform.height = totalHeight;
-            
-            console.log(`容器信息:`, {
-                总卡片数: totalCards,
-                每行卡片数: cardsPerRow,
-                总行数: rows,
-                卡片高度: cellHeight,
-                垂直间距: spacingY,
-                上内边距: paddingTop,
-                下内边距: paddingBottom,
-                旧高度: oldHeight,
-                新高度: totalHeight,
-                容器尺寸: `${uiTransform.width}×${uiTransform.height}`,
-                锚点: `(${uiTransform.anchorX}, ${uiTransform.anchorY})`
-            });
-            
+                        
             // 检查是否需要调整水平尺寸
             const containerWidth = uiTransform.width;
             const totalCardWidth = layout.cellSize.width * cardsPerRow;
@@ -1414,12 +1145,6 @@ export class LevelSelection extends Component {
             const totalPadding = layout.paddingLeft + layout.paddingRight;
             const neededWidth = totalPadding + totalCardWidth + totalSpacing;
             
-            console.log(`宽度检查:`, {
-                容器宽度: containerWidth,
-                需要的宽度: neededWidth,
-                差值: containerWidth - neededWidth,
-                建议: containerWidth >= neededWidth ? '宽度足够' : '宽度不足，建议调整'
-            });
         } else {
             console.error('LevelContainer没有UITransform组件');
         }
@@ -1427,14 +1152,11 @@ export class LevelSelection extends Component {
         // 滚动到顶部
         if (this.scrollView) {
             this.scrollView.scrollToTop();
-            console.log('已滚动到顶部');
         }
         
         // 打印最终布局信息
         setTimeout(() => {
-            console.log('=== 最终布局检查 ===');
             const children = this.levelContainer.children;
-            console.log('子节点总数:', children.length);
             
             // 按行分组显示
             for (let row = 0; row < rows; row++) {
@@ -1455,8 +1177,6 @@ export class LevelSelection extends Component {
                     console.log(`第 ${row + 1} 行 (${rowCards.length}个卡片):`, rowCards);
                 }
             }
-            
-            console.log('=== 布局检查完成 ===');
         }, 200);
     }
     
@@ -1475,14 +1195,13 @@ export class LevelSelection extends Component {
     
     // 关卡被点击
     private onLevelSelected(levelIndex: number) {
-        console.log(`Level selected: ${levelIndex}`);
         
         localStorage.setItem('diamond_chess_selected_level', levelIndex.toString());
         
         // 隐藏关卡选择页
         this.node.active = false;
         
-        // 【重要】直接调用BoardController加载关卡
+        // 直接调用BoardController加载关卡
         const gameManager = find('Canvas/GameManager');
         if (gameManager) {
             const boardController = gameManager.getComponent('BoardController') as any;
@@ -1496,7 +1215,6 @@ export class LevelSelection extends Component {
     private loadGameScene(levelIndex: number) {
         // 这里需要根据你的场景加载方式来实现
         // 例如：director.loadScene('GameScene');
-        console.log(`Should load game scene with level ${levelIndex}`);
         
         // 临时方案：隐藏关卡选择页，显示游戏页
         this.node.active = false;
@@ -1526,7 +1244,7 @@ export class LevelSelection extends Component {
         this.loadLevelProgress();
         this.refreshLevelCards();
         
-        // 【修正】使用国际化文本
+        // 使用国际化文本
         const loadingText = this.i18n ? this.i18n.t('loadingLevels') : '加载关卡列表...';
         this.showLoadingMask(loadingText);
 
@@ -1542,18 +1260,18 @@ export class LevelSelection extends Component {
             gameUI.active = false;
         }
 
-        // 【新增】确保首页隐藏
+        // 确保首页隐藏
         const homePage = find('Canvas/HomePage');
         if (homePage) {
             homePage.active = false;
         }
 
-        // 【修正】确保刷新后更新标题
+        // 确保刷新后更新标题
         if (this.titleLabel && this.i18n) {
             this.titleLabel.string = this.i18n.t('selectLevel');
         }
 
-        // 【修正】确保返回按钮文本更新
+        // 确保返回按钮文本更新
         if (this.homeBackButton && this.i18n) {
             const backLabel = this.homeBackButton.node.getComponentInChildren(Label);
             if (backLabel) {
@@ -1561,7 +1279,7 @@ export class LevelSelection extends Component {
             }
         }
 
-        // 【修改】延迟一点时间刷新卡片，确保遮罩先显示出来
+        // 延迟一点时间刷新卡片，确保遮罩先显示出来
         setTimeout(() => {
             this.refreshLevelCards();
             
@@ -1572,9 +1290,8 @@ export class LevelSelection extends Component {
         }, 50);       
     }
 
-    // 新增：返回首页方法
+    // 返回首页方法
     private onBackToHome() {
-        console.log("返回首页");
         
         // 隐藏关卡选择页
         this.node.active = false;
