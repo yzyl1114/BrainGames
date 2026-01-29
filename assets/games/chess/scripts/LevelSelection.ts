@@ -105,14 +105,7 @@ export class LevelSelection extends Component {
         
         // 检查 TitleBar 的所有子节点
         if (this.titleBar) {
-            console.log('TitleBar 子节点详情:');
             this.titleBar.children.forEach((child, index) => {
-                console.log(`  [${index}] ${child.name}:`, {
-                    激活: child.active,
-                    位置: child.position,
-                    本地位置: child.getPosition(),
-                    世界位置: child.worldPosition
-                });
             });
         }
 
@@ -159,14 +152,6 @@ export class LevelSelection extends Component {
             }
         }
         
-        console.log('TitleBar 信息:', {
-            名称: this.titleBar.name,
-            激活: this.titleBar.active,
-            位置: this.titleBar.position,
-            世界位置: this.titleBar.worldPosition,
-            子节点数: this.titleBar.children.length,
-            父节点: this.titleBar.parent?.name
-        });
         
         // 确保标题栏在最上层显示
         this.titleBar.setSiblingIndex(999);
@@ -553,32 +538,74 @@ export class LevelSelection extends Component {
     }
 
     // 更新关卡进度（在游戏完成后调用）
-    public async updateLevelProgress(levelIndex: number, score: string, stepCount: number) {
+    public async updateLevelProgress(levelIndex: number, score: string, stepCount: number, isVictory: boolean = false) {
         console.log('===================');
         console.log('【LevelSelection.updateLevelProgress】');
-        console.log(`接收到的参数: levelIndex=${levelIndex}, score=${score}, stepCount=${stepCount}`);
+        console.log(`接收到的参数: levelIndex=${levelIndex}, score="${score}", stepCount=${stepCount}, isVictory=${isVictory}`);
+        console.log(`score字符串长度: ${score.length}, 包含★数量: ${(score.match(/★/g) || []).length}`);
         console.log(`当前levelDataList长度: ${this.levelDataList.length}`);
+        
+        // 打印传入的score内容
+        console.log(`score内容:`, {
+            原始值: score,
+            字符: score.split('').map(c => `${c}(${c.charCodeAt(0)})`),
+            是否包含星星: score.includes('★')
+        });
         
         if (levelIndex >= this.levelDataList.length) {
             console.error(`错误: levelIndex(${levelIndex}) >= levelDataList长度(${this.levelDataList.length})`);
             return;
         }
         
-        // 更新当前关卡
-        this.levelDataList[levelIndex].isCompleted = true;
-        this.levelDataList[levelIndex].bestScore = score;
-        this.levelDataList[levelIndex].stepCount = stepCount;
+        const levelData = this.levelDataList[levelIndex];
+        const currentBestScore = levelData.bestScore || "";
         
-        // 解锁下一关（如果存在）
-        const nextLevelIndex = levelIndex + 1;
-        console.log(`下一关索引: ${nextLevelIndex}`);
-        
-        if (nextLevelIndex < this.levelDataList.length) {
-            console.log(`解锁关卡 ${nextLevelIndex + 1}`);
-            this.levelDataList[nextLevelIndex].isUnlocked = true;
-            this.currentMaxUnlockedLevel = Math.max(this.currentMaxUnlockedLevel, nextLevelIndex);
+        // 【修复】只保存更好的成绩
+        if (isVictory) {
+            // 胜利时：只有首次通关或获得更好评价时才更新
+            levelData.isCompleted = true;
+            
+            // 比较成绩：获得更多星星的评价更好
+            const newStarCount = (score.match(/★/g) || []).length;
+            const currentStarCount = (currentBestScore.match(/★/g) || []).length;
+            
+            if (newStarCount > currentStarCount) {
+                // 获得更多星星，更新成绩
+                levelData.bestScore = score;
+                levelData.stepCount = stepCount;
+                console.log(`✅ 更新为更好成绩: ${score} (${newStarCount}星) > 之前的 ${currentBestScore} (${currentStarCount}星)`);
+            } else if (newStarCount === currentStarCount && stepCount < levelData.stepCount) {
+                // 星星数相同但步数更少，更新步数
+                levelData.stepCount = stepCount;
+                console.log(`✅ 更新为更少步数: ${stepCount}步 < 之前的 ${levelData.stepCount}步`);
+            } else {
+                console.log(`⏭️ 保持原成绩: ${currentBestScore} (${currentStarCount}星)`);
+            }
+            
+            // 【修复】只有胜利时才解锁下一关
+            const nextLevelIndex = levelIndex + 1;
+            console.log(`下一关索引: ${nextLevelIndex}`);
+            
+            if (nextLevelIndex < this.levelDataList.length) {
+                console.log(`解锁关卡 ${nextLevelIndex + 1}`);
+                this.levelDataList[nextLevelIndex].isUnlocked = true;
+                this.currentMaxUnlockedLevel = Math.max(this.currentMaxUnlockedLevel, nextLevelIndex);
+            } else {
+                console.log(`下一关索引 ${nextLevelIndex} 超出范围，无法解锁`);
+            }
+            
         } else {
-            console.log(`下一关索引 ${nextLevelIndex} 超出范围，无法解锁`);
+            // 失败时：不更新已完成状态和最佳成绩
+            // 但可以记录失败的数据用于分析（可选）
+            console.log(`❌ 未通关，不更新最佳成绩。当前最佳: ${currentBestScore}, 本次: ${score}`);
+            
+            // 【可选】如果从未完成过，可以记录失败次数或本次成绩
+            if (!levelData.isCompleted) {
+                // 这是首次尝试，即使失败也记录一下（可选）
+                levelData.bestScore = score; // 这行可选，如果你希望显示最新成绩
+                levelData.stepCount = stepCount;
+                console.log(`📝 首次尝试失败，记录成绩: ${score}`);
+            }
         }
         
         console.log(`当前最大解锁关卡索引: ${this.currentMaxUnlockedLevel}`);
@@ -672,16 +699,7 @@ export class LevelSelection extends Component {
         layout.horizontalDirection = Layout.HorizontalDirection.LEFT_TO_RIGHT;
         
         layout.affectedByScale = true;
-        
-        console.log('卡片布局设置完成:', {
-            卡片尺寸: `${cardWidth}×${cardHeight}`,
-            每行数量: cardsPerRow,
-            水平间距: layout.spacingX,
-            垂直间距: layout.spacingY,
-            起始轴: layout.startAxis === 0 ? 'HORIZONTAL' : 'VERTICAL',
-            约束: layout.constraint === 1 ? 'FIXED_ROW' : 'OTHER'
-        });
-        
+                
         // 立即更新布局
         layout.updateLayout();
         
@@ -720,11 +738,6 @@ export class LevelSelection extends Component {
             // 检查前几个节点的位置
             for (let i = 0; i < Math.min(3, children.length); i++) {
                 const child = children[i];
-                console.log(`节点 ${i} (${child.name}):`, {
-                    位置: child.position,
-                    世界位置: child.worldPosition,
-                    父节点: child.parent?.name
-                });
             }
             
             // 检查是否是纵向排列
@@ -811,14 +824,8 @@ export class LevelSelection extends Component {
             });
             
             // 检查所有子节点
-            console.log('卡片子节点:');
             firstCard.children.forEach((child, index) => {
                 const childTransform = child.getComponent(UITransform);
-                console.log(`  子节点[${index}] ${child.name}:`, {
-                    尺寸: childTransform?.contentSize,
-                    位置: child.position,
-                    缩放: child.scale
-                });
             });
         }
         
@@ -915,13 +922,10 @@ export class LevelSelection extends Component {
             }
             cardTransform.setContentSize(90, 90);
             cardTransform.setAnchorPoint(0.5, 0.5);
-            
-            console.log(`卡片 ${i} 生成完成`);
-            
+                        
             this.setupLevelCard(cardNode, levelData);
         }
         
-        console.log(`已生成 ${LEVELS_DATA.length} 个关卡卡片`);
         
         // 应用手动布局
         setTimeout(() => {
@@ -1183,14 +1187,12 @@ export class LevelSelection extends Component {
         button.interactable = levelData.isUnlocked;
         
         if (levelData.isUnlocked) {
-            console.log(`关卡 ${levelData.levelIndex + 1} 已解锁，设置点击事件`);
             button.node.off(Button.EventType.CLICK);
             button.node.on(Button.EventType.CLICK, () => {
                 console.log(`点击关卡卡片: ${levelData.levelIndex + 1}`);
                 this.onLevelSelected(levelData.levelIndex);
             }, this);
         } else {
-            console.log(`关卡 ${levelData.levelIndex + 1} 未解锁，禁用按钮`);
             button.interactable = false;
         }
     }
@@ -1247,7 +1249,6 @@ export class LevelSelection extends Component {
         const totalWidth = (displaySize * totalStars) + (starSpacing * (totalStars - 1));
         const startX = -totalWidth / 2 + displaySize / 2;
         
-        console.log(`[Stars] 创建 ${totalStars} 颗星星，显示尺寸: ${displaySize}x${displaySize}, activeStarCount: ${activeStarCount}`);
         
         // 【重要修复】正确计算应该点亮的星星数量
         // activeStarCount 实际上是从评价文字中提取的星星数量，比如 "★★★★☆" 是 4
@@ -1271,9 +1272,7 @@ export class LevelSelection extends Component {
             // 未完成或失败
             starsToLight = 0;
         }
-        
-        console.log(`[Stars] 5星评价: ${activeStarCount}星 → 3星评价: ${starsToLight}星`);
-        
+                
         for (let i = 0; i < totalStars; i++) {
             const starNode = new Node(`Star_${i}`);
             starNode.parent = scoreNode;
@@ -1302,7 +1301,6 @@ export class LevelSelection extends Component {
             const targetScale = 0.25;
             starNode.setScale(targetScale, targetScale, 1);
             
-            console.log(`星星${i}: 位置X=${starNode.position.x.toFixed(1)}, 缩放=${targetScale}, 点亮=${i < starsToLight}`);
         }
     }
 

@@ -94,7 +94,6 @@ export class HomePageController extends Component {
     }
         
     private updateTexts() {
-        console.log('[HomePageController] 更新文本');
         
         if (!this.i18n) {
             console.warn('[HomePageController] 没有I18nManager');
@@ -110,7 +109,6 @@ export class HomePageController extends Component {
         
         // 【新增】确保国际化数据已加载
         if (!this.i18n.isLoadedState()) {
-            console.log('[HomePageController] I18nManager未加载，等待...');
             this.scheduleOnce(() => this.updateTexts(), 0.3);
             return;
         }

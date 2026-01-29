@@ -349,16 +349,13 @@ export class I18nManager extends Component {
     // 【新增】调试：检查关键键值
     private debugKeyCheck(): void {
         const importantKeys = ['level', 'moveCount', 'remainingPieces', 'retry', 'undo', 'back'];
-        console.log('[I18nManager] 重要键检查:');
         importantKeys.forEach(key => {
             const exists = this.localeData.has(key);
             const value = this.localeData.get(key);
-            console.log(`  ${key}: ${exists ? '✅ 存在' : '❌ 缺失'} ${value ? `- 值: "${value}"` : ''}`);
         });
         
         // 显示前几个键值
         const keys = Array.from(this.localeData.keys()).slice(0, 5);
-        console.log(`[I18nManager] 前5个键值:`, keys.map(key => `${key}: ${this.localeData.get(key)}`));
     }
     
     // 其他方法

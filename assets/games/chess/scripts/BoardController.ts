@@ -528,10 +528,10 @@ export class BoardController extends Component {
     }
 
     // 添加更新关卡进度的方法
-    private updateLevelProgress(levelIndex: number, score: string, stepCount: number, isCenterPeg: boolean = false) {
+    private updateLevelProgress(levelIndex: number, score: string, stepCount: number, isVictory: boolean = false) {
         console.log('===================');
-        console.log('【updateLevelProgress】开始更新关卡进度');
-        console.log(`关卡索引: ${levelIndex}, 评价: ${score}, 步数: ${stepCount}`);
+        console.log('【BoardController.updateLevelProgress】');
+        console.log(`关卡索引: ${levelIndex}, 评价: ${score}, 步数: ${stepCount}, 胜利: ${isVictory}`);
         
         // 如果有 LevelSelection 组件，调用其更新方法
         if (this.levelSelectionNode) {
@@ -540,40 +540,37 @@ export class BoardController extends Component {
             const levelSelection = this.levelSelectionNode.getComponent(LevelSelection);
             if (levelSelection && levelSelection.updateLevelProgress) {
                 console.log('找到LevelSelection组件，调用updateLevelProgress');
-                levelSelection.updateLevelProgress(levelIndex, score, stepCount);
+                // 传入isVictory参数
+                levelSelection.updateLevelProgress(levelIndex, score, stepCount, isVictory);
             } else {
                 console.warn('LevelSelection组件未找到或没有updateLevelProgress方法');
-                
-                // 尝试直接获取组件
-                const allComponents = this.levelSelectionNode.getComponents('LevelSelection');
-                console.log(`找到的LevelSelection组件数量: ${allComponents.length}`);
             }
         } else {
             console.warn('levelSelectionNode未设置');
         }
         
-        // 同时保存到本地存储
+        // 同时保存到本地存储（可选）
         try {
             const progress = {
                 levelIndex: levelIndex,
                 score: score,
                 stepCount: stepCount,
-                isCenterPeg: isCenterPeg,
-                completed: true,
+                isVictory: isVictory, // 保存胜利状态
                 timestamp: Date.now()
             };
             
             // 保存单个关卡的进度
             localStorage.setItem(`diamond_chess_level_${levelIndex}`, JSON.stringify(progress));
             
-            // 【新增】同时保存最大解锁关卡
-            const nextLevelIndex = levelIndex + 1;
-            if (nextLevelIndex < 100) { // 假设最多100关
-                localStorage.setItem(`diamond_chess_max_unlocked`, nextLevelIndex.toString());
+            // 【新增】同时保存最大解锁关卡（只有胜利才解锁）
+            if (isVictory) {
+                const nextLevelIndex = levelIndex + 1;
+                if (nextLevelIndex < 100) { // 假设最多100关
+                    localStorage.setItem(`diamond_chess_max_unlocked`, nextLevelIndex.toString());
+                }
             }
             
-            console.log(`Level ${levelIndex} progress saved: ${score}, ${stepCount} steps`);
-            console.log(`下一关 ${nextLevelIndex} 已标记为解锁`);
+            console.log(`Level ${levelIndex} progress saved: ${score}, ${stepCount} steps, victory: ${isVictory}`);
         } catch (e) {
             console.error("Failed to save level progress:", e);
         }
@@ -2103,7 +2100,7 @@ export class BoardController extends Component {
             const isCenter = this.boardState[CENTER_POS.row][CENTER_POS.col] === TILE_STATE.PEG;
             const result = evaluateResult(remainingPegs);
 
-            this.updateLevelProgress(this.currentLevelIndex, result, actualSteps, isCenter);
+            this.updateLevelProgress(this.currentLevelIndex, result, actualSteps, true);
 
             // 传入实际步数，不是剩余棋子数
             this.showSettlementPanel(true, remainingPegs, result, actualSteps, isCenter);
@@ -2115,6 +2112,7 @@ export class BoardController extends Component {
             console.log(`[GameState] ❌ 检测到步数用尽`);
             const result = evaluateResult(remainingPegs);
             // 传入实际步数，不是剩余棋子数
+            this.updateLevelProgress(this.currentLevelIndex, result, actualSteps, false);
             this.showSettlementPanel(false, remainingPegs, result, actualSteps);
             return;
         }
@@ -2131,6 +2129,7 @@ export class BoardController extends Component {
                 }
                 const result = evaluateResult(remainingPegs);
                 // 传入实际步数，不是剩余棋子数
+                this.updateLevelProgress(this.currentLevelIndex, result, actualSteps, false);
                 this.showSettlementPanel(false, remainingPegs, result, actualSteps);
             }  
         }
