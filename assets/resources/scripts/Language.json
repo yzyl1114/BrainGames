@@ -61,7 +61,7 @@
     "tutorial": "教学"
   },
   "en-US": {
-    "gameTitle": "Diamond Chess",
+    "gameTitle": "Peg Solitaire",
     "selectLevel": "Select Level",
     "retry": "Retry",
     "undo": "Undo",
@@ -113,8 +113,8 @@
     "buttonClick": "Button click sound",
     "muteFailed": "Failed to save mute state",
     "loadFailed": "Failed to load mute state",
-    "GameDescTitle": "Game Introduction",
-    "GameDescLabel": "This is a brain-teasing casual puzzle game. During gameplay, pieces jump over adjacent pieces to empty spaces, capturing the jumped pieces. Pieces can jump horizontally or vertically along the board lines, but not diagonally.",
+    "GameDescTitle": "Introduction",
+    "GameDescLabel": "Peg Solitaire is a casual puzzle game that challenges your strategic thinking.\n\nPieces jump over adjacent ones to capture them, moving only horizontally or vertically, not diagonally.",
     "StartGameButton": "Start Game",
     "UndoButton": "Undo",
     "tutorialButton": "I Understand",
