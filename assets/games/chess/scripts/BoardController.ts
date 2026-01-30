@@ -74,11 +74,11 @@ export class BoardController extends Component {
     @property(SpriteFrame)
     private tutorialIconSprite: SpriteFrame = null;
 
-    // 【新增】棋子图片数组
+    // 棋子图片数组
     @property([SpriteFrame])
     private pegSprites: SpriteFrame[] = [];
     
-    // 【新增】当前关卡使用的棋子图片
+    // 当前关卡使用的棋子图片
     private currentPegSprite: SpriteFrame = null;
 
     // ===== 步数限制相关 =====
@@ -275,7 +275,7 @@ export class BoardController extends Component {
             return null;
         };
 
-        // 3. 【新增】初始化标题栏（放在UI节点查找之前）
+        // 3. 初始化标题栏（放在UI节点查找之前）
         this.initGameTitleBar();
 
         // 4. 动态查找并绑定所有通用UI组件
@@ -431,7 +431,7 @@ export class BoardController extends Component {
 
         const level = LEVELS_DATA[levelIndex];
         
-        // 【新增】初始化步数限制
+        // 初始化步数限制
         this.stepLimit = level.stepLimit || 30; // 默认30步
         this.remainingSteps = this.stepLimit; // 初始化剩余步数
 
@@ -446,8 +446,13 @@ export class BoardController extends Component {
             }
         }
         
-        // 更新计步器显示（使用剩余步数）
+        // 更新计步器显示
         this.updateStepCounter();
+
+        // 确保 StepCounter 节点隐藏
+        if (this.stepCounterLabel && this.stepCounterLabel.node) {
+            this.stepCounterLabel.node.active = false;
+        }
         
         // 加载关卡布局
         this.boardState = [];
@@ -533,7 +538,7 @@ export class BoardController extends Component {
             // 保存单个关卡的进度
             localStorage.setItem(`diamond_chess_level_${levelIndex}`, JSON.stringify(progress));
             
-            // 【新增】同时保存最大解锁关卡（只有胜利才解锁）
+            // 同时保存最大解锁关卡（只有胜利才解锁）
             if (isVictory) {
                 const nextLevelIndex = levelIndex + 1;
                 if (nextLevelIndex < 100) { // 假设最多100关
@@ -621,7 +626,7 @@ export class BoardController extends Component {
         this.undoBadgeLabel.horizontalAlign = Label.HorizontalAlign.CENTER;
         this.undoBadgeLabel.verticalAlign = Label.VerticalAlign.CENTER;
         
-        // 【修复】检查是否已有UITransform
+        // 检查是否已有UITransform
         let labelTransform = labelNode.getComponent(UITransform);
         if (!labelTransform) {
             labelTransform = labelNode.addComponent(UITransform);
@@ -629,7 +634,7 @@ export class BoardController extends Component {
         labelTransform.setContentSize(30, 30);
         labelTransform.setAnchorPoint(0.5, 0.5);
         
-        // 5. 【新增】确保徽章节点在最上层
+        // 5. 确保徽章节点在最上层
         this.undoBadgeNode.setSiblingIndex(undoButton.children.length);
 
         // 6. 初始更新徽章
@@ -1042,7 +1047,7 @@ export class BoardController extends Component {
     }
 
     /**
-     * 【新增】设置所有棋子的图片
+     * 设置所有棋子的图片
      */
     private setAllPegsSprite(spriteFrame: SpriteFrame) {
         this.pegNodes.forEach((pegNode, key) => {
@@ -1137,7 +1142,7 @@ export class BoardController extends Component {
         
         // ==================== 设置弹窗内容 ====================
         if (isVictory) {
-            // 【重要修复】通关状态
+            // 通关状态
             if (this.settlementTitle && this.i18n) {
                 this.settlementTitle.string = this.i18n.t('levelComplete'); // 应该是 "关卡完成"
             } else if (this.settlementTitle) {
@@ -1147,7 +1152,7 @@ export class BoardController extends Component {
             // 显示星星评价系统
             this.showVictoryStars(remainingPegsForStars);
             
-            // 【修正】设置评价和统计文字
+            // 设置评价和统计文字
             if (this.settlementResult && this.i18n) {
                 this.settlementResult.string = `${this.i18n.t('starRating')}: ${resultText}`;
             } else {
@@ -1202,7 +1207,7 @@ export class BoardController extends Component {
             }
             
         } else {
-            // 【重要修复】失败状态
+            // 失败状态
             if (this.settlementTitle && this.i18n) {
                 this.settlementTitle.string = this.i18n.t('gameOver');
             } else if (this.settlementTitle) {
@@ -1212,7 +1217,7 @@ export class BoardController extends Component {
             // 显示失败状态的星星评价
             this.showVictoryStars(remainingPegsForStars); 
             
-            // 【修正】设置评价和统计文字
+            // 设置评价和统计文字
             if (this.settlementResult && this.i18n) {
                 this.settlementResult.string = `${this.i18n.t('starRating')}: ${resultText}`;
             } else {
@@ -1272,7 +1277,7 @@ export class BoardController extends Component {
         let activeStarCount3 = 0;
         
         if (remainingPegs > 0) {
-            // 【修改】这里 stepCount 实际上是剩余棋子数
+            // 这里 stepCount 实际上是剩余棋子数
             const resultText = evaluateResult(remainingPegs);
             starCount5 = (resultText.match(/★/g) || []).length; // 原始5星数量
             
@@ -1435,7 +1440,7 @@ export class BoardController extends Component {
         }
         
         if (this.stepCounterLabel && this.stepCounterLabel.node) {
-            this.stepCounterLabel.node.active = true;
+            this.stepCounterLabel.node.active = false;//保持隐藏
         }
         
         const buttonContainer = this.uiRoot?.getChildByPath('UIRoot/ButtonContainer');
@@ -1443,7 +1448,7 @@ export class BoardController extends Component {
             buttonContainer.active = true;
         }
         
-        // 【新增】恢复悔棋数字徽章
+        // 恢复悔棋数字徽章
         if (this.undoBadgeNode) {
             this.undoBadgeNode.active = true;
         }
@@ -1549,7 +1554,7 @@ export class BoardController extends Component {
         // 返回按钮应该始终可用
         if (this.retryButton) this.retryButton.interactable = !pause;
         if (this.undoButton) this.undoButton.interactable = !pause;
-        // 【修改】不暂停返回按钮：if (this.backButton) this.backButton.interactable = !pause;
+        // 不暂停返回按钮：if (this.backButton) this.backButton.interactable = !pause;
         
         // 暂停结算弹窗（如果有）
         if (this.settlementPanel && this.settlementPanel.active) {
@@ -1626,8 +1631,13 @@ export class BoardController extends Component {
     public retryLevel() {
         this.clearHistory();  // 清空历史记录
         
-        // 【新增】重置悔棋计数
+        // 重置悔棋计数
         this.undoCount = 0;
+
+        // 确保 StepCounter 隐藏
+        if (this.stepCounterLabel && this.stepCounterLabel.node) {
+            this.stepCounterLabel.node.active = false;
+        }
         
         this.loadLevel(this.currentLevelIndex);
     }
@@ -1852,7 +1862,7 @@ export class BoardController extends Component {
     
     private executeJump(peg: Peg, targetR: number, targetC: number, eatenPos: { row: number, col: number }) {
         
-        // 【新增】检查剩余步数
+        // 检查剩余步数
         if (this.remainingSteps <= 0) {
             this.showTips("stepLimitExceeded"); // 修改为国际化键
             this.resetPegPosition(peg);
@@ -1931,7 +1941,7 @@ export class BoardController extends Component {
                 
                 this.resetActiveState();
                 
-                // 【新增】检查游戏状态（包括步数是否用尽）
+                // 检查游戏状态（包括步数是否用尽）
                 this.checkGameState();        
             })
             .start();
@@ -2034,14 +2044,14 @@ export class BoardController extends Component {
     
     private setMaxUndoCount(levelIndex: number) {
         if (levelIndex < 30) {
-            this.maxUndoCount = 5; // 1-30关：5次
+            this.maxUndoCount = 2; // 1-30关：5次
         } else if (levelIndex < 60) {
-            this.maxUndoCount = 7; // 31-60关：7次
+            this.maxUndoCount = 3; // 31-60关：7次
         } else {
-            this.maxUndoCount = 9; // 61+关：9次
+            this.maxUndoCount = 5; // 61+关：9次
         }
 
-        // 【新增】如果徽章已创建，更新初始值
+        // 如果徽章已创建，更新初始值
         if (this.undoBadgeLabel) {
             this.updateUndoBadge();
         }
@@ -2071,7 +2081,7 @@ export class BoardController extends Component {
             return;
         }
         
-        // 【修改】传递当前选择的棋子图片给Peg组件
+        // 传递当前选择的棋子图片给Peg组件
         pegComp.init(r, c, this, this.currentPegSprite);
         
         pegNode.setPosition(this.getPegLocalPosition(r, c));
@@ -2348,7 +2358,7 @@ export class BoardController extends Component {
         this.updateStepCounter();
     }
 
-    // 新增：直接更新按钮文本的方法
+    // 直接更新按钮文本的方法
     private updateButtonTextDirectly() {
         if (!this.i18n) return;
         
@@ -2377,7 +2387,7 @@ export class BoardController extends Component {
         }
     }
 
-    // 新增：更新结算弹窗文本
+    // 更新结算弹窗文本
     private updateSettlementText() {
         if (!this.i18n || !this.settlementPanel.active) return;
         
@@ -2414,7 +2424,7 @@ export class BoardController extends Component {
             i18nNode.off('language-changed', this.onLanguageChanged, this);
         }
         
-        // 【新增】移除 game-paused 事件监听
+        // 移除 game-paused 事件监听
         director.off('game-paused', this.autoSaveBeforePause, this);
     }
 
