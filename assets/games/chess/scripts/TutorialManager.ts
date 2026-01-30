@@ -1,7 +1,7 @@
 // assets/games/chess/scripts/TutorialManager.ts
 
 import { _decorator, Component, Node, Prefab, instantiate, Button, Label, RichText, ScrollView, UITransform, Color, Sprite, find } from 'cc';
-import { I18nManager } from './I18nManager'; // 【新增】导入国际化管理器
+import { I18nManager } from './I18nManager'; // 导入国际化管理器
 
 const { ccclass, property } = _decorator;
 
@@ -12,9 +12,10 @@ export class TutorialManager extends Component {
     
     private tutorialPanel: Node = null; // 弹窗实例
     private isShowing: boolean = false;
-    private i18n: I18nManager = null; // 【新增】国际化管理器引用
+    private i18n: I18nManager = null; // 国际化管理器引用
+    private onCloseCallback: Function | null = null;
     
-    // 【修改】移除硬编码的教学内容，改为从语言包动态获取
+    // 移除硬编码的教学内容，改为从语言包动态获取
     protected onLoad() {
         // 获取国际化管理器实例
         this.i18n = I18nManager.getInstance();
@@ -79,7 +80,7 @@ export class TutorialManager extends Component {
      * 设置教学内容（国际化版本）
      */
     private setupTutorialContent(levelIndex: number) {
-        // 【修改】使用国际化管理器获取文本
+        // 使用国际化管理器获取文本
         
         // 设置标题
         const titleLabel = this.tutorialPanel.getChildByPath('PopupWindow/TitleLabel')?.getComponent(Label);
@@ -94,7 +95,7 @@ export class TutorialManager extends Component {
         if (contentText) {
             const richText = contentText.getComponent(RichText);
             if (richText && this.i18n) {
-                // 【关键修改】构建富文本内容
+                // 构建富文本内容
                 const tutorialContent = this.buildTutorialContent();
                 richText.string = tutorialContent;
                 console.log('[Tutorial] 国际化教学内容已设置');
@@ -235,14 +236,24 @@ export class TutorialManager extends Component {
             confirmButton.node.on(Button.EventType.CLICK, this.hideTutorial, this);
         }
     }
-    
+   
+    public setOnCloseCallback(callback: Function) {
+        this.onCloseCallback = callback;
+    }
+
     /**
      * 隐藏教学弹窗
      */
     public hideTutorial() {
         if (!this.isShowing || !this.tutorialPanel) return;
-        
-        // 淡出动画（可选）
+     
+        console.log('[Tutorial] 开始关闭教学弹窗');
+    
+        // 如果有回调函数，先调用
+        if (this.onCloseCallback) {
+            this.onCloseCallback();
+        }
+
         this.tutorialPanel.destroy();
         this.tutorialPanel = null;
         this.isShowing = false;

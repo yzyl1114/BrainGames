@@ -302,11 +302,13 @@ export class BoardController extends Component {
             console.warn('[UI] SettlementPanel not found in UI prefab.');
         }
 
-        // 6. 动态绑定按钮点击事件（替代编辑器Click Events设置）
+        // 6. 动态绑定按钮点击事件
         if (this.retryButton) {
+            this.retryButton.node.off(Button.EventType.CLICK); // 先移除旧事件
             this.retryButton.node.on(Button.EventType.CLICK, this.retryLevel, this);
         }
         if (this.undoButton) {
+            this.undoButton.node.off(Button.EventType.CLICK); // 先移除旧事件
             this.undoButton.node.on(Button.EventType.CLICK, this.undoMove, this);
         }
         if (this.settlementRetryBtn) {
@@ -334,7 +336,7 @@ export class BoardController extends Component {
         // 9. 创建音乐开关按钮
         this.createAudioButton(); 
 
-        // 在创建完所有按钮后，创建悔棋数字徽章，使用标记避免重复创建
+        // 10. 创建悔棋数字徽章
         this.scheduleOnce(() => {
             if (!this.undoBadgeNode || !this.undoBadgeNode.isValid) {
                 this.createUndoBadge();
@@ -343,13 +345,23 @@ export class BoardController extends Component {
             }
         }, 0.1);
 
-        // 初始化UI状态
+        // 11. 初始化UI状态
         if (this.tipsLabel) {
             this.tipsLabel.node.active = false; // 初始隐藏提示
         }
         if (this.settlementPanel) {
             this.settlementPanel.active = false; // 初始隐藏结算弹窗
         }
+
+        // 12. 确保悔棋和重玩按钮在最上层显示
+        this.scheduleOnce(() => {
+            if (this.retryButton && this.retryButton.node) {
+                this.retryButton.node.setSiblingIndex(999);
+            }
+            if (this.undoButton && this.undoButton.node) {
+                this.undoButton.node.setSiblingIndex(999);
+            }
+        }, 0.2);
     }
 
     // ==================== 游戏关卡与状态管理 ====================
@@ -1446,6 +1458,15 @@ export class BoardController extends Component {
         const buttonContainer = this.uiRoot?.getChildByPath('UIRoot/ButtonContainer');
         if (buttonContainer) {
             buttonContainer.active = true;
+            // 确保按钮交互性恢复
+            if (this.retryButton) {
+                this.retryButton.interactable = true;
+                this.retryButton.node.active = true;
+            }
+            if (this.undoButton) {
+                this.undoButton.interactable = true;
+                this.undoButton.node.active = true;
+            }
         }
         
         // 恢复悔棋数字徽章
@@ -1503,9 +1524,18 @@ export class BoardController extends Component {
 
     // ==================== 教学系统相关方法 ====================
     private showTutorialPanel() {
+        console.log(`[Tutorial] 显示教学弹窗前 - 重玩:${this.retryButton?.interactable}, 悔棋:${this.undoButton?.interactable}`);
+        
         if (this.tutorialManager) {
+            // 设置关闭回调
+            this.tutorialManager.setOnCloseCallback(() => {
+                console.log(`[Tutorial] 通过回调恢复游戏交互`);
+                this.pauseGameInteraction(false);
+            });
+            
             this.tutorialManager.showTutorial(this.currentLevelIndex);
             this.pauseGameInteraction(true);
+            
         } else {
             console.warn('[UI] Tutorial manager not initialized');
             this.createEmergencyTutorialPanel();
@@ -1551,10 +1581,9 @@ export class BoardController extends Component {
         });
         
         // 只暂停游戏按钮，不暂停返回按钮
-        // 返回按钮应该始终可用
         if (this.retryButton) this.retryButton.interactable = !pause;
         if (this.undoButton) this.undoButton.interactable = !pause;
-        // 不暂停返回按钮：if (this.backButton) this.backButton.interactable = !pause;
+        if (this.backButton) this.backButton.interactable = !pause;
         
         // 暂停结算弹窗（如果有）
         if (this.settlementPanel && this.settlementPanel.active) {
