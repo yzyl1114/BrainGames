@@ -5,6 +5,10 @@
       "web-desktop": {
         "configID": "21b9d0",
         "services": []
+      },
+      "web-mobile": {
+        "configID": "21b9d0",
+        "services": []
       }
     }
   },

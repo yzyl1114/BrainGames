@@ -8,7 +8,25 @@
     },
     "polyfills": {
       "asyncFunctions": true
-    }
+    },
+    "buildPath": "project://build",
+    "outputName": "web-mobile",
+    "mainBundleCompressionType": "merge_dep",
+    "platform": "web-mobile",
+    "buildScriptTargets": "es2020",
+    "debug": true,
+    "scenes": [
+      {
+        "url": "db://assets/games/chess/scenes/ChessGame.scene",
+        "uuid": "61046460-35e4-45d0-a505-24255411fae8",
+        "bundle": "db://assets/games/chess"
+      },
+      {
+        "url": "db://assets/Chess.scene",
+        "uuid": "4d857970-4503-4dab-a770-56fe828a0185"
+      }
+    ],
+    "startScene": "4d857970-4503-4dab-a770-56fe828a0185"
   },
   "BuildTaskManager": {
     "taskMap": {}
