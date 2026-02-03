@@ -11,9 +11,9 @@
       },
       "buildPath": "project://build",
       "outputName": "web-mobile",
-      "mainBundleCompressionType": "merge_dep",
+      "mainBundleCompressionType": "merge_all_json",
       "platform": "web-mobile",
-      "buildScriptTargets": "es2020",
+      "buildScriptTargets": "es2015",
       "debug": true,
       "scenes": [
         {
@@ -26,15 +26,34 @@
           "uuid": "4d857970-4503-4dab-a770-56fe828a0185"
         }
       ],
-      "startScene": "4d857970-4503-4dab-a770-56fe828a0185"
+      "startScene": "4d857970-4503-4dab-a770-56fe828a0185",
+      "name": "Peg Solitaire",
+      "experimentalEraseModules": true,
+      "skipCompressTexture": false,
+      "md5Cache": true
     },
     "options": {
       "web-mobile": {
         "useWebGPU": false,
         "orientation": "portrait",
-        "embedWebDebugger": false,
+        "embedWebDebugger": true,
         "__version__": "1.0.1"
       }
-    }
+    },
+    "taskOptionsMap": {
+      "1770109160843": {
+        "useWebGPU": false,
+        "orientation": "portrait",
+        "embedWebDebugger": true,
+        "__version__": "1.0.1"
+      },
+      "1770110472443": {
+        "useWebGPU": false,
+        "orientation": "portrait",
+        "embedWebDebugger": true,
+        "__version__": "1.0.1"
+      }
+    },
+    "__version__": "1.3.9"
   }
 }

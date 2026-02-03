@@ -11,9 +11,9 @@
     },
     "buildPath": "project://build",
     "outputName": "web-mobile",
-    "mainBundleCompressionType": "merge_dep",
+    "mainBundleCompressionType": "merge_all_json",
     "platform": "web-mobile",
-    "buildScriptTargets": "es2020",
+    "buildScriptTargets": "es2015",
     "debug": true,
     "scenes": [
       {
@@ -26,9 +26,91 @@
         "uuid": "4d857970-4503-4dab-a770-56fe828a0185"
       }
     ],
-    "startScene": "4d857970-4503-4dab-a770-56fe828a0185"
+    "startScene": "4d857970-4503-4dab-a770-56fe828a0185",
+    "name": "Peg Solitaire",
+    "experimentalEraseModules": true,
+    "skipCompressTexture": false,
+    "md5Cache": true
   },
   "BuildTaskManager": {
-    "taskMap": {}
+    "taskMap": {
+      "1770110472443": {
+        "type": "build",
+        "id": "1770110472443",
+        "progress": 1,
+        "state": "failure",
+        "stage": "build",
+        "message": "2026-2-3 17:21:18 build task failed! Error: execute-task buildScriptCommand failed with code -1!\n    at ChildProcess.<anonymous> (/Applications/Cocos/Creator/3.8.8/CocosCreator.app/Contents/Resources/app.asar/builtin/builder/dist/worker/worker-pools/sub-process-manager.ccc:1:2253)\n    at ChildProcess.emit (node:events:519:28)\n    at emit (node:internal/child_process:951:14)\n    at processTicksAndRejections (node:internal/process/task_queues:83:21)",
+        "detailMessage": "Generate systemJs..., progress: 17%\r",
+        "options": {
+          "name": "Peg Solitaire",
+          "server": "",
+          "engineModulesConfigKey": "defaultConfig",
+          "platform": "web-mobile",
+          "buildPath": "project://build",
+          "debug": true,
+          "buildMode": "normal",
+          "mangleProperties": false,
+          "md5Cache": true,
+          "skipCompressTexture": false,
+          "sourceMaps": false,
+          "overwriteProjectSettings": {
+            "includeModules": {
+              "gfx-webgl2": "on",
+              "physics": "inherit-project-setting",
+              "physics-2d": "inherit-project-setting"
+            },
+            "macroConfig": {
+              "cleanupImageCache": "inherit-project-setting"
+            }
+          },
+          "nativeCodeBundleMode": "both",
+          "polyfills": {
+            "asyncFunctions": true
+          },
+          "experimentalEraseModules": true,
+          "startSceneAssetBundle": false,
+          "bundleConfigs": [],
+          "inlineEnum": true,
+          "useBuiltinServer": false,
+          "md5CacheOptions": {
+            "excludes": [],
+            "includes": [],
+            "replaceOnly": [],
+            "handleTemplateMd5Link": true
+          },
+          "mainBundleIsRemote": false,
+          "mainBundleCompressionType": "merge_all_json",
+          "useSplashScreen": true,
+          "bundleCommonChunk": false,
+          "packAutoAtlas": true,
+          "startScene": "4d857970-4503-4dab-a770-56fe828a0185",
+          "outputName": "web-mobile-001",
+          "taskName": "web-mobile-001",
+          "scenes": [
+            {
+              "url": "db://assets/Chess.scene",
+              "uuid": "4d857970-4503-4dab-a770-56fe828a0185"
+            },
+            {
+              "url": "db://assets/games/chess/scenes/ChessGame.scene",
+              "uuid": "61046460-35e4-45d0-a505-24255411fae8",
+              "bundle": "db://assets/games/chess"
+            }
+          ],
+          "wasmCompressionMode": false,
+          "binGroupConfig": {
+            "threshold": 16,
+            "enable": false
+          },
+          "buildScriptTargets": "es2015",
+          "packages": {},
+          "__version__": "1.3.9",
+          "logDest": "project://temp/builder/log/web-mobile2-3-2026 17-21.log"
+        },
+        "time": "2-3-2026 17:21:12",
+        "dirty": false
+      }
+    }
   }
 }
