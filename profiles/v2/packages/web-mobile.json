@@ -7,28 +7,28 @@
         "enable": false
       },
       "polyfills": {
-        "asyncFunctions": true
+        "asyncFunctions": false
       },
       "buildPath": "project://build",
       "outputName": "web-mobile",
       "mainBundleCompressionType": "merge_all_json",
       "platform": "web-mobile",
-      "buildScriptTargets": "es2015",
+      "buildScriptTargets": "",
       "debug": true,
       "scenes": [
+        {
+          "url": "db://assets/Chess.scene",
+          "uuid": "4d857970-4503-4dab-a770-56fe828a0185"
+        },
         {
           "url": "db://assets/games/chess/scenes/ChessGame.scene",
           "uuid": "61046460-35e4-45d0-a505-24255411fae8",
           "bundle": "db://assets/games/chess"
-        },
-        {
-          "url": "db://assets/Chess.scene",
-          "uuid": "4d857970-4503-4dab-a770-56fe828a0185"
         }
       ],
       "startScene": "4d857970-4503-4dab-a770-56fe828a0185",
       "name": "Peg Solitaire",
-      "experimentalEraseModules": true,
+      "experimentalEraseModules": false,
       "skipCompressTexture": false,
       "md5Cache": true
     },
@@ -48,6 +48,42 @@
         "__version__": "1.0.1"
       },
       "1770110472443": {
+        "useWebGPU": false,
+        "orientation": "portrait",
+        "embedWebDebugger": true,
+        "__version__": "1.0.1"
+      },
+      "1770111059692": {
+        "useWebGPU": false,
+        "orientation": "portrait",
+        "embedWebDebugger": true,
+        "__version__": "1.0.1"
+      },
+      "1770111584559": {
+        "useWebGPU": false,
+        "orientation": "portrait",
+        "embedWebDebugger": true,
+        "__version__": "1.0.1"
+      },
+      "1770114679451": {
+        "useWebGPU": false,
+        "orientation": "portrait",
+        "embedWebDebugger": true,
+        "__version__": "1.0.1"
+      },
+      "1770129786750": {
+        "useWebGPU": false,
+        "orientation": "portrait",
+        "embedWebDebugger": true,
+        "__version__": "1.0.1"
+      },
+      "1770133894183": {
+        "useWebGPU": false,
+        "orientation": "portrait",
+        "embedWebDebugger": true,
+        "__version__": "1.0.1"
+      },
+      "1770200604170": {
         "useWebGPU": false,
         "orientation": "portrait",
         "embedWebDebugger": true,

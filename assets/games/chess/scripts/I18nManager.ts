@@ -16,7 +16,7 @@ export class I18nManager extends Component {
     languagePackPath: string = 'scripts/Language';
     
     private currentLanguage: Language = Language.EN_US;
-    private localeData: Map<string, string> = new Map();
+    private localeData: Map<string, string> = new Map(); // 直接初始化，不要改为可空类型
     private isLoaded: boolean = false;
     private initializationPromise: Promise<void> | null = null;
     
@@ -61,7 +61,7 @@ export class I18nManager extends Component {
 
     protected onLoad() {
         console.log('[I18nManager] onLoad - Initializing');
-        
+
         if (I18nManager._instance && I18nManager._instance !== this) {
             console.log('[I18nManager] Duplicate instance, destroying this one');
             this.node.destroy();
@@ -204,7 +204,7 @@ export class I18nManager extends Component {
             return;
         }
         
-        this.localeData.clear();
+        this.localeData.clear();// 现在可以安全调用
         
         const langData = externalData[this.currentLanguage];
         if (langData) {

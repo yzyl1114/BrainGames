@@ -40,7 +40,7 @@ export class CrazyGamesSDK extends Component {
         CrazyGamesSDK.instance = this;
         
         // 监听场景加载完成
-        director.on(director.Event.AFTER_SCENE_LAUNCH, this.initSDK, this);
+        director.on(director.Director.EVENT_AFTER_SCENE_LAUNCH, this.initSDK, this);
         
         // 立即初始化
         this.initSDK();
@@ -262,6 +262,6 @@ export class CrazyGamesSDK extends Component {
     }
     
     protected onDestroy() {
-        director.off(director.Event.AFTER_SCENE_LAUNCH, this.initSDK, this);
+        director.off(director.Director.EVENT_AFTER_SCENE_LAUNCH, this.initSDK, this);
     }
 }

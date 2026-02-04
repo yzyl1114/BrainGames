@@ -7,41 +7,41 @@
       "enable": false
     },
     "polyfills": {
-      "asyncFunctions": true
+      "asyncFunctions": false
     },
     "buildPath": "project://build",
     "outputName": "web-mobile",
     "mainBundleCompressionType": "merge_all_json",
     "platform": "web-mobile",
-    "buildScriptTargets": "es2015",
+    "buildScriptTargets": "",
     "debug": true,
     "scenes": [
+      {
+        "url": "db://assets/Chess.scene",
+        "uuid": "4d857970-4503-4dab-a770-56fe828a0185"
+      },
       {
         "url": "db://assets/games/chess/scenes/ChessGame.scene",
         "uuid": "61046460-35e4-45d0-a505-24255411fae8",
         "bundle": "db://assets/games/chess"
-      },
-      {
-        "url": "db://assets/Chess.scene",
-        "uuid": "4d857970-4503-4dab-a770-56fe828a0185"
       }
     ],
     "startScene": "4d857970-4503-4dab-a770-56fe828a0185",
-    "name": "Peg Solitaire",
-    "experimentalEraseModules": true,
+    "name": "Peg Solitaire1",
+    "experimentalEraseModules": false,
     "skipCompressTexture": false,
     "md5Cache": true
   },
   "BuildTaskManager": {
     "taskMap": {
-      "1770110472443": {
+      "1770200604170": {
         "type": "build",
-        "id": "1770110472443",
+        "id": "1770200604170",
         "progress": 1,
-        "state": "failure",
+        "state": "success",
         "stage": "build",
-        "message": "2026-2-3 17:21:18 build task failed! Error: execute-task buildScriptCommand failed with code -1!\n    at ChildProcess.<anonymous> (/Applications/Cocos/Creator/3.8.8/CocosCreator.app/Contents/Resources/app.asar/builtin/builder/dist/worker/worker-pools/sub-process-manager.ccc:1:2253)\n    at ChildProcess.emit (node:events:519:28)\n    at emit (node:internal/child_process:951:14)\n    at processTicksAndRejections (node:internal/process/task_queues:83:21)",
-        "detailMessage": "Generate systemJs..., progress: 17%\r",
+        "message": "2026-2-4 18:24:24 build success in 1 min!",
+        "detailMessage": "// ---- build task web-mobile：onBeforeCopyBuildTemplate ----\r",
         "options": {
           "name": "Peg Solitaire",
           "server": "",
@@ -66,9 +66,9 @@
           },
           "nativeCodeBundleMode": "both",
           "polyfills": {
-            "asyncFunctions": true
+            "asyncFunctions": false
           },
-          "experimentalEraseModules": true,
+          "experimentalEraseModules": false,
           "startSceneAssetBundle": false,
           "bundleConfigs": [],
           "inlineEnum": true,
@@ -85,8 +85,8 @@
           "bundleCommonChunk": false,
           "packAutoAtlas": true,
           "startScene": "4d857970-4503-4dab-a770-56fe828a0185",
-          "outputName": "web-mobile-001",
-          "taskName": "web-mobile-001",
+          "outputName": "web-mobile",
+          "taskName": "web-mobile",
           "scenes": [
             {
               "url": "db://assets/Chess.scene",
@@ -103,12 +103,12 @@
             "threshold": 16,
             "enable": false
           },
-          "buildScriptTargets": "es2015",
+          "buildScriptTargets": "",
           "packages": {},
           "__version__": "1.3.9",
-          "logDest": "project://temp/builder/log/web-mobile2-3-2026 17-21.log"
+          "logDest": "project://temp/builder/log/web-mobile2-4-2026 18-23.log"
         },
-        "time": "2-3-2026 17:21:12",
+        "time": "2-4-2026 18:23:24",
         "dirty": false
       }
     }
