@@ -7,7 +7,7 @@
       "enable": false
     },
     "polyfills": {
-      "asyncFunctions": false
+      "asyncFunctions": true
     },
     "buildPath": "project://build",
     "outputName": "web-mobile",
@@ -17,8 +17,8 @@
     "debug": true,
     "scenes": [
       {
-        "url": "db://assets/Chess.scene",
-        "uuid": "4d857970-4503-4dab-a770-56fe828a0185"
+        "url": "db://assets/ChessNew.scene",
+        "uuid": "2b52a369-34d4-4b4d-b47c-2c9e62fd0a95"
       },
       {
         "url": "db://assets/games/chess/scenes/ChessGame.scene",
@@ -27,23 +27,24 @@
       }
     ],
     "startScene": "4d857970-4503-4dab-a770-56fe828a0185",
-    "name": "Peg Solitaire1",
+    "name": "包2",
     "experimentalEraseModules": false,
     "skipCompressTexture": false,
-    "md5Cache": true
+    "md5Cache": true,
+    "sourceMaps": true
   },
   "BuildTaskManager": {
     "taskMap": {
-      "1770200604170": {
+      "1770300066786": {
         "type": "build",
-        "id": "1770200604170",
+        "id": "1770300066786",
         "progress": 1,
         "state": "success",
         "stage": "build",
-        "message": "2026-2-4 18:24:24 build success in 1 min!",
-        "detailMessage": "// ---- build task web-mobile：onBeforeCopyBuildTemplate ----\r",
+        "message": "2026-2-5 22:01:17 build success in 11 s!",
+        "detailMessage": "build task(web-mobile) in 10991!\r",
         "options": {
-          "name": "Peg Solitaire",
+          "name": "包2",
           "server": "",
           "engineModulesConfigKey": "defaultConfig",
           "platform": "web-mobile",
@@ -53,7 +54,7 @@
           "mangleProperties": false,
           "md5Cache": true,
           "skipCompressTexture": false,
-          "sourceMaps": false,
+          "sourceMaps": true,
           "overwriteProjectSettings": {
             "includeModules": {
               "gfx-webgl2": "on",
@@ -66,7 +67,7 @@
           },
           "nativeCodeBundleMode": "both",
           "polyfills": {
-            "asyncFunctions": false
+            "asyncFunctions": true
           },
           "experimentalEraseModules": false,
           "startSceneAssetBundle": false,
@@ -84,18 +85,13 @@
           "useSplashScreen": true,
           "bundleCommonChunk": false,
           "packAutoAtlas": true,
-          "startScene": "4d857970-4503-4dab-a770-56fe828a0185",
+          "startScene": "2b52a369-34d4-4b4d-b47c-2c9e62fd0a95",
           "outputName": "web-mobile",
           "taskName": "web-mobile",
           "scenes": [
             {
-              "url": "db://assets/Chess.scene",
-              "uuid": "4d857970-4503-4dab-a770-56fe828a0185"
-            },
-            {
-              "url": "db://assets/games/chess/scenes/ChessGame.scene",
-              "uuid": "61046460-35e4-45d0-a505-24255411fae8",
-              "bundle": "db://assets/games/chess"
+              "url": "db://assets/games/newscene/ChessNew.scene",
+              "uuid": "2b52a369-34d4-4b4d-b47c-2c9e62fd0a95"
             }
           ],
           "wasmCompressionMode": false,
@@ -106,9 +102,9 @@
           "buildScriptTargets": "",
           "packages": {},
           "__version__": "1.3.9",
-          "logDest": "project://temp/builder/log/web-mobile2-4-2026 18-23.log"
+          "logDest": "project://temp/builder/log/web-mobile2-5-2026 22-01.log"
         },
-        "time": "2-4-2026 18:23:24",
+        "time": "2-5-2026 22:01:06",
         "dirty": false
       }
     }

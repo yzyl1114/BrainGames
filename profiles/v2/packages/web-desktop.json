@@ -23,8 +23,26 @@
           "designHeight": 960
         },
         "__version__": "1.0.1"
+      },
+      "1770299290728": {
+        "useWebGPU": false,
+        "resolution": {
+          "designWidth": 1334,
+          "designHeight": 750
+        },
+        "__version__": "1.0.1"
       }
     },
-    "__version__": "1.3.9"
+    "__version__": "1.3.9",
+    "options": {
+      "web-desktop": {
+        "useWebGPU": false,
+        "resolution": {
+          "designWidth": 1334,
+          "designHeight": 750
+        },
+        "__version__": "1.0.1"
+      }
+    }
   }
 }

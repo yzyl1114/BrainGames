@@ -7,7 +7,7 @@
         "enable": false
       },
       "polyfills": {
-        "asyncFunctions": false
+        "asyncFunctions": true
       },
       "buildPath": "project://build",
       "outputName": "web-mobile",
@@ -17,8 +17,8 @@
       "debug": true,
       "scenes": [
         {
-          "url": "db://assets/Chess.scene",
-          "uuid": "4d857970-4503-4dab-a770-56fe828a0185"
+          "url": "db://assets/ChessNew.scene",
+          "uuid": "2b52a369-34d4-4b4d-b47c-2c9e62fd0a95"
         },
         {
           "url": "db://assets/games/chess/scenes/ChessGame.scene",
@@ -27,10 +27,11 @@
         }
       ],
       "startScene": "4d857970-4503-4dab-a770-56fe828a0185",
-      "name": "Peg Solitaire",
+      "name": "包2",
       "experimentalEraseModules": false,
       "skipCompressTexture": false,
-      "md5Cache": true
+      "md5Cache": true,
+      "sourceMaps": true
     },
     "options": {
       "web-mobile": {
@@ -84,6 +85,42 @@
         "__version__": "1.0.1"
       },
       "1770200604170": {
+        "useWebGPU": false,
+        "orientation": "portrait",
+        "embedWebDebugger": true,
+        "__version__": "1.0.1"
+      },
+      "1770224170685": {
+        "useWebGPU": false,
+        "orientation": "portrait",
+        "embedWebDebugger": true,
+        "__version__": "1.0.1"
+      },
+      "1770292452394": {
+        "useWebGPU": false,
+        "orientation": "portrait",
+        "embedWebDebugger": true,
+        "__version__": "1.0.1"
+      },
+      "1770293262849": {
+        "useWebGPU": false,
+        "orientation": "portrait",
+        "embedWebDebugger": true,
+        "__version__": "1.0.1"
+      },
+      "1770293945024": {
+        "useWebGPU": false,
+        "orientation": "portrait",
+        "embedWebDebugger": true,
+        "__version__": "1.0.1"
+      },
+      "1770297903457": {
+        "useWebGPU": false,
+        "orientation": "portrait",
+        "embedWebDebugger": true,
+        "__version__": "1.0.1"
+      },
+      "1770300066786": {
         "useWebGPU": false,
         "orientation": "portrait",
         "embedWebDebugger": true,
