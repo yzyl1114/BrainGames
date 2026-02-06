@@ -27,7 +27,7 @@
         }
       ],
       "startScene": "4d857970-4503-4dab-a770-56fe828a0185",
-      "name": "包2",
+      "name": "包3",
       "experimentalEraseModules": false,
       "skipCompressTexture": false,
       "md5Cache": true,
@@ -121,6 +121,12 @@
         "__version__": "1.0.1"
       },
       "1770300066786": {
+        "useWebGPU": false,
+        "orientation": "portrait",
+        "embedWebDebugger": true,
+        "__version__": "1.0.1"
+      },
+      "1770365197571": {
         "useWebGPU": false,
         "orientation": "portrait",
         "embedWebDebugger": true,

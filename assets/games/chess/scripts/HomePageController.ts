@@ -1,6 +1,6 @@
 // assets/games/chess/scripts/HomePageController.ts
 import { _decorator, Component, Node, Label, Button, find } from 'cc';
-import { LevelSelection } from './LevelSelection';
+//import { LevelSelection } from './LevelSelection';
 import { I18nManager } from './I18nManager';
 
 const { ccclass, property } = _decorator;
@@ -176,7 +176,8 @@ export class HomePageController extends Component {
         
         if (this.levelSelectionNode) {
             this.levelSelectionNode.active = true;
-            const levelSelection = this.levelSelectionNode.getComponent(LevelSelection);
+            //const levelSelection = this.levelSelectionNode.getComponent(LevelSelection);
+            const levelSelection = this.levelSelectionNode.getComponent('LevelSelection') as any;
             if (levelSelection?.show) {
                 levelSelection.show();
             }
